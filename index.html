@@ -27,6 +27,11 @@
   #result.bad{background:var(--badbg);color:var(--bad)}
   #result.idle{background:#eef0f3;color:var(--mut)}
   #result .prow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  #result.hold{background:#fff7ed;color:#9a3412;border:5px solid #ea580c}
+  .holdbar{background:#ea580c;color:#fff;border-radius:10px;padding:12px 14px;font-size:22px;font-weight:800;margin-bottom:12px;line-height:1.2}
+  .holdbar.cust{background:#7c3aed}
+  .holdbar small{display:block;font-size:15px;font-weight:600;margin-top:4px}
+  #holdNote{margin-top:12px;padding:12px 14px;border-radius:10px;background:#fff7ed;color:#9a3412;font-weight:700;font-size:15px}
   .gen{display:inline-block;font-size:30px;font-weight:800;padding:10px 20px;border-radius:14px;letter-spacing:.3px}
   #result .price{font-size:84px;font-weight:800;line-height:1}
   #result .name{font-size:22px;font-weight:700;margin-top:8px;color:var(--ink)}
@@ -72,6 +77,12 @@
       <input id="file" type="file" accept=".xls,.xlsx,.html,.htm,.csv,.txt" class="hide">
       <button class="btn" id="pick">Choose WebAMI file</button>
       <div class="err hide" id="loaderr"></div>
+      <hr style="border:none;border-top:1px solid var(--line);margin:26px 0">
+      <h3 style="margin:0 0 6px">Customer requests (optional)</h3>
+      <p>So customer holds get flagged. In the request sheet tap File &rarr; Download &rarr; CSV, then choose that file. It stays on this device only.</p>
+      <input id="reqfile" type="file" accept=".csv,.txt,text/csv" class="hide">
+      <button class="btn sec" id="reqpick">Choose requests file</button>
+      <p class="note" id="reqmsg"></p>
     </div>
   </section>
 
@@ -80,12 +91,14 @@
     <div class="tabs">
       <div class="tab on" data-t="scanv">Scan</div>
       <div class="tab" data-t="listv">Checklist</div>
+      <div class="tab" data-t="holdv" id="holdTab">Set aside</div>
       <div class="tab" data-t="missv">Missing</div>
     </div>
 
     <div id="scanv">
       <div class="card">
         <input id="scan" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Scan a record barcode">
+        <div id="holdNote" class="hide"></div>
         <div id="result" class="idle"><div class="sub">Scan a record. Its sticker price shows up here.</div></div>
         <div class="stats">
           <div class="stat"><b id="sScanned">0</b><span>scanned</span></div>
@@ -104,6 +117,14 @@
       <div class="card">
         <p class="note" style="margin-top:0">Optional: type what the packing slip says for any line. If the box and the slip both come up short, the shortage is on WebAMI.</p>
         <div class="scroll"><table id="tbl"></table></div>
+      </div>
+    </div>
+
+    <div id="holdv" class="hide">
+      <div class="card">
+        <div id="holdBody"></div>
+        <p class="note" id="reqmsg2"></p>
+        <button class="btn sec sm" id="reqpick2">Load customer requests file</button>
       </div>
     </div>
 
@@ -190,7 +211,7 @@
         num: td[cols["num"]], upc: upc, key: key,
         artist: niceArtist(td[cols["artist"]]), rawArtist: td[cols["artist"]], title: td[cols["title"]],
         list: list, cost: td[cols["adj price"]],
-        billed: billed, sticker: sticker(list), pk: ""
+        billed: billed, sticker: sticker(list), pk: "", street: td[cols["street date"]]||""
       });
     }
     if(!lines.length) throw new Error("No records found in that file.");
@@ -277,6 +298,28 @@
     $("missText").textContent = txt;
     $("missSummary").innerHTML = miss.length ? "<b>"+miss.length+" title(s) short</b>. Finish scanning the boxes first, then use this list for the claim." : "<b>Nothing missing so far.</b>";
 
+    // set aside list
+    var dh=[], ch=[];
+    order.lines.forEach(function(l){
+      var d=dateHold(l); if(d) dh.push({l:l,d:d});
+      matchReq(l).forEach(function(r){ ch.push({l:l,r:r}); });
+    });
+    var hh="";
+    function got(l){ return (c[l.key]||0)>0 ? "<span class='pill ok'>scanned</span>" : "<span class='pill todo'>not scanned yet</span>"; }
+    hh+="<h3 style='margin:0 0 8px'>Customer holds ("+ch.length+")</h3>";
+    if(!requests.length) hh+="<p class='note'>No request sheet loaded, so customer holds are not being checked.</p>";
+    else if(!ch.length) hh+="<p class='note'>None of the records on this order match an open customer request.</p>";
+    else hh+="<table><tbody>"+ch.map(function(x){ return "<tr><td><b>"+esc(x.l.artist)+"</b><br>"+esc(x.l.title)+"</td><td>"+esc(x.r.name)+(x.r.shop?" ("+esc(x.r.shop)+")":"")+"<br>"+esc(x.r.phone||"")+"</td><td>"+got(x.l)+"</td></tr>"; }).join("")+"</tbody></table>";
+    hh+="<h3 style='margin:22px 0 8px'>Not for sale yet ("+dh.length+")</h3>";
+    if(!dh.length) hh+="<p class='note'>Nothing on this order has a street date after today.</p>";
+    else hh+="<table><tbody>"+dh.map(function(x){ return "<tr><td><b>"+esc(x.l.artist)+"</b><br>"+esc(x.l.title)+"</td><td><b>"+esc(fmtD(x.d))+"</b></td><td>"+got(x.l)+"</td></tr>"; }).join("")+"</tbody></table>";
+    $("holdBody").innerHTML=hh;
+    var nh=dh.length+ch.length;
+    $("holdTab").textContent = nh ? "Set aside ("+nh+")" : "Set aside";
+    var note=$("holdNote");
+    if(nh){ note.textContent=nh+" record"+(nh===1?"":"s")+" on this order need to be set aside. See the Set aside tab."; note.classList.remove("hide"); } else note.classList.add("hide");
+    setReqMsg();
+
     // log
     var recent = scans.slice(-6).reverse();
     var byKey = {}; order.lines.forEach(function(l){ byKey[l.key]=l; });
@@ -304,6 +347,77 @@
     var c=GENRE_CLR[g]; return "<span class='gen' style='background:"+c[0]+";color:"+c[1]+"'>"+esc(g)+"</span>";
   }
 
+
+  // ---------- holds: street dates + customer requests ----------
+  var REQ_STORE="hd_requests_v1", requests=[];
+  function loadReq(){ try{ requests=JSON.parse(localStorage.getItem(REQ_STORE)||"[]"); }catch(e){ requests=[]; } }
+  function saveReq(){ try{ localStorage.setItem(REQ_STORE, JSON.stringify(requests)); }catch(e){} }
+  function parseCSV(t){
+    var rows=[],row=[],f="",q=false,i,ch;
+    for(i=0;i<t.length;i++){ ch=t.charAt(i);
+      if(q){ if(ch==='"'){ if(t.charAt(i+1)==='"'){f+='"';i++;} else q=false; } else f+=ch; }
+      else if(ch==='"') q=true;
+      else if(ch===','){ row.push(f); f=""; }
+      else if(ch==="\n"||ch==="\r"){ if(ch==="\r"&&t.charAt(i+1)==="\n") i++; row.push(f); f=""; rows.push(row); row=[]; }
+      else f+=ch; }
+    if(f!==""||row.length){ row.push(f); rows.push(row); }
+    return rows;
+  }
+  function parseRequests(text){
+    var rows=parseCSV(String(text).replace(/^﻿/,"")), hi=-1, cols={}, i;
+    for(i=0;i<rows.length;i++){
+      var low=rows[i].map(function(c){return String(c).trim().toLowerCase();});
+      if(low.indexOf("artist")>-1 && low.indexOf("album")>-1){ hi=i; low.forEach(function(h,ix){ cols[h]=ix; }); break; }
+    }
+    if(hi<0) throw new Error("That does not look like the request sheet. It needs Artist and Album columns.");
+    function g(row,names){ for(var n=0;n<names.length;n++){ if(cols[names[n]]!=null) return String(row[cols[names[n]]]||"").trim(); } return ""; }
+    var out=[];
+    for(i=hi+1;i<rows.length;i++){
+      var r=rows[i], artist=g(r,["artist"]), album=g(r,["album"]);
+      if(!artist && !album) continue;
+      out.push({artist:artist, album:album, name:g(r,["name","full name"]), shop:g(r,["shop","pick up shop"]), phone:g(r,["phone"]), status:g(r,["status"]), format:g(r,["format"])});
+    }
+    return out;
+  }
+  function wn(s){ return String(s||"").toLowerCase().replace(/['’]/g,"").replace(/&/g," and ").replace(/[^a-z0-9 ]/g," ").replace(/\b(the|a)\b/g," ").replace(/\s+/g," ").trim(); }
+  function openReq(r){ return !/^\s*(picked up|pick up|complete|completed|cancel|canceled|cancelled|done|fulfilled|closed|delivered)/i.test(r.status||""); }
+  function matchReq(l){
+    var res=[]; if(!requests.length) return res;
+    var la=wn(l.artist)+" | "+wn(l.rawArtist), toks=la.split(/[ |]+/), lt=wn(l.title);
+    if(lt.length<3) return res;
+    requests.forEach(function(r){
+      if(!openReq(r)) return;
+      var ra=wn(r.artist); if(!ra) return;
+      var rt=ra.split(" "), last=rt[rt.length-1];
+      var aOk = la.indexOf(ra)>-1 || (last.length>=4 && toks.indexOf(last)>-1);
+      if(!aOk) return;
+      var parts=[wn(r.album)].concat(String(r.album||"").split(/[,;\/]| and /i).map(wn));
+      var tOk=parts.some(function(p){ return p.length>=4 && (lt.indexOf(p)>-1 || (lt.length>=4 && p.indexOf(lt)>-1)); });
+      if(tOk) res.push(r);
+    });
+    return res;
+  }
+  function shortName(n){ var p=String(n||"").trim().split(/\s+/); return p.length>1 ? p[0]+" "+p[p.length-1].charAt(0)+"." : (p[0]||"customer"); }
+  function dateHold(l){
+    var m=String(l.street||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if(!m) return null;
+    var d=new Date(+m[3],+m[1]-1,+m[2]), t=new Date(); t.setHours(0,0,0,0);
+    return d>t ? d : null;
+  }
+  function fmtD(d){ return d.toLocaleDateString("en-US",{weekday:"long",month:"numeric",day:"numeric"}); }
+  function holdBars(l){
+    var h="", d=dateHold(l);
+    if(d) h+="<div class='holdbar'>STREET DATE: DON'T SELL UNTIL "+esc(fmtD(d).toUpperCase())+"<small>Set it aside.</small></div>";
+    matchReq(l).forEach(function(r){
+      h+="<div class='holdbar cust'>CUSTOMER HOLD: "+esc(shortName(r.name))+(r.shop?" ("+esc(r.shop)+")":"")+"<small>"+esc(r.format||"")+(r.phone?" &middot; "+esc(r.phone):"")+" &middot; Set it aside.</small></div>";
+    });
+    return h;
+  }
+  function setReqMsg(){
+    var open=requests.filter(openReq).length;
+    var t = requests.length ? (open+" open customer request"+(open===1?"":"s")+" loaded.") : "No customer requests loaded yet.";
+    ["reqmsg","reqmsg2"].forEach(function(id){ if($(id)) $(id).textContent=t; });
+  }
+
   function handleScan(raw){
     if(!order) return;
     var k = keyOf(raw);
@@ -315,8 +429,9 @@
       showResult("bad","<div class='sub'><b>NOT ON THIS ORDER</b></div><div class='name'>UPC "+esc(raw)+"</div><div class='sub'>Set it aside. It was not billed on this WebAMI order.</div>");
     } else {
       var s = c[k], over = s>line.billed;
-      showResult(over?"warn":"ok",
-        "<div class='prow'><div class='price'>"+money(line.sticker)+"</div>"+genreBadge(line)+"</div><div class='name'>"+esc(line.artist)+"</div><div class='sub' style='color:var(--ink)'>"+esc(line.title)+"</div>"+
+      var hb = holdBars(line);
+      showResult(over?"warn":(hb?"hold":"ok"),
+        hb+"<div class='prow'><div class='price'>"+money(line.sticker)+"</div>"+genreBadge(line)+"</div><div class='name'>"+esc(line.artist)+"</div><div class='sub' style='color:var(--ink)'>"+esc(line.title)+"</div>"+
         "<div class='sub'>"+(over? "<b>MORE THAN BILLED</b>: scanned "+s+", order says "+line.billed+". Set it aside." : "Scanned "+s+" of "+line.billed)+"</div>");
     }
     render();
@@ -339,6 +454,19 @@
     $("file").value = "";
   });
 
+  function pickReq(){ $("reqfile").click(); }
+  $("reqpick").addEventListener("click", pickReq);
+  $("reqpick2").addEventListener("click", pickReq);
+  $("reqfile").addEventListener("change", function(){
+    var f=$("reqfile").files[0]; if(!f) return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      try{ requests=parseRequests(String(rd.result)); saveReq(); setReqMsg(); if(order) render(); }
+      catch(e){ ["reqmsg","reqmsg2"].forEach(function(id){ $(id).textContent=e.message; }); }
+    };
+    rd.readAsText(f); $("reqfile").value="";
+  });
+
   $("scan").addEventListener("keydown", function(e){
     if(e.key==="Enter"){ e.preventDefault(); var v=$("scan").value.trim(); $("scan").value=""; if(v) handleScan(v); }
   });
@@ -348,7 +476,7 @@
     t.addEventListener("click", function(){
       Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(x){ x.classList.remove("on"); });
       t.classList.add("on");
-      ["scanv","listv","missv"].forEach(function(id){ $(id).classList.add("hide"); });
+      ["scanv","listv","holdv","missv"].forEach(function(id){ $(id).classList.add("hide"); });
       $(t.getAttribute("data-t")).classList.remove("hide");
       if(t.getAttribute("data-t")==="scanv") $("scan").focus();
     });
@@ -383,6 +511,7 @@
     if(onScan && !$("app").classList.contains("hide") && e.target.tagName!=="INPUT" && e.target.tagName!=="BUTTON") $("scan").focus();
   });
 
+  loadReq(); setReqMsg();
   if(restore()) start();
 })();
 </script>
