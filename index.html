@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hunky Dory - Record Receiving</title>
+<style>
+  :root{--ink:#1f2328;--mut:#667085;--line:#e4e7ec;--bg:#f6f7f9;--ok:#1a7f4b;--okbg:#dcf5e6;--warn:#9a6700;--warnbg:#fff1c2;--bad:#b42318;--badbg:#fde4e1;--acc:#1f2328}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);-webkit-text-size-adjust:100%}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  header h1{margin:0;font-size:18px}
+  header .meta{color:var(--mut);font-size:13px}
+  main{max-width:960px;margin:0 auto;padding:20px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
+  .btn{appearance:none;border:1px solid var(--acc);background:var(--acc);color:#fff;border-radius:10px;padding:14px 20px;font-size:16px;font-weight:600;cursor:pointer}
+  .btn.sec{background:#fff;color:var(--acc)}
+  .btn.sm{padding:8px 12px;font-size:14px}
+  .tabs{display:flex;gap:8px;margin-bottom:16px}
+  .tab{flex:1;text-align:center;padding:12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:15px;cursor:pointer}
+  .tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+  .hide{display:none!important}
+  #scan{width:100%;font-size:28px;padding:16px;border:2px solid var(--acc);border-radius:12px;letter-spacing:1px}
+  #result{margin-top:16px;border-radius:14px;padding:22px;min-height:150px}
+  #result.ok{background:var(--okbg);color:var(--ok)}
+  #result.warn{background:var(--warnbg);color:var(--warn)}
+  #result.bad{background:var(--badbg);color:var(--bad)}
+  #result.idle{background:#eef0f3;color:var(--mut)}
+  #result .price{font-size:84px;font-weight:800;line-height:1}
+  #result .name{font-size:22px;font-weight:700;margin-top:8px;color:var(--ink)}
+  #result .sub{font-size:16px;margin-top:6px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
+  .stat b{display:block;font-size:26px}
+  .stat span{font-size:12px;color:var(--mut)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{position:sticky;top:0;background:#fff;text-align:left;font-size:12px;color:var(--mut);padding:8px;border-bottom:2px solid var(--line)}
+  td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.n,th.n{text-align:right;white-space:nowrap}
+  .pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:700}
+  .pill.ok{background:var(--okbg);color:var(--ok)}
+  .pill.warn{background:var(--warnbg);color:var(--warn)}
+  .pill.bad{background:var(--badbg);color:var(--bad)}
+  .pill.todo{background:#eef0f3;color:var(--mut)}
+  input.pk{width:56px;font-size:15px;padding:6px;border:1px solid var(--line);border-radius:8px;text-align:center}
+  .drop{border:2px dashed #b8bfca;border-radius:14px;padding:40px 20px;text-align:center}
+  .drop h2{margin:0 0 8px}
+  .drop p{color:var(--mut);margin:6px 0 18px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .log{font-size:13px;color:var(--mut);margin-top:14px}
+  .log div{padding:3px 0;border-bottom:1px solid var(--line)}
+  .note{font-size:13px;color:var(--mut)}
+  .err{color:var(--bad);font-weight:600;margin-top:12px}
+  pre{white-space:pre-wrap;background:#f3f4f6;border-radius:10px;padding:14px;font-size:14px}
+  .scroll{max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Record Receiving</h1>
+  <div class="meta" id="meta">No order loaded</div>
+</header>
+<main>
+
+  <!-- STEP 1: LOAD -->
+  <section id="load" class="card">
+    <div class="drop">
+      <h2>Step 1: Load the WebAMI order</h2>
+      <p>On WebAMI, open the order and tap Export &rarr; Excel. Then choose that file here exactly as it downloaded.</p>
+      <input id="file" type="file" accept=".xls,.xlsx,.html,.htm,.csv,.txt" class="hide">
+      <button class="btn" id="pick">Choose WebAMI file</button>
+      <div class="err hide" id="loaderr"></div>
+    </div>
+  </section>
+
+  <!-- STEP 2: RECEIVE -->
+  <section id="app" class="hide">
+    <div class="tabs">
+      <div class="tab on" data-t="scanv">Scan</div>
+      <div class="tab" data-t="listv">Checklist</div>
+      <div class="tab" data-t="missv">Missing</div>
+    </div>
+
+    <div id="scanv">
+      <div class="card">
+        <input id="scan" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Scan a record barcode">
+        <div id="result" class="idle"><div class="sub">Scan a record. Its sticker price shows up here.</div></div>
+        <div class="stats">
+          <div class="stat"><b id="sScanned">0</b><span>scanned</span></div>
+          <div class="stat"><b id="sBilled">0</b><span>on the order</span></div>
+          <div class="stat"><b id="sLeft">0</b><span>still to find</span></div>
+          <div class="stat"><b id="sIssues">0</b><span>problems</span></div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn sec sm" id="undo">Undo last scan</button>
+        </div>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <div id="listv" class="hide">
+      <div class="card">
+        <p class="note" style="margin-top:0">Optional: type what the packing slip says for any line. If the box and the slip both come up short, the shortage is on WebAMI.</p>
+        <div class="scroll"><table id="tbl"></table></div>
+      </div>
+    </div>
+
+    <div id="missv" class="hide">
+      <div class="card">
+        <div id="missSummary"></div>
+        <pre id="missText"></pre>
+        <div class="row"><button class="btn sec sm" id="copy">Copy this list</button><span class="note" id="copied"></span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <button class="btn sec sm" id="newOrder">Load a different order</button>
+        <button class="btn sec sm" id="resetScans">Clear all scans</button>
+        <span class="note" id="confirmMsg"></span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var order = null;       // {conf, date, lines:[{num,upc,key,artist,title,list,cost,billed,sticker,scanned,pk}]}
+  var scans = [];         // array of keys, in order
+  var STORE = "hd_receiving_v1";
+
+  function $(id){return document.getElementById(id);}
+  function keyOf(s){ return String(s||"").replace(/\D/g,"").replace(/^0+/,""); }
+  function sticker(list){ var n = parseFloat(String(list).replace(/[$,]/g,"")); if(!isFinite(n)) return null; return Math.ceil(n-1e-9)+1; }
+  function money(n){ return n==null?"?":"$"+n; }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+  // "LAST,FIRST" -> "First Last" for display only
+  function niceArtist(a){
+    a = String(a||"").trim();
+    var m = /[&\/]/.test(a) ? null : a.match(/^([^,]+),\s*(.+)$/);
+    var s = m ? (m[2]+" "+m[1]) : a;
+    if (s === s.toUpperCase()) s = s.toLowerCase().replace(/\b([a-z])/g,function(c){return c.toUpperCase();});
+    return s;
+  }
+
+  function save(){
+    try{ localStorage.setItem(STORE, JSON.stringify({order:order, scans:scans})); }catch(e){}
+  }
+  function restore(){
+    try{
+      var raw = localStorage.getItem(STORE);
+      if(!raw) return false;
+      var d = JSON.parse(raw);
+      if(d && d.order && d.order.lines){ order=d.order; scans=d.scans||[]; return true; }
+    }catch(e){}
+    return false;
+  }
+  function wipe(){ try{ localStorage.removeItem(STORE); }catch(e){} }
+
+  // ---------- parse the WebAMI file (an HTML table saved as .xls) ----------
+  function parseOrder(text){
+    var doc = new DOMParser().parseFromString(String(text).replace(/<br\s*\/?>/gi," "), "text/html");
+    var meta = {conf:"", date:""};
+    var bodyText = doc.body ? doc.body.textContent : text;
+    var m = bodyText.match(/Confirmation Number:\s*([A-Za-z0-9]+)/); if(m) meta.conf = m[1];
+    m = bodyText.match(/Date Submitted:\s*([0-9\/]+)/); if(m) meta.date = m[1];
+    var rows = Array.prototype.slice.call(doc.querySelectorAll("tr"));
+    var hdrIdx = -1, cols = {};
+    for(var i=0;i<rows.length;i++){
+      var cells = Array.prototype.slice.call(rows[i].children).map(function(c){return c.textContent.replace(/\s+/g," ").trim().toLowerCase();});
+      if(cells.indexOf("upc")>-1 && cells.indexOf("adj qty")>-1){
+        hdrIdx = i;
+        cells.forEach(function(h,ix){ cols[h]=ix; });
+        break;
+      }
+    }
+    if(hdrIdx<0) throw new Error("This doesn't look like a WebAMI order export. Check that you picked the Excel export.");
+    var lines = [];
+    for(var r=hdrIdx+1;r<rows.length;r++){
+      var td = Array.prototype.slice.call(rows[r].children).map(function(c){return c.textContent.replace(/\s+/g," ").trim();});
+      var upc = td[cols["upc"]]; if(!upc) continue;
+      var key = keyOf(upc); if(!key) continue;
+      var billed = parseInt(td[cols["adj qty"]],10); if(!isFinite(billed)) billed = parseInt(td[cols["qty"]],10)||0;
+      var list = td[cols["list price"]];
+      lines.push({
+        num: td[cols["num"]], upc: upc, key: key,
+        artist: niceArtist(td[cols["artist"]]), title: td[cols["title"]],
+        list: list, cost: td[cols["adj price"]],
+        billed: billed, sticker: sticker(list), pk: ""
+      });
+    }
+    if(!lines.length) throw new Error("No records found in that file.");
+    // merge duplicate UPC lines
+    var seen = {}, out=[];
+    lines.forEach(function(l){
+      if(seen[l.key]){ seen[l.key].billed += l.billed; } else { seen[l.key]=l; out.push(l); }
+    });
+    return {conf:meta.conf, date:meta.date, lines:out};
+  }
+
+  // ---------- state helpers ----------
+  function counts(){
+    var c = {}; scans.forEach(function(k){ c[k]=(c[k]||0)+1; }); return c;
+  }
+  function status(l, c){
+    var s = c[l.key]||0, b = l.billed, p = (l.pk===""||l.pk==null)?null:parseInt(l.pk,10);
+    if(s===b){
+      if(p!=null && p!==b) return {t:"CHECK SLIP: slip says "+p, c:"warn"};
+      return {t:"OK", c:"ok"};
+    }
+    if(s<b){
+      var short=b-s;
+      if(s===0 && scans.length===0) return {t:"Not scanned yet", c:"todo"};
+      if(p!=null && p<b) return {t:"SHORT "+short+" - slip short too, claim it", c:"bad"};
+      return {t:"SHORT "+short, c: s===0?"todo":"bad"};
+    }
+    return {t:"OVER +"+(s-b), c:"warn"};
+  }
+  function unknownScans(){
+    var known = {}; order.lines.forEach(function(l){known[l.key]=1;});
+    var u = {}; scans.forEach(function(k){ if(!known[k]) u[k]=(u[k]||0)+1; });
+    return u;
+  }
+
+  // ---------- render ----------
+  function render(){
+    if(!order) return;
+    $("meta").textContent = "Order "+order.conf+(order.date?" - submitted "+order.date:"")+" - "+order.lines.length+" titles";
+    var c = counts(), billed=0, scanned=0, left=0, issues=0;
+    order.lines.forEach(function(l){
+      billed+=l.billed; var s=c[l.key]||0; scanned+=Math.min(s,l.billed);
+      if(s<l.billed) left+=l.billed-s;
+      if(s>l.billed) issues++;
+    });
+    var unk = unknownScans(); issues += Object.keys(unk).length;
+    $("sScanned").textContent = scans.length;
+    $("sBilled").textContent = billed;
+    $("sLeft").textContent = left;
+    $("sIssues").textContent = issues;
+
+    // checklist
+    var h = "<thead><tr><th>#</th><th>Record</th><th class='n'>Price</th><th class='n'>Billed</th><th class='n'>Scanned</th><th class='n'>Slip</th><th>Status</th></tr></thead><tbody>";
+    order.lines.forEach(function(l,i){
+      var st = status(l,c);
+      h += "<tr><td>"+esc(l.num)+"</td><td><b>"+esc(l.artist)+"</b><br>"+esc(l.title)+"</td><td class='n'><b>"+money(l.sticker)+"</b></td><td class='n'>"+l.billed+"</td><td class='n'>"+(c[l.key]||0)+"</td><td class='n'><input class='pk' data-i='"+i+"' inputmode='numeric' value='"+esc(l.pk)+"'></td><td><span class='pill "+st.c+"'>"+esc(st.t)+"</span></td></tr>";
+    });
+    Object.keys(unk).forEach(function(k){
+      h += "<tr><td>-</td><td><b>Not on this order</b><br>"+esc(k)+"</td><td class='n'>-</td><td class='n'>0</td><td class='n'>"+unk[k]+"</td><td></td><td><span class='pill bad'>NOT ON ORDER</span></td></tr>";
+    });
+    $("tbl").innerHTML = h+"</tbody>";
+    Array.prototype.forEach.call(document.querySelectorAll("input.pk"), function(inp){
+      inp.addEventListener("change", function(){
+        order.lines[+inp.getAttribute("data-i")].pk = inp.value.trim(); save(); render();
+      });
+    });
+
+    // missing
+    var miss = [], over=[];
+    order.lines.forEach(function(l){
+      var s=c[l.key]||0;
+      var p=(l.pk===""||l.pk==null)?null:parseInt(l.pk,10);
+      if(s<l.billed){ miss.push({l:l, n:l.billed-s, slipShort:(p!=null && p<l.billed)}); }
+      if(s>l.billed){ over.push({l:l, n:s-l.billed}); }
+    });
+    var txt = "Order "+order.conf+"\n";
+    if(!miss.length) txt += "\nNothing missing. Everything billed was scanned.\n";
+    else {
+      txt += "\nBILLED BUT NOT RECEIVED ("+miss.reduce(function(a,m){return a+m.n;},0)+" records):\n";
+      miss.forEach(function(m){ txt += "- "+m.l.artist+" - "+m.l.title+" (UPC "+m.l.upc+") x"+m.n+(m.slipShort?"  [packing slip short too - claim with WebAMI]":"")+"\n"; });
+    }
+    if(over.length){ txt += "\nMORE THAN BILLED:\n"; over.forEach(function(o){ txt += "- "+o.l.artist+" - "+o.l.title+" +"+o.n+"\n"; }); }
+    var uk = Object.keys(unk); if(uk.length){ txt += "\nSCANNED BUT NOT ON ORDER:\n"; uk.forEach(function(k){ txt += "- UPC "+k+" x"+unk[k]+"\n"; }); }
+    $("missText").textContent = txt;
+    $("missSummary").innerHTML = miss.length ? "<b>"+miss.length+" title(s) short</b>. Finish scanning the boxes first, then use this list for the claim." : "<b>Nothing missing so far.</b>";
+
+    // log
+    var recent = scans.slice(-6).reverse();
+    var byKey = {}; order.lines.forEach(function(l){ byKey[l.key]=l; });
+    $("log").innerHTML = recent.map(function(k){ var l=byKey[k]; return "<div>"+(l? esc(l.artist+" - "+l.title)+" "+money(l.sticker) : "Not on order: "+esc(k))+"</div>"; }).join("");
+  }
+
+  function showResult(cls, html){ var r=$("result"); r.className=cls; r.innerHTML=html; }
+
+  function handleScan(raw){
+    if(!order) return;
+    var k = keyOf(raw);
+    if(!k){ showResult("bad","<div class='price'>?</div><div class='sub'>That scan did not read as a barcode. Try again.</div>"); return; }
+    scans.push(k); save();
+    var line = null; order.lines.forEach(function(l){ if(l.key===k) line=l; });
+    var c = counts();
+    if(!line){
+      showResult("bad","<div class='sub'><b>NOT ON THIS ORDER</b></div><div class='name'>UPC "+esc(raw)+"</div><div class='sub'>Set it aside. It was not billed on this WebAMI order.</div>");
+    } else {
+      var s = c[k], over = s>line.billed;
+      showResult(over?"warn":"ok",
+        "<div class='price'>"+money(line.sticker)+"</div><div class='name'>"+esc(line.artist)+"</div><div class='sub' style='color:var(--ink)'>"+esc(line.title)+"</div>"+
+        "<div class='sub'>"+(over? "<b>MORE THAN BILLED</b>: scanned "+s+", order says "+line.billed+". Set it aside." : "Scanned "+s+" of "+line.billed)+"</div>");
+    }
+    render();
+  }
+
+  // ---------- events ----------
+  $("pick").addEventListener("click", function(){ $("file").click(); });
+  $("file").addEventListener("change", function(){
+    var f = $("file").files[0]; if(!f) return;
+    $("loaderr").classList.add("hide");
+    var rd = new FileReader();
+    rd.onload = function(){
+      try{
+        order = parseOrder(String(rd.result)); scans = []; save();
+        start();
+      }catch(e){ $("loaderr").textContent = e.message; $("loaderr").classList.remove("hide"); }
+    };
+    rd.onerror = function(){ $("loaderr").textContent = "Could not read that file."; $("loaderr").classList.remove("hide"); };
+    rd.readAsText(f);
+    $("file").value = "";
+  });
+
+  $("scan").addEventListener("keydown", function(e){
+    if(e.key==="Enter"){ e.preventDefault(); var v=$("scan").value.trim(); $("scan").value=""; if(v) handleScan(v); }
+  });
+  $("undo").addEventListener("click", function(){ if(scans.length){ scans.pop(); save(); showResult("idle","<div class='sub'>Last scan removed.</div>"); render(); } $("scan").focus(); });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t){
+    t.addEventListener("click", function(){
+      Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(x){ x.classList.remove("on"); });
+      t.classList.add("on");
+      ["scanv","listv","missv"].forEach(function(id){ $(id).classList.add("hide"); });
+      $(t.getAttribute("data-t")).classList.remove("hide");
+      if(t.getAttribute("data-t")==="scanv") $("scan").focus();
+    });
+  });
+
+  $("copy").addEventListener("click", function(){
+    var t = $("missText").textContent;
+    try{ navigator.clipboard.writeText(t).then(function(){ $("copied").textContent="Copied"; }, function(){ $("copied").textContent="Could not copy. Select the text and copy it."; }); }
+    catch(e){ $("copied").textContent="Could not copy. Select the text and copy it."; }
+  });
+
+  var pending = null;
+  function ask(msg, fn){
+    $("confirmMsg").innerHTML = esc(msg)+" <button class='btn sm' id='yes'>Yes</button> <button class='btn sec sm' id='no'>No</button>";
+    $("yes").addEventListener("click", function(){ $("confirmMsg").textContent=""; fn(); });
+    $("no").addEventListener("click", function(){ $("confirmMsg").textContent=""; });
+  }
+  $("newOrder").addEventListener("click", function(){
+    ask("This clears the current order and scans.", function(){ order=null; scans=[]; wipe(); $("app").classList.add("hide"); $("load").classList.remove("hide"); $("meta").textContent="No order loaded"; });
+  });
+  $("resetScans").addEventListener("click", function(){
+    ask("Clear every scan for this order?", function(){ scans=[]; save(); showResult("idle","<div class='sub'>Scans cleared.</div>"); render(); $("scan").focus(); });
+  });
+
+  function start(){
+    $("load").classList.add("hide"); $("app").classList.remove("hide");
+    render(); $("scan").focus();
+  }
+  // keep the scan box ready on the scan tab
+  document.addEventListener("click", function(e){
+    var onScan = !$("scanv").classList.contains("hide");
+    if(onScan && !$("app").classList.contains("hide") && e.target.tagName!=="INPUT" && e.target.tagName!=="BUTTON") $("scan").focus();
+  });
+
+  if(restore()) start();
+})();
+</script>
+</body>
+</html>
