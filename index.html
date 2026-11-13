@@ -15,7 +15,10 @@
   .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px}
   .btn{appearance:none;border:1px solid var(--acc);background:var(--acc);color:#fff;border-radius:10px;padding:14px 20px;font-size:16px;font-weight:600;cursor:pointer}
   .btn.sec{background:#fff;color:var(--acc)}
-  .btn.sm{padding:8px 12px;font-size:14px}
+  .btn.sm{padding:16px 20px;font-size:17px;border-radius:12px}
+  .tab{padding:18px 8px;font-size:17px}
+  #confirmMsg:not(:empty){position:fixed;left:0;right:0;top:0;background:#fff;border-bottom:3px solid var(--acc);padding:20px;z-index:50;font-size:20px;font-weight:600;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+  #confirmMsg .btn{padding:18px 34px;font-size:20px;margin:12px 8px 0}
   .tabs{display:flex;gap:8px;margin-bottom:16px}
   .tab{flex:1;text-align:center;padding:12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:15px;cursor:pointer}
   .tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
@@ -64,9 +67,10 @@
 </head>
 <body>
 <header>
-  <h1>Record Receiving <span style="font-size:12px;font-weight:600;opacity:.7">v5</span></h1>
+  <h1>Record Receiving <span style="font-size:12px;font-weight:600;opacity:.7">v6</span></h1>
   <div class="meta" id="meta">No order loaded</div>
 </header>
+<div id="confirmMsg"></div>
 <main>
 
   <!-- STEP 1: LOAD -->
@@ -88,11 +92,13 @@
 
   <!-- STEP 2: RECEIVE -->
   <section id="app" class="hide">
+    <button class="btn sec" id="newOrder" style="display:block;width:100%;padding:26px;font-size:22px;margin-bottom:16px;border-radius:14px">Load a different order</button>
     <div class="tabs">
       <div class="tab on" data-t="scanv">Scan</div>
       <div class="tab" data-t="listv">Checklist</div>
       <div class="tab" data-t="holdv" id="holdTab">Set aside</div>
       <div class="tab" data-t="missv">Missing</div>
+      <div class="tab" data-t="logv">Finish &amp; Log</div>
     </div>
 
     <div id="scanv">
@@ -131,16 +137,38 @@
     <div id="missv" class="hide">
       <div class="card">
         <div id="missSummary"></div>
+        <div id="missTbl"></div>
         <pre id="missText"></pre>
         <div class="row"><button class="btn sec sm" id="copy">Copy this list</button><span class="note" id="copied"></span></div>
       </div>
     </div>
 
+    <div id="logv" class="hide">
+      <div class="card">
+        <h3 style="margin:0 0 8px">Finish this receipt</h3>
+        <p class="note">Do this when every box is scanned. It saves the shorts to the log.</p>
+        <div class="row"><input id="who" type="text" placeholder="Your name" autocomplete="off" style="font-size:16px;padding:10px;border:1px solid var(--line);border-radius:10px;flex:1;min-width:140px"><button class="btn" id="finish">Finish &amp; save</button></div>
+        <p class="note" id="finMsg"></p>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px">Square import files</h3>
+        <p class="note">Only records you scanned. Optional: load your Square catalog export so records already in Square become reactivations instead of duplicates.</p>
+        <input id="catfile" type="file" accept=".csv,.txt,text/csv" class="hide">
+        <div class="row"><button class="btn sec sm" id="catpick">Load Square catalog (optional)</button><span class="note" id="catMsg"></span></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="sqdl">Download Square files</button></div>
+        <p class="note" id="sqMsg"></p>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px">Receiving log</h3>
+        <div id="logBody"></div>
+        <div class="row" style="margin-top:10px"><button class="btn sec sm" id="logdl">Download log (CSV)</button></div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="row">
-        <button class="btn sec sm" id="newOrder">Load a different order</button>
         <button class="btn sec sm" id="resetScans">Clear all scans</button>
-        <span class="note" id="confirmMsg"></span>
+        
       </div>
     </div>
   </section>
@@ -296,6 +324,9 @@
     if(over.length){ txt += "\nMORE THAN BILLED:\n"; over.forEach(function(o){ txt += "- "+o.l.artist+" - "+o.l.title+" +"+o.n+"\n"; }); }
     var uk = Object.keys(unk); if(uk.length){ txt += "\nSCANNED BUT NOT ON ORDER:\n"; uk.forEach(function(k){ txt += "- UPC "+k+" x"+unk[k]+"\n"; }); }
     $("missText").textContent = txt;
+    var mt = miss.length ? "<table style='margin-top:10px'><tbody>"+miss.map(function(m){ return "<tr><td><b>"+esc(m.l.artist)+"</b><br>"+esc(m.l.title)+"</td><td class='n'><b>"+money(m.l.sticker)+"</b></td><td>"+genreBadge(m.l)+"</td><td class='n'>x"+m.n+"</td></tr>"; }).join("")+"</tbody></table>" : "";
+    $("missTbl").innerHTML = mt;
+    renderLog();
     $("missSummary").innerHTML = miss.length ? "<b>"+miss.length+" title(s) short</b>. Finish scanning the boxes first, then use this list for the claim." : "<b>Nothing missing so far.</b>";
 
     // set aside list
@@ -438,6 +469,97 @@
     render();
   }
 
+  // ---------- Square export, receipt log ----------
+  var SQH="Token,Item Name,Customer-facing Name,Variation Name,Unit and Precision,SKU,Description,Categories,Reporting Category,SEO Title,SEO Description,Permalink,GTIN,Square Online Item Visibility,Item Type,Weight (lb),Social Media Link Title,Social Media Link Description,Shipping Enabled,Self-serve Ordering Enabled,Delivery Enabled,Pickup Enabled,Price,Online Sale Price,Archived,Sellable,Contains Alcohol,Stockable,Skip Detail Screen in POS,Preselect First Variation,Option Name 1,Option Value 1,Option Name 2,Option Value 2,Default Unit Cost,Default Vendor Name,Default Vendor Code,Current Quantity Hunky Dory Raleigh,New Quantity Hunky Dory Raleigh,Stock Alert Enabled Hunky Dory Raleigh,Stock Alert Count Hunky Dory Raleigh,Tax - Sales Tax (7.25%),Tax - Wake Co. Bev Tax (1%)".split(",");
+  var SQ_OVR={"JAY-Z":"Jay-Z","ALT-J":"Alt-J","LCD SOUNDSYSTEM":"LCD Soundsystem","CURE":"The Cure","SMITHS":"The Smiths","BEATLES":"The Beatles","BEACH BOYS":"The Beach Boys","BETHS":"The Beths","NOTORIOUS BIG":"The Notorious B.I.G.","PULP FICTION / O.S.T.":"Various Artists","HISAISHI,JOE & ROYAL PHILHARMONIC ORCHESTRA":"Joe Hisaishi & Royal Philharmonic Orchestra","COLE,J.":"J. Cole","PINKPANTHERESS":"PinkPantheress","NEON GENESIS EVANGELION - O.S.T.":"Various Artists","FRIDAY / O.S.T.":"Various Artists","ISBELL,JASON & 400 UNIT":"Jason Isbell & The 400 Unit","PETTY,TOM & HEARTBREAKERS":"Tom Petty & The Heartbreakers"};
+  var CAT_STORE="hd_catalog_v1", LOG_STORE="hd_receipts_v1";
+  var catalog = null; // {header:[], rows:[[]], gi:, ai:, ...}
+  function csvCell(v){ v=String(v==null?"":v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+  function toCSV(header, rows){ return "﻿"+[header].concat(rows).map(function(r){return r.map(csvCell).join(",");}).join("\r\n")+"\r\n"; }
+  function sqArtist(raw){ var a=String(raw||"").trim(); return SQ_OVR[a]||niceArtist(a); }
+  function dl(name, text){
+    var b=new Blob([text],{type:"text/csv"}), u=URL.createObjectURL(b), a=document.createElement("a");
+    a.href=u; a.download=name; document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(u); },1500);
+  }
+  function setCatMsg(){ $("catMsg").textContent = catalog ? "Catalog loaded ("+catalog.rows.length+" rows)." : "No catalog loaded."; }
+  function loadCatalog(text){
+    var rows=parseCSV(String(text).replace(/^﻿/,"")); var h=rows[0]||[]; var ix={};
+    h.forEach(function(n,i){ ix[n]=i; });
+    if(ix["GTIN"]==null||ix["Archived"]==null) throw new Error("That does not look like a Square catalog export (needs GTIN and Archived columns).");
+    var map={}; rows.slice(1).forEach(function(r){ var k=keyOf(r[ix["GTIN"]]); if(!k) return; var nm=r[ix["Item Name"]]||""; if(/\[LP\]/.test(nm) && map[k]) return; (map[k]=map[k]||[]).push(r); });
+    catalog={header:h, ix:ix, map:map, rows:rows.slice(1)};
+    try{ localStorage.setItem(CAT_STORE, JSON.stringify({header:h,rows:rows.slice(1)})); }catch(e){}
+    setCatMsg();
+  }
+  function restoreCatalog(){
+    try{ var d=JSON.parse(localStorage.getItem(CAT_STORE)||"null"); if(d&&d.header){ var t=[d.header].concat(d.rows); var ix={}; d.header.forEach(function(n,i){ix[n]=i;}); var map={}; d.rows.forEach(function(r){ var k=keyOf(r[ix["GTIN"]]); if(!k) return; var nm=r[ix["Item Name"]]||""; if(/\[LP\]/.test(nm)&&map[k]) return; (map[k]=map[k]||[]).push(r); }); catalog={header:d.header,ix:ix,map:map,rows:d.rows}; } }catch(e){}
+    setCatMsg();
+  }
+  function exportSquare(){
+    if(!order) return;
+    var c=counts(), newRows=[], reRows=[], skipped=0, nIdx={};
+    SQH.forEach(function(n,i){ nIdx[n]=i; });
+    order.lines.forEach(function(l){
+      if(!(c[l.key]>0)) return;
+      var cost=parseFloat(String(l.cost).replace(/[$,]/g,"")); var price=(l.sticker==null?"":l.sticker.toFixed(2)); var cs=isFinite(cost)?cost.toFixed(2):"";
+      var ex = catalog && catalog.map[l.key];
+      if(ex){
+        var r=ex[0].slice(), ix=catalog.ix;
+        if(String(r[ix["Archived"]]).toUpperCase()==="Y"){
+          r[ix["Archived"]]="N"; if(ix["Price"]!=null) r[ix["Price"]]=price; if(ix["Default Unit Cost"]!=null) r[ix["Default Unit Cost"]]=cs;
+          reRows.push(r);
+        } else skipped++;
+        return;
+      }
+      var row=SQH.map(function(){return "";});
+      function set(n,v){ row[nIdx[n]]=v; }
+      set("Item Name", sqArtist(l.rawArtist||l.artist)+": "+l.title); set("Variation Name","Regular");
+      set("Categories","Records > New Records"); set("Reporting Category","Records > New Records"); set("GTIN",l.upc);
+      set("Square Online Item Visibility","hidden"); set("Item Type","Physical good"); set("Shipping Enabled","N");
+      set("Self-serve Ordering Enabled","N"); set("Delivery Enabled","N"); set("Pickup Enabled","Y");
+      set("Price",price); set("Archived","N"); set("Skip Detail Screen in POS","Y"); set("Preselect First Variation","Y");
+      set("Default Unit Cost",cs); set("Default Vendor Name","WebAMI");
+      set("Tax - Sales Tax (7.25%)","Y"); set("Tax - Wake Co. Bev Tax (1%)","N");
+      newRows.push(row);
+    });
+    var tag=(order.conf||"order").replace(/[^A-Za-z0-9]/g,"");
+    if(newRows.length) dl("1_NEW_records_"+tag+".csv", toCSV(SQH,newRows));
+    if(reRows.length) setTimeout(function(){ dl("2_REACTIVATE_existing_"+tag+".csv", toCSV(catalog.header,reRows)); },700);
+    $("sqMsg").innerHTML = "<b>"+newRows.length+" new</b>"+(catalog?", <b>"+reRows.length+" reactivated</b>, "+skipped+" already active in Square (no change)":"")+". Records you did not scan are left out."+(catalog?"":" No catalog loaded, so every scanned record is listed as new.");
+  }
+
+  function getLog(){ try{ return JSON.parse(localStorage.getItem(LOG_STORE)||"[]"); }catch(e){ return []; } }
+  function putLog(a){ try{ localStorage.setItem(LOG_STORE, JSON.stringify(a)); }catch(e){} }
+  function fmtStamp(ts){ var d=new Date(ts); return d.toLocaleDateString("en-US",{month:"numeric",day:"numeric",year:"numeric"})+" "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); }
+  function finishReceipt(){
+    if(!order) return;
+    var c=counts(), shorts=[], over=[], unk=unknownScans(), billed=0, got=0;
+    order.lines.forEach(function(l){ var s=c[l.key]||0; billed+=l.billed; got+=Math.min(s,l.billed);
+      if(s<l.billed) shorts.push({artist:l.artist,title:l.title,upc:l.upc,n:l.billed-s,price:l.sticker});
+      if(s>l.billed) over.push({artist:l.artist,title:l.title,upc:l.upc,n:s-l.billed}); });
+    var rec={conf:order.conf, ts:Date.now(), by:($("who").value||"").trim()||"(no name)", billed:billed, got:got, shorts:shorts, over:over,
+      unknown:Object.keys(unk).map(function(k){return {upc:k,n:unk[k]};})};
+    var log=getLog().filter(function(r){ return r.conf!==rec.conf; }); log.unshift(rec); putLog(log);
+    try{ localStorage.setItem("hd_who", rec.by); }catch(e){}
+    $("finMsg").innerHTML="<b>Saved.</b> "+got+" of "+billed+" received, "+shorts.length+" short title(s).";
+    renderLog();
+  }
+  function renderLog(){
+    var log=getLog(); var el=$("logBody"); if(!el) return;
+    if(!log.length){ el.innerHTML="<p class='note'>No receipts saved yet.</p>"; return; }
+    el.innerHTML = log.map(function(r){
+      var sh=r.shorts.length? "<ul style='margin:6px 0 0 18px;padding:0'>"+r.shorts.map(function(x){return "<li>"+esc(x.artist)+" - "+esc(x.title)+" x"+x.n+"</li>";}).join("")+"</ul>" : "<div class='note'>Nothing short.</div>";
+      var ov=r.over.length? "<div style='margin-top:6px'><b>More than billed:</b> "+r.over.map(function(x){return esc(x.artist+" - "+x.title)+" +"+x.n;}).join("; ")+"</div>":"";
+      var uk=r.unknown.length? "<div style='margin-top:6px'><b>Not on order:</b> "+r.unknown.map(function(x){return "UPC "+esc(x.upc)+" x"+x.n;}).join("; ")+"</div>":"";
+      return "<details style='border-top:1px solid var(--line);padding:10px 0'><summary><b>"+esc(r.conf)+"</b> - "+esc(fmtStamp(r.ts))+" - "+esc(r.by)+"<br><span class='note'>"+r.got+" of "+r.billed+" received, "+r.shorts.length+" short</span></summary>"+sh+ov+uk+"</details>";
+    }).join("");
+  }
+  function logCSV(){
+    var rows=getLog().map(function(r){ return [r.conf, fmtStamp(r.ts), r.by, r.billed, r.got, r.shorts.map(function(x){return x.artist+" - "+x.title+" x"+x.n;}).join(" | "), r.over.map(function(x){return x.artist+" - "+x.title+" +"+x.n;}).join(" | "), r.unknown.map(function(x){return x.upc+" x"+x.n;}).join(" | ")]; });
+    dl("hd_receiving_log.csv", toCSV(["Order","Finished","By","Billed","Received","Short","More than billed","Not on order"],rows));
+  }
+
   // ---------- events ----------
   $("pick").addEventListener("click", function(){ $("file").click(); });
   $("file").addEventListener("change", function(){
@@ -477,7 +599,7 @@
     t.addEventListener("click", function(){
       Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(x){ x.classList.remove("on"); });
       t.classList.add("on");
-      ["scanv","listv","holdv","missv"].forEach(function(id){ $(id).classList.add("hide"); });
+      ["scanv","listv","holdv","missv","logv"].forEach(function(id){ $(id).classList.add("hide"); });
       $(t.getAttribute("data-t")).classList.remove("hide");
       if(t.getAttribute("data-t")==="scanv") $("scan").focus();
     });
@@ -518,6 +640,18 @@
     if(onScan && !$("app").classList.contains("hide") && e.target.tagName!=="INPUT" && e.target.tagName!=="BUTTON") $("scan").focus();
   });
 
+
+  $("catpick").addEventListener("click", function(){ $("catfile").click(); });
+  $("catfile").addEventListener("change", function(){
+    var f=$("catfile").files[0]; if(!f) return; var rd=new FileReader();
+    rd.onload=function(){ try{ loadCatalog(String(rd.result)); }catch(e){ $("catMsg").textContent=e.message; } };
+    rd.readAsText(f); $("catfile").value="";
+  });
+  $("sqdl").addEventListener("click", exportSquare);
+  $("finish").addEventListener("click", finishReceipt);
+  $("logdl").addEventListener("click", logCSV);
+  try{ $("who").value = localStorage.getItem("hd_who")||""; }catch(e){}
+  restoreCatalog();
   loadReq(); setReqMsg();
   if(restore()) start();
 })();
