@@ -76,7 +76,13 @@
   <!-- STEP 1: LOAD -->
   <section id="load" class="card">
     <div class="drop">
-      <h2>Step 1: Load the WebAMI order</h2>
+      <div id="queueBox" class="hide">
+        <h2>Ready to receive</h2>
+        <p>Orders already pulled from WebAMI. Tap the one that just arrived.</p>
+        <div id="queueList"></div>
+        <hr style="border:none;border-top:1px solid var(--line);margin:26px 0">
+      </div>
+      <h2>Or load a WebAMI file</h2>
       <p>On WebAMI, open the order and tap Export &rarr; Excel. Then choose that file here exactly as it downloaded.</p>
       <input id="file" type="file" accept=".xls,.xlsx,.html,.htm,.csv,.txt" class="hide">
       <button class="btn" id="pick">Choose WebAMI file</button>
@@ -647,6 +653,38 @@
   $("finish").addEventListener("click", finishReceipt);
   $("logdl").addEventListener("click", logCSV);
   try{ $("who").value = localStorage.getItem("hd_who")||""; }catch(e){}
+  // ---------- orders already pulled from WebAMI (pre-loaded, no file needed) ----------
+  // upc = full UPC-A (WebAMI lists it without the check digit). cost = unit price on the invoice.
+  var QUEUE = [
+    {conf:"313171149946a1", date:"11/9/2026", note:"Invoice PLS98541460, shipped 11/10", lines:[
+      ["Bad Bunny","DEBI TIRAR MAS FOTOS","199806106600",1,"34.98","26.36"],
+      ["Various","Friday (Original Soundtrack)","602547187352",1,"37.99","31.42"],
+      ["Neon Genesis Evangelion","Original Series Soundtrack","196588128219",1,"41.98","29.21"],
+      ["Kane Parsons","Backrooms (Original Soundtrack)","810180993043",2,"39.98","27.00"],
+      ["Prince","Purple Rain (Picture Disc)","093624917021",1,"29.98","23.50"],
+      ["Olivia Rodrigo","Sour","602438106417",1,"29.99","22.77"],
+      ["Talking Heads","Fear Of Music (2026 Remaster)","603497807895",1,"34.98","27.07"],
+      ["The Talking Heads","Stop Making Sense (Deluxe Edition)","603497824007",1,"39.98","31.49"]
+    ]}
+  ];
+  function queueOrder(q){
+    return {conf:q.conf, date:q.date, lines:q.lines.map(function(r,i){
+      return {num:String(i+1), upc:r[2], key:keyOf(r[2]), artist:r[0], rawArtist:r[0], title:r[1], list:r[4], cost:r[5],
+              billed:r[3], sticker:sticker(r[4]), pk:"", street:""};
+    })};
+  }
+  function renderQueue(){
+    if(!QUEUE.length) return;
+    $("queueBox").classList.remove("hide");
+    $("queueList").innerHTML = QUEUE.map(function(q,i){
+      var n=q.lines.reduce(function(a,r){return a+r[3];},0);
+      return '<button class="btn" data-q="'+i+'" style="display:block;width:100%;text-align:left;margin:0 0 10px">Order '+esc(q.conf)+' &middot; '+q.lines.length+' titles, '+n+' records<br><span style="font-size:13px;font-weight:500;opacity:.8">'+esc(q.note||"")+'</span></button>';
+    }).join("");
+    Array.prototype.forEach.call($("queueList").querySelectorAll("button"), function(b){
+      b.addEventListener("click", function(){ order = queueOrder(QUEUE[+b.getAttribute("data-q")]); scans = []; save(); start(); });
+    });
+  }
+  renderQueue();
   restoreCatalog();
   loadReq(); setReqMsg();
   if(restore()) start();
