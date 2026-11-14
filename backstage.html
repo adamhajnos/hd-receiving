@@ -270,6 +270,7 @@ window.HD_CONFIG = {
 
   // Hours before a shift sign-in expires and the tablet asks "who's on?" again.
   STORE: "Raleigh",
+  TEST_SKIP: true, // testing only: skips PIN login and the opening checklist (demo mode). Remove before real use.
   SHIFT_HOURS: 14,
 
   // DEMO MODE ONLY: sample Trove records (cover is a URL; blank shows initials).
@@ -552,7 +553,7 @@ function noteHTML(){
   return S.note ? '<div class="note"><span class="nl">Note from '+esc(S.note.who)+' \u00b7 '+fmtTime(S.note.ts)+'</span>'+esc(S.note.text)+'</div>' : '';
 }
 function vHome(){
-  const opened = S.feed.some(e=>e.task==='opening');
+  const opened = !!C.TEST_SKIP || S.feed.some(e=>e.task==='opening');
   const feed = S.feed.filter(e=>e.task!=='note').slice().reverse().map(e=>
     '<div class="row"><span class="tm">'+fmtTime(e.ts)+'</span><span class="wh">'+esc(e.who)+'</span><span class="sm">'+esc(e.summary)+'</span></div>').join('');
   if(!opened){
@@ -561,7 +562,7 @@ function vHome(){
   }
   const tile=(act,t,s)=>'<button class="tile" data-act="'+act+'"><span class="t">'+t+'</span><span class="s">'+(s||'\u00a0')+'</span></button>';
   const soon=(t)=>'<div class="tile soon" aria-disabled="true"><span class="t">'+t+'</span><span class="s">Soon</span></div>';
-  const dr=S.feed.filter(e=>e.task==='dropoff').length, cl=latest('closing'), op=latest('opening');
+  const dr=S.feed.filter(e=>e.task==='dropoff').length, cl=latest('closing'), op=latest('opening')||{ts:new Date().toISOString()};
   const openTile='<div class="tile pill done" aria-label="Opening done"><span class="t">Open</span><span class="s">Done \u00b7 '+fmtTime(op.ts)+'</span></div>';
   const closeTile=cl
     ? '<button class="tile pill done" data-act="go:closing"><span class="t">Close</span><span class="s">Done \u00b7 '+fmtTime(cl.ts)+'</span></button>'
@@ -949,7 +950,7 @@ async function tryLogin(){
   }
   render();
 }
-function logout(){ S.who=null; S.pin=''; S.entry=''; S.feed=[]; LS.set('hd.shift',null); S.view='login'; render(); }
+function logout(){ if(C.TEST_SKIP&&DEMO){ S.view='home'; render(); return; } S.who=null; S.pin=''; S.entry=''; S.feed=[]; LS.set('hd.shift',null); S.view='login'; render(); }
 document.addEventListener('input',ev=>{
   if(ev.target&&ev.target.id==='fq'){ S.fq=ev.target.value; const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); const x=document.getElementById('fx'); if(x) x.style.display=S.fq?'block':'none'; return; }
   if(ev.target&&ev.target.id==='tbq'){ S.tbq=ev.target.value; const l=document.getElementById('tblist'); if(l) l.innerHTML=tbrowseListHTML(); coverScan(); return; }
@@ -1131,7 +1132,7 @@ fit(); tick(); setInterval(tick,30000);
 /* refresh feed while idle on home */
 setInterval(async()=>{ if(S.view==='home'&&S.who){ await refreshFeed(); if(S.view==='home') render(); } },60000);
 
-(async function(){ if(S.who){ await refreshFeed(); } render(); })();
+(async function(){ if(C.TEST_SKIP&&DEMO&&!S.who){ S.who=((C.STAFF||[])[0]||{}).name||'Adam'; S.view='home'; } if(S.who){ await refreshFeed(); } render(); })();
 })();
 </script>
 </body>
