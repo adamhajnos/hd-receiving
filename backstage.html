@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -6,19 +6,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex,nofollow">
 <title>HD Backstage</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
 :root{
   --bg:#15120F; --panel:#201B16; --line:rgba(244,236,220,.14); --fg:#F4ECDC; --muted:#B9AE9A;
   --ok:#7FC4A8; --ok-bg:rgba(127,196,168,.14);
   --warn:#EBC85A; --warn-bg:rgba(235,200,90,.14);
   --bad:#E8715E; --bad-bg:rgba(232,113,94,.14);
-  --display:'Archivo',system-ui,sans-serif; --mono:'DM Mono',ui-monospace,monospace;
+  --display:'Inter',-apple-system,'SF Pro Text','Helvetica Neue',system-ui,sans-serif; --mono:'Inter',-apple-system,'SF Pro Text','Helvetica Neue',system-ui,sans-serif;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:hidden}
-body{background:#0d0b09;color:var(--fg);font-family:var(--display);font-size:18px;-webkit-tap-highlight-color:transparent}
+body{background:#0d0b09;color:var(--fg);font-family:var(--display);font-size:21px;-webkit-tap-highlight-color:transparent}
 #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 #sizer{position:relative}
 #device{position:absolute;left:0;top:0;transform-origin:0 0}
@@ -41,18 +41,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
 .app{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.01em}
-h1 small{display:block;font:500 14px var(--mono);color:var(--muted);letter-spacing:.04em;margin-top:2px}
-h2{margin:0;font-size:26px;font-weight:800}
+h1{margin:0;font-size:36px;font-weight:800;letter-spacing:-.01em}
+h1 small{display:block;font:500 17px var(--mono);color:var(--muted);letter-spacing:.04em;margin-top:2px}
+h2{margin:0;font-size:32px;font-weight:800}
 .who{display:flex;align-items:center;gap:10px}
-.chip{font:500 16px var(--mono);padding:0 16px;min-height:56px;display:flex;align-items:center;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
-.btn{min-height:56px;padding:0 24px;border-radius:14px;border:0;font-weight:800;background:var(--fg);color:var(--bg)}
+.chip{font:500 20px var(--mono);padding:0 18px;min-height:62px;display:flex;align-items:center;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
+.btn{min-height:64px;padding:0 28px;border-radius:14px;border:0;font-weight:800;font-size:22px;background:var(--fg);color:var(--bg)}
 .btn.ghost{background:none;border:1px solid var(--line);color:var(--fg);font-weight:700}
 .btn.go{background:var(--ok);color:#0c1a14}
 .btn.warn{background:var(--warn);color:#1d1604}
 .btn:disabled{opacity:.35;cursor:default}
-.hint{margin:0;color:var(--muted);font-size:16px}
-.banner{font:500 15px var(--mono);border-radius:10px;padding:10px 14px;color:var(--bad);background:var(--bad-bg)}
+.hint{margin:0;color:var(--muted);font-size:20px}
+.banner{font:500 18px var(--mono);border-radius:10px;padding:10px 14px;color:var(--bad);background:var(--bad-bg)}
 .banner.demo{color:var(--warn);background:var(--warn-bg)}
 /* sign-in */
 .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
@@ -69,29 +69,29 @@ h2{margin:0;font-size:26px;font-weight:800}
 .pad .fn{font:700 18px var(--display);color:var(--muted);border-color:transparent;background:none}
 /* home tiles */
 .tiles .tile{min-height:92px;padding:14px 18px}
-.tile.pill{min-height:64px;min-width:230px;padding:8px 18px;gap:2px;justify-content:center}.tile.pill .t{font-size:24px}.tile.pill .s{font-size:14px}.lnk{background:none;border:0;padding:6px 0;font:inherit;color:var(--fg);text-decoration:underline;min-height:44px}
-.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}.col{display:flex;flex-direction:column;gap:10px;min-width:0}.col .tile{min-height:108px;padding:14px 18px}.col .tile .t{font-size:21px}.cat{margin:6px 0 2px;font:600 13px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tile.pill{min-height:64px;min-width:230px;padding:8px 18px;gap:2px;justify-content:center}.tile.pill .t{font-size:28px}.tile.pill .s{font-size:17px}.lnk{background:none;border:0;padding:6px 0;font:inherit;color:var(--fg);text-decoration:underline;min-height:44px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}.col{display:flex;flex-direction:column;gap:10px;min-width:0}.col .tile{min-height:118px;padding:14px 18px}.col .tile .t{font-size:26px}.cat{margin:6px 0 2px;font:600 17px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
 .tile{display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:150px;padding:18px 20px;text-align:left;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
-.tile .t{font-weight:800;font-size:24px;line-height:1.15}
-.tile .s{font:500 15px var(--mono);color:var(--muted)}
+.tile .t{font-weight:800;font-size:28px;line-height:1.15}
+.tile .s{font:500 18px var(--display);line-height:1.25;color:var(--muted)}
 .tile.todo{border-color:var(--warn);background:var(--warn-bg)}
 .tile.todo .s{color:var(--warn)}
 .tile.done{border-color:var(--ok);background:var(--ok-bg)}
 .tile.done .s{color:var(--ok)}
 .tile.soon{border:1.5px dashed var(--line);background:none;cursor:default}
 .tile.soon .t{color:var(--muted);font-weight:500}
-.feed h3{margin:0 0 10px;font:500 14px var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.feed h3{margin:0 0 10px;font:500 17px var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
 .row{display:flex;gap:14px;align-items:baseline;padding:12px 4px;border-top:1px solid var(--line)}
-.row .tm{flex:none;width:92px;font:500 15px var(--mono);color:var(--muted)}
+.row .tm{flex:none;width:110px;font:500 18px var(--mono);color:var(--muted)}
 .row .wh{flex:none;width:110px;font-weight:700}
 .row .sm{min-width:0}
 /* forms */
 .top{display:flex;align-items:center;gap:16px}
-.form{display:flex;flex-direction:column;gap:18px;max-width:720px}
-label{display:flex;flex-direction:column;gap:8px;font-weight:700}
+.form{display:flex;flex-direction:column;gap:14px;max-width:720px}
+label{display:flex;flex-direction:column;gap:6px;font-weight:700}
 label span.o{font-weight:500;color:var(--muted)}
-input,textarea{font:500 22px var(--display);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:0 16px;min-height:64px;width:100%}
+input,textarea{font:500 25px var(--display);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:0 16px;min-height:70px;width:100%}
 textarea{padding:14px 16px;min-height:140px;resize:vertical}
 input.money{font:500 34px var(--mono);min-height:72px}
 .pre{position:relative}
@@ -100,13 +100,13 @@ input.money{font:500 34px var(--mono);min-height:72px}
 .tight{gap:18px}.tight .pair{gap:18px}.tight label{gap:7px}.tight input,.tight select{min-height:58px}.tight .fmts button{min-height:54px}.tight .btn{min-height:52px}
 .rlist{display:flex;flex-direction:column;gap:10px}
 .rlist.two{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}.rlist.two .rrow{grid-template-columns:1fr auto auto auto;font-size:18px;padding:8px 12px;gap:10px}.rlist.two .rb{width:48px;height:48px;min-height:0;font-size:22px}
-.rrow{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:18px;padding:12px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);font-size:21px}
+.rrow{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:18px;padding:12px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);font-size:24px}
 .rrow.part{border-color:var(--warn)}.rrow.ok{border-color:var(--ok);background:var(--ok-bg)}.rrow.over,.rrow.bad{border-color:var(--warn);background:var(--warn-bg)}
 .rprice{font:700 26px var(--mono)}.rcnt{font:600 22px var(--mono);min-width:110px;text-align:right}
 .rbs{display:flex;gap:8px}.rb{min-width:56px;min-height:52px;border-radius:12px;border:1px solid var(--line);background:none;font-size:26px;font-weight:700}
 .rlast{display:flex;align-items:baseline;gap:18px;padding:12px 18px;border-radius:14px;background:var(--panel);border:1px solid var(--ok);font-size:22px}.rlast b{font:700 30px var(--mono);color:var(--ok);margin-left:auto}
 .row2{display:flex;align-items:center;gap:18px}.calc{font:600 28px var(--mono)}
-select{font:500 22px var(--display);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:0 16px;min-height:64px;width:100%}
+select{font:500 25px var(--display);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:0 16px;min-height:64px;width:100%}
 .pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
 /* opening gate */
 .openbig{width:100%;min-height:380px;border-radius:24px;border:1.5px solid var(--warn);background:var(--warn-bg);font:800 72px var(--display);color:var(--warn)}
@@ -115,20 +115,20 @@ select{font:500 22px var(--display);background:var(--panel);color:var(--fg);bord
 .orow.d{border-color:var(--ok);background:var(--ok-bg)}
 .orow.c{border-color:var(--warn);background:var(--warn-bg)}
 .otop{display:flex;align-items:center;justify-content:space-between;gap:14px}
-.otitle{font-weight:700;font-size:20px}
+.otitle{font-weight:700;font-size:26px}
 .obtns{display:flex;gap:10px;flex:none}
-.ob{min-height:56px;min-width:110px;border-radius:14px;border:1px solid var(--line);background:none;font-weight:800;font-size:18px}
+.ob{min-height:64px;min-width:130px;border-radius:14px;border:1px solid var(--line);background:none;font-weight:800;font-size:23px}
 .ob.d.on{background:var(--ok);color:#0c1a14;border-color:var(--ok)}
 .ob.c.on{background:var(--warn);color:#1d1604;border-color:var(--warn)}
-.orow input{min-height:56px;font-size:20px}
+.orow input{min-height:62px;font-size:24px}
 .orow .pre input{font:500 26px var(--mono);padding-left:40px}
 .orow .pre b{font-size:24px}
 .fmts{display:flex;gap:10px;flex-wrap:wrap}
-.fmts button{min-height:56px;padding:0 24px;border-radius:14px;border:1px solid var(--line);background:none;font-weight:700;font-size:19px}
+.fmts button{min-height:62px;padding:0 26px;border-radius:14px;border:1px solid var(--line);background:none;font-weight:700;font-size:23px}
 .fmts button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .npop{position:absolute;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:50}.npop .card{width:760px;max-width:92%;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:34px 38px;display:flex;flex-direction:column;gap:18px}.npop .nl{display:block;font:500 15px var(--mono);opacity:.7;margin-bottom:6px}.npop .tx{font-size:30px;font-weight:700;line-height:1.3;white-space:pre-wrap}
-.note{padding:14px 18px;border-radius:14px;border:1px solid var(--line);background:var(--panel);font-size:20px;font-weight:700}
-.note .nl{display:block;font:500 13px var(--mono);letter-spacing:.05em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.note{padding:14px 18px;border-radius:14px;border:1px solid var(--line);background:var(--panel);font-size:24px;font-weight:700}
+.note .nl{display:block;font:500 16px var(--mono);letter-spacing:.05em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
 .iimg{width:160px;height:120px;object-fit:cover;border-radius:12px;display:block}
 .tile{min-height:130px}
 .hero{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
@@ -137,23 +137,23 @@ select{font:500 22px var(--display);background:var(--panel);color:var(--fg);bord
 .hero .tile .s{font-size:16px}
 div.tile.done{cursor:default}
 /* trove list */
-.findbar{display:flex;align-items:center;gap:14px;width:100%;min-height:60px;padding:0 20px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--mut,inherit);font-size:21px;text-align:left;margin:0 0 12px}.findbar b{opacity:.7;font-size:24px}
+.findbar{display:flex;align-items:center;gap:14px;width:100%;min-height:68px;padding:0 20px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--mut,inherit);font-size:25px;text-align:left;margin:0 0 12px}.findbar b{opacity:.7;font-size:24px}
 .xbtn{min-width:56px;min-height:56px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:26px;line-height:1}
 .fgrp{font:600 15px var(--mono);letter-spacing:.08em;opacity:.8;margin:14px 0 8px}
 .fres{display:grid;grid-template-columns:1fr auto;gap:10px 18px;align-items:center;padding:14px 18px 14px 22px;border:1px solid var(--line);border-left:10px solid var(--line);border-radius:14px;background:var(--panel);margin-bottom:10px}
 .fres.in{border-left-color:var(--ok)}.fres.out{border-left-color:var(--warn)}.fres.ord{border-left-color:#7aa7ff}
-.fres .nm{font-size:23px}.fres .pr{font:700 26px var(--mono)}
+.fres .nm{font-size:27px}.fres .pr{font:700 26px var(--mono)}
 .fres .meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.fres .stk{font:800 19px var(--mono);padding:8px 16px;border-radius:12px;letter-spacing:.03em}
+.fres .stk{font:800 22px var(--mono);padding:8px 16px;border-radius:12px;letter-spacing:.03em}
 .fres.in .stk{background:var(--ok);color:#06150e}.fres.out .stk{background:var(--warn);color:#1b1100}.fres.ord .stk{background:#7aa7ff;color:#08142b}
-.fres .gn{font:800 19px var(--mono);padding:8px 16px;border-radius:999px;border:2px solid var(--fg);text-transform:uppercase;letter-spacing:.04em}
-.fres .wh{font-size:18px;opacity:.8;flex:1}
+.fres .gn{font:800 22px var(--mono);padding:8px 16px;border-radius:999px;border:2px solid var(--fg);text-transform:uppercase;letter-spacing:.04em}
+.fres .wh{font-size:21px;opacity:.8;flex:1}
 .fres .rq{min-height:52px;padding:0 22px}
 .tbar{display:flex;gap:12px;align-items:center}
 .tbar input{flex:1}
-.tchip{min-height:64px;padding:0 20px;border-radius:14px;border:1px solid var(--line);background:none;font-weight:700;font-size:18px;white-space:nowrap}
+.tchip{min-height:70px;padding:0 22px;border-radius:14px;border:1px solid var(--line);background:none;font-weight:700;font-size:22px;white-space:nowrap}
 .tchip.on{background:var(--fg);color:var(--bg)}
-.tloc{margin:18px 0 8px;font:500 14px var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.tloc{position:sticky;top:-20px;z-index:3;display:flex;align-items:center;justify-content:space-between;margin:22px -8px 10px;padding:14px 18px;border-radius:12px;border-left:8px solid var(--warn);background:#2d261d;font:800 24px var(--display);letter-spacing:.04em;color:var(--fg);text-transform:uppercase;box-shadow:0 6px 10px rgba(0,0,0,.45)}.tloc .n{font:700 20px var(--mono);color:var(--warn);letter-spacing:0}
 .trow{display:flex;align-items:center;gap:16px;width:100%;min-height:68px;padding:10px 16px;margin-bottom:8px;text-align:left;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
 .trow .box{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:20px;color:#0c1a14}
 .trow.on{border-color:var(--ok);background:var(--ok-bg)}
@@ -161,20 +161,44 @@ div.tile.done{cursor:default}
 .cov{flex:none;width:56px;height:56px;border-radius:8px;object-fit:cover;background:#2a241d}
 .cov.ph{display:flex;align-items:center;justify-content:center;font:700 17px var(--mono);color:var(--muted);letter-spacing:.04em}
 .trow .tx{flex:1;min-width:0}
-.trow .pr{flex:none;font:500 24px var(--mono);color:var(--fg)}
-.trow b{display:block;font-size:19px}
-.trow b+span{display:block;color:var(--muted);font-size:16px}
+.trow .pr{flex:none;font:500 28px var(--mono);color:var(--fg)}
+.trow b{display:block;font-size:25px}
+.trow b+span{display:block;color:var(--muted);font-size:21px}
 .tpanel{display:flex;align-items:center;gap:18px;padding:14px 20px;margin:10px 0 6px;border-radius:16px;border:2px solid var(--line);background:var(--panel);min-height:96px}
-.tpanel .big{flex:1;min-width:0;font-size:26px}.tpanel .big small{display:block;font:600 14px var(--mono);letter-spacing:.08em;opacity:.75;text-transform:uppercase;margin-bottom:4px}
-.tpanel .big span{display:block;font-size:18px;opacity:.8}
+.tpanel .big{flex:1;min-width:0;font-size:30px}.tpanel .big small{display:block;font:600 17px var(--mono);letter-spacing:.08em;opacity:.75;text-transform:uppercase;margin-bottom:4px}
+.tpanel .big span{display:block;font-size:22px;opacity:.8}
 .tpanel.ok{border-color:var(--ok);background:var(--ok-bg)}.tpanel.bad{border-color:#ff5a4d;background:rgba(255,90,77,.18);animation:flash .5s 2}.tpanel.dup{border-color:var(--warn)}
 @keyframes flash{50%{background:rgba(255,90,77,.55)}}
 .tpanel .btn{min-height:56px}
+.addpick{display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px}.addpick .btn{min-height:124px;font-size:34px;font-weight:800;text-align:left;padding:14px 26px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px}.addpick .btn small{font:400 20px var(--display);opacity:.72}
 .tact{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0 12px}
-.tact .btn{min-height:84px;font-size:21px;line-height:1.25;text-align:left;padding:12px 22px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
-.tact .btn small{font:500 15px var(--sans,inherit);opacity:.8}
-.trow.ro{cursor:default}.trow.ro .gpill{flex:none;font:700 14px var(--mono);padding:5px 12px;border-radius:999px;border:1.5px solid var(--fg);text-transform:uppercase}
-.stickybar{position:sticky;bottom:-28px;margin:16px -28px -28px;padding:14px 28px 28px;background:linear-gradient(transparent,var(--bg) 30%)}
+.tact .btn{min-height:104px;font-size:30px;font-weight:800;letter-spacing:-.01em;line-height:1.25;text-align:left;padding:12px 22px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
+.tact .btn small{font:400 18px var(--display);opacity:.72;letter-spacing:0}
+.trow.ro{cursor:default}.trow.ro .gpill{flex:none;font:700 17px var(--mono);padding:5px 12px;border-radius:999px;border:1.5px solid var(--fg);text-transform:uppercase}
+.trow.ro .grip{flex:none;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:32px;color:var(--muted);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;border:1px solid var(--line)}
+.trow.ro.drag{border-color:var(--warn);background:var(--warn-bg);box-shadow:0 10px 24px rgba(0,0,0,.6);position:relative;z-index:4}
+.guide{margin-top:14px;padding:24px 28px;border-radius:18px;border:1px solid var(--line);background:var(--panel)}
+.guide h3{margin:0 0 18px;font:800 32px var(--display)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:20px}
+.steps li{display:flex;gap:20px;align-items:flex-start}
+.steps .num{flex:none;width:56px;height:56px;border-radius:50%;background:var(--warn);color:#1d1604;display:flex;align-items:center;justify-content:center;font:800 30px var(--display)}
+.steps b{font-size:28px}.steps p{margin:4px 0 8px;font-size:23px;color:var(--muted);line-height:1.35}.steps p+.btn{min-height:56px;font-size:20px}
+.dtok{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:6px 0 12px;padding:14px 18px;border-radius:14px;border:1px dashed var(--line)}.dtok b{font-size:22px}.dtok span{font-size:19px;color:var(--muted);flex:1;min-width:240px}.dtok input{flex:1;min-width:260px;max-width:420px;min-height:60px}.dtok .btn{min-height:60px}
+.bigstart{width:100%;margin-top:18px;min-height:130px;border-radius:22px;border:0;background:var(--ok);color:#0c1a14;font:800 46px var(--display)}
+.tp{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+.prog{display:flex;align-items:center;gap:20px}.prog .pc{flex:none;font:800 30px var(--display)}
+.bar{flex:1;height:18px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.nextcard{display:flex;gap:24px;align-items:center;padding:20px 24px;border-radius:18px;border:2px solid var(--warn);background:var(--warn-bg)}
+.nextcard .cov{width:128px;height:128px;border-radius:12px;font-size:30px}
+.nextcard .lbl{font:800 19px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--warn);margin-bottom:6px}
+.nextcard b{display:block;font-size:40px;line-height:1.15}.nextcard span{display:block;font-size:28px;opacity:.9;margin-top:2px}
+.nextcard em{display:inline-block;margin-top:10px;font:700 24px var(--mono);font-style:normal;padding:6px 16px;border-radius:999px;border:2px solid var(--fg)}
+.tmsg{padding:18px 24px;border-radius:16px;border:2px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.tmsg b{font-size:30px}.tmsg span{font-size:24px;opacity:.85;flex:1;min-width:0}
+.tmsg.ok{border-color:var(--ok);background:var(--ok-bg)}.tmsg.dup{border-color:var(--warn);background:var(--warn-bg)}
+.tmsg.bad{border-color:#ff5a4d;background:rgba(255,90,77,.2);animation:flash .5s 2}
+.tconf{display:flex;flex-direction:column;gap:8px;padding:18px 22px;border-radius:16px;border:2px solid var(--warn);background:#2a2214}.tconf b{font-size:28px}.tconf span{font-size:22px;opacity:.85}.tcb{display:flex;gap:14px;margin-top:8px}
+.stickybar>.btn{width:100%}.stickybar .btn{min-height:72px;font-size:25px}.stickybar{position:sticky;bottom:-28px;margin:16px -28px -28px;padding:14px 28px 28px;background:linear-gradient(transparent,var(--bg) 30%)}
 /* checklist */
 .steps{display:flex;flex-direction:column;gap:10px;max-width:720px}
 .step{display:flex;align-items:center;gap:16px;min-height:72px;padding:12px 18px;text-align:left;border-radius:16px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:20px;width:100%}
@@ -186,6 +210,42 @@ div.tile.done{cursor:default}
 .toast{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ok);color:#0c1a14;font-weight:800;padding:16px 28px;border-radius:14px;z-index:10}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
 .radded{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.06);font-size:18px}.radded .btn{min-height:40px;padding:0 16px;font-size:15px}
+.plwrap{display:grid;grid-template-columns:1fr 430px;gap:22px;align-items:start}.plleft,.plright{min-width:0}
+.plh{display:flex;align-items:center;gap:12px;margin:0 0 8px}.plh b{font-size:24px}.plh .o{color:var(--muted);font-size:17px}
+.pqs{width:100%;min-height:58px;font-size:22px;margin-bottom:8px}
+.pqlist{max-height:470px;overflow:auto}.pqrow{display:flex;align-items:center;gap:14px;min-height:64px;padding:8px 14px;margin-bottom:8px;border-radius:12px;border:1px solid var(--line);background:var(--panel)}
+.pqrow .tx{flex:1;min-width:0}.pqrow .tx b{display:block;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pqrow .tx span{display:block;color:var(--muted);font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pqrow .pr{flex:none;font-size:22px}.pqrow .x{flex:none;width:52px;height:52px;border-radius:12px;border:1px solid var(--line);background:none;font-size:22px}.pqrow .add{min-height:52px;padding:0 18px;font-size:20px}
+.pqres{margin-bottom:10px;padding:6px;border-radius:14px;border:1px dashed var(--line)}
+.pprev{padding:12px;border-radius:14px;border:1px solid var(--line);background:#f4efe6;overflow:hidden}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pcell{min-height:28px;border-radius:8px;border:1px solid var(--line);background:none;font-size:16px;font-weight:700;color:var(--muted)}
+.pcell.used{opacity:.35;text-decoration:line-through}.pcell.will{background:var(--ok-bg);border-color:var(--ok);color:var(--fg)}
+#pprint{width:100%;margin-top:12px}
+.lbl{width:4in;height:1in;box-sizing:border-box;padding:.07in .1in;display:flex;gap:.1in;background:#fff;color:#111;font-family:Inter,Helvetica,Arial,sans-serif;overflow:hidden}
+.lbl.blank{align-items:center;justify-content:center;color:#999;font-size:14px;border:1px dashed #ccc}
+.lbl .lt{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between}.lbl .lh{display:flex;justify-content:space-between;font-size:7pt;letter-spacing:.08em;font-weight:800}.lbl .lh span{font-weight:600;letter-spacing:0;text-transform:uppercase}
+.lbl .la{font-size:13pt;font-weight:800;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lbl .ll{font-size:10.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lbl .ln{font-size:7.5pt;font-style:italic;color:#444;height:.13in;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl .lr{flex:none;width:1.35in;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between}.lbl .lp{font-size:20pt;font-weight:800;line-height:1}.lbl .bars{width:1.3in;height:.36in;fill:#000;display:block}.lbl .lc{font-size:6.5pt;letter-spacing:.06em;align-self:center}
+#psheet{display:none}
+@media print{@page{size:letter;margin:0}html,body{background:#fff!important;height:auto!important}body>*:not(#psheet){display:none!important}#psheet{display:block!important}.ppage{width:8.5in;height:11in;box-sizing:border-box;padding:.5in .15625in 0;display:grid;grid-template-columns:4in 4in;column-gap:.1875in;grid-auto-rows:1in;break-after:page;page-break-after:always}.ppage:last-child{break-after:auto;page-break-after:auto}.lbl.blank{border:0}}
+.kboard{display:grid;grid-template-columns:1fr;gap:12px}.kt{display:flex;align-items:center;gap:14px;min-height:78px;padding:12px 20px;text-align:left;width:100%;border-radius:16px;border:1px solid var(--ok);background:var(--ok-bg)}
+.kt .kn{flex:none;width:46px;font:500 38px var(--mono);color:var(--ok)}.kt .kx b,.kcard .kx b{display:block;font-size:21px;line-height:1.15}.kt .kx b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.kx span{display:block;color:var(--muted);font-size:17px;margin-top:3px}.kt .kx{min-width:0}.kt .kx em{color:var(--warn);font-style:normal;font-weight:700}
+.kt .kn{width:40px;font-size:30px}.kt .kx{flex:1}.kt .kx b{display:block;-webkit-line-clamp:unset;font-size:20px}.kt .kx span{margin-top:5px;font-size:17px}.kp{flex:none;font:500 24px var(--mono);color:var(--fg)}.kp em{color:var(--warn);font-style:normal;font:700 18px var(--display)}
+.kbig{width:100%;min-height:150px;border-radius:20px;border:2px dashed var(--warn);background:var(--warn-bg);display:flex;align-items:center;justify-content:center;gap:24px;text-align:left}.kbig b{display:block;font-size:34px}.kbig span span{font-size:20px;color:var(--muted)}.kbig .kcam{font-size:64px;line-height:1;color:var(--warn)}.kdone{display:flex;gap:18px;align-items:center;min-height:150px;padding:14px 20px;border-radius:20px;border:1px solid var(--ok);background:var(--ok-bg)}.kdone b{font-size:26px}
+.keq{padding:12px 16px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-size:19px;line-height:1.4;color:var(--muted)}.keq b{color:var(--fg)}
+.kgrip{flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:28px;color:var(--muted);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;margin-left:-8px}
+.kt,.kcard[data-key]{user-select:none;-webkit-user-select:none}.kdrag{opacity:.3}.kdrop{outline:3px solid var(--fg);outline-offset:2px}.kdrop-b{box-shadow:0 -6px 0 -1px var(--fg)}.kdrop-a{box-shadow:0 6px 0 -1px var(--fg)}
+.drp .iimg{width:72px;height:56px}.drp .btn{min-height:60px}.camt{font-size:22px;font-weight:600}.drp .camb{min-height:96px}.camb{width:110px;padding:0;display:flex;align-items:center;justify-content:center}
+.eerr{margin:-6px 0 0;color:var(--bad);font-size:17px}
+.kt.open{border:1.5px dashed var(--line);background:none}.kt.open .kn{color:var(--muted)}.kt.open b{color:var(--muted);font-weight:500;font-style:italic}
+.kcard{display:flex;align-items:center;gap:14px;padding:12px 16px;margin-bottom:10px;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+.kmv{flex:none;display:flex;flex-direction:column;gap:6px}.kmv button{width:50px;height:42px;border-radius:10px;border:1px solid var(--line);background:none;font-size:17px}.kmv button:disabled{opacity:.25}
+.kscrim{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding:16px;z-index:20}.ksheet{width:min(700px,100%);max-height:88%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:18px}.ksheet h2{margin:0;font-size:30px}
+.krow{display:flex;gap:12px;flex-wrap:wrap}.krow .btn{flex:1 1 150px}.kpick{display:flex;flex-direction:column;gap:10px}.kpick button{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:68px;padding:10px 18px;border-radius:14px;border:1px solid var(--warn);background:var(--warn-bg);text-align:left}.kpick b{font-size:22px}.kpick span{color:var(--muted);font-size:17px}
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kgrid button{min-height:68px;border-radius:14px;border:1px solid var(--ok);background:var(--ok-bg);font:500 28px var(--mono)}.kgrid button small{display:block;font:500 13px var(--display);color:var(--muted)}.kgrid button:disabled{opacity:.3;border-style:dashed}.kgrid button.swap{border-style:dashed;border-color:var(--muted);background:none}
+.kmoney{width:100%;min-height:70px;font:500 38px var(--mono);border-radius:14px;padding:0 18px}.kchips{display:flex;gap:8px;flex-wrap:wrap}.kchips button{min-height:54px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:none;font:500 21px var(--mono)}
+.chip.warn{background:var(--warn);color:#1d1604;border-color:var(--warn);font-weight:800}
+.btn.danger{background:#E8715E;color:#1b0f0c;border-color:#E8715E}
 </style>
 </head>
 <body>
@@ -194,7 +254,8 @@ div.tile.done{cursor:default}
 <div id="scroll"><div class="app" id="app"></div></div>
 </div></div></div></div>
 <div id="rotate" role="alert">Turn the iPad sideways.<br>This screen is built for landscape.</div>
-<script>// Hunky Dory Ops Console: edit this file, not index.html.
+<script>
+// Hunky Dory Ops Console: edit this file, not index.html.
 window.HD_CONFIG = {
   // Paste the Apps Script web app URL here after deploying (see README.md).
   // Leave empty to run in DEMO mode (data stays in this browser only).
@@ -270,8 +331,15 @@ window.HD_CONFIG = {
 
   // Hours before a shift sign-in expires and the tablet asks "who's on?" again.
   STORE: "Raleigh",
+  // Discogs search-only app key (safe to embed; cannot access the Discogs account).
+  DISCOGS_KEY: "bgNzLBWsCBoCuWxQltPd",
+  DISCOGS_SECRET: "cXrQjlLFfUpUcMSxGqsAZvCebHmafXQb",
   TEST_SKIP: true, // testing only: skips PIN login and the opening checklist (demo mode). Remove before real use.
   SHIFT_HOURS: 14,
+
+  // DEMO MODE ONLY: sample kegs from the Tap Board preview (not the real taps). Live mode reads the Tap Board sheet.
+  TAP_COUNT: 12,
+  DEMO_KEGS: [{"key": "Blackberry Lemon Creamsicle Blender|HopFly", "beer": "Blackberry Lemon Creamsicle Blender", "brewery": "HopFly", "style": "Sour - Smoothie / Pastry", "price": 7, "status": "tap", "tap": 1, "days": 0, "lastTap": null, "abv": "6.5"}, {"key": "Digging These Lights|Mad Mole", "beer": "Digging These Lights", "brewery": "Mad Mole", "style": "Winter Ale", "price": 6, "status": "tap", "tap": 2, "days": 0, "lastTap": null, "abv": "6.0"}, {"key": "Beast Life|DSSOLVR", "beer": "Beast Life", "brewery": "DSSOLVR", "style": "Schwarzbier", "price": 6.5, "status": "tap", "tap": 3, "days": 0, "lastTap": null, "abv": "6.2"}, {"key": "Folk Metal|Burlington Beer", "beer": "Folk Metal", "brewery": "Burlington Beer", "style": "Stout - Oatmeal", "price": 6.5, "status": "tap", "tap": 4, "days": 0, "lastTap": null, "abv": "5.5"}, {"key": "Fire In The Mole|Mad Mole", "beer": "Fire In The Mole", "brewery": "Mad Mole", "style": "Pilsner - Italian", "price": 6, "status": "tap", "tap": 5, "days": 0, "lastTap": null, "abv": "5.0"}, {"key": "Congress Street|Trillium", "beer": "Congress Street", "brewery": "Trillium", "style": "IPA - New England / Hazy", "price": 8, "status": "tap", "tap": 6, "days": 0, "lastTap": null, "abv": "7.2"}, {"key": "Tropical Lightning IPA|Wilmington", "beer": "Tropical Lightning IPA", "brewery": "Wilmington", "style": "IPA - American", "price": 7, "status": "tap", "tap": 7, "days": 0, "lastTap": null, "abv": "7.4"}, {"key": "House Pilsner|Oaklyn Springs", "beer": "House Pilsner", "brewery": "Oaklyn Springs", "style": "Pilsner - German", "price": 5, "status": "tap", "tap": 8, "days": 0, "lastTap": null, "abv": "4.6"}, {"key": "45 RPM|Divine Barrel", "beer": "45 RPM", "brewery": "Divine Barrel", "style": "IPA - Session", "price": 6, "status": "tap", "tap": 9, "days": 0, "lastTap": null, "abv": "4.5"}, {"key": "PB&J Mixtape|Xül", "beer": "PB&J Mixtape", "brewery": "Xül", "style": "Sour - Fruited", "price": 8, "status": "tap", "tap": 10, "days": 0, "lastTap": null, "abv": "6.5"}, {"key": "Green City|Other Half", "beer": "Green City", "brewery": "Other Half", "style": "IPA - New England / Hazy", "price": 7, "status": "tap", "tap": 11, "days": 0, "lastTap": null, "abv": "7.0"}, {"key": "Sky of the Mind|Edit Beer", "beer": "Sky of the Mind", "brewery": "Edit Beer", "style": "IPA - New England / Hazy", "price": 7, "status": "tap", "tap": 12, "days": 0, "lastTap": null, "abv": "7.0"}, {"key": "Lost in the Forest|Edmund's Oast", "beer": "Lost in the Forest", "brewery": "Edmund's Oast", "style": "IPA - Spruce Tips", "price": null, "status": "deck", "tap": null, "days": 18, "lastTap": null}, {"key": "Green Wizard|Widowmaker", "beer": "Green Wizard", "brewery": "Widowmaker", "style": "IPA - West Coast", "price": null, "status": "deck", "tap": null, "days": 1, "lastTap": null}, {"key": "Tangie Dream|Incendiary", "beer": "Tangie Dream", "brewery": "Incendiary", "style": "Wheat Beer - Witbier", "price": null, "status": "deck", "tap": null, "days": 1, "lastTap": null}, {"key": "Epochal|Incendiary", "beer": "Epochal", "brewery": "Incendiary", "style": "IPA - West Coast", "price": null, "status": "deck", "tap": null, "days": 1, "lastTap": null}, {"key": "Daft Duck|Hopfly", "beer": "Daft Duck", "brewery": "Hopfly", "style": "", "price": null, "status": "empty", "tap": null, "days": 2, "lastTap": null}, {"key": "Luxology Blueberry Lavender Lemonade|Bottle Logic", "beer": "Luxology Blueberry Lavender Lemonade", "brewery": "Bottle Logic", "style": "", "price": null, "status": "empty", "tap": null, "days": 0, "lastTap": null}, {"key": "Thank You For Existing|DSSOLVR", "beer": "Thank You For Existing", "brewery": "DSSOLVR", "style": "", "price": null, "status": "empty", "tap": null, "days": 7, "lastTap": null}, {"key": "Fire in the Mole|Mad Mole", "beer": "Fire in the Mole", "brewery": "Mad Mole", "style": "", "price": null, "status": "empty", "tap": null, "days": 18, "lastTap": null}, {"key": "Mumble|Sneaky Penguin", "beer": "Mumble", "brewery": "Sneaky Penguin", "style": "", "price": null, "status": "empty", "tap": null, "days": 18, "lastTap": null}, {"key": "Field Day|Graft", "beer": "Field Day", "brewery": "Graft", "style": "", "price": null, "status": "empty", "tap": null, "days": 14, "lastTap": null}, {"key": "A Subtle Touch At the Edge of Violence|Burial", "beer": "A Subtle Touch At the Edge of Violence", "brewery": "Burial", "style": "", "price": null, "status": "empty", "tap": null, "days": 11, "lastTap": null}, {"key": "2 Lime Crew|Heist", "beer": "2 Lime Crew", "brewery": "Heist", "style": "", "price": null, "status": "empty", "tap": null, "days": 25, "lastTap": null}, {"key": "Oscuro Mar|Flying Machine", "beer": "Oscuro Mar", "brewery": "Flying Machine", "style": "", "price": null, "status": "empty", "tap": null, "days": 25, "lastTap": null}, {"key": "Crispy Cat|Fat Orange Cat", "beer": "Crispy Cat", "brewery": "Fat Orange Cat", "style": "", "price": null, "status": "empty", "tap": null, "days": 0, "lastTap": null}, {"key": "Zombie Dust|3 Floyds", "beer": "Zombie Dust", "brewery": "3 Floyds", "style": "", "price": null, "status": "empty", "tap": null, "days": 0, "lastTap": null}, {"key": "Friends in Dissent|Casita", "beer": "Friends in Dissent", "brewery": "Casita", "style": "", "price": null, "status": "empty", "tap": null, "days": 0, "lastTap": null}, {"key": "Al Oro|Vicious Fishes", "beer": "Al Oro", "brewery": "Vicious Fishes", "style": "", "price": null, "status": "empty", "tap": null, "days": 0, "lastTap": null}],
 
   // DEMO MODE ONLY: sample Trove records (cover is a URL; blank shows initials).
   // Live mode reads the "Trove" tab of the Sheet, and covers are filled in automatically.
@@ -295,147 +363,156 @@ window.HD_CONFIG = {
     { code: "TT-0004", artist: "AFI", title: "The Blood Album", location: "Bar wall", price: 300, genre: "", cover: "" },
     { code: "TT-0005", artist: "AFI", title: "DecemberUnderground (7\" Box)", location: "Bar wall", price: 165, genre: "", cover: "" },
     { code: "TT-0006", artist: "Phish", title: "Picture of Nectar", location: "Bar wall", price: 200, genre: "", cover: "" },
-    { code: "TT-0007", artist: "Helen Merrill", title: "S/T", location: "Bar wall", price: 300, genre: "", cover: "" },
-    { code: "TT-0008", artist: "Jay Jay Johnson", title: "The Eminent JJJ", location: "Bar wall", price: 90, genre: "", cover: "" },
+    { code: "TT-0007", artist: "Helen Merrill", title: "Helen Merrill", location: "Bar wall", price: 300, genre: "", cover: "" },
+    { code: "TT-0008", artist: "Jay Jay Johnson", title: "The Eminent Jay Jay Johnson, Vol. 2", location: "Bar wall", price: 90, genre: "", cover: "" },
     { code: "TT-0009", artist: "Roy Haynes", title: "Cymbalism", location: "Bar wall", price: 350, genre: "", cover: "" },
-    { code: "TT-0010", artist: "Metallica", title: "Jump In The Fire", location: "Bar wall", price: 200, genre: "", cover: "" },
-    { code: "TT-0011", artist: "Trash Sultana", title: "Flow State", location: "Bar wall", price: 90, genre: "", cover: "" },
+    { code: "TT-0010", artist: "Metallica", title: "Jump in the Fire", location: "Bar wall", price: 200, genre: "", cover: "" },
+    { code: "TT-0011", artist: "Tash Sultana", title: "Flow State", location: "Bar wall", price: 90, genre: "", cover: "" },
     { code: "TT-0012", artist: "Khruangbin", title: "The Universe Smiles Upon You", location: "Bar cubbies", price: 175, genre: "", cover: "" },
     { code: "TT-0013", artist: "Sky Ferreira", title: "Night Time, My Time", location: "Bar cubbies", price: 150, genre: "", cover: "" },
     { code: "TT-0014", artist: "My Bloody Valentine", title: "Loveless", location: "Bar cubbies", price: 225, genre: "", cover: "" },
-    { code: "TT-0015", artist: "Pink Floyd", title: "The Wall", location: "Bar cubbies", price: 100, genre: "", cover: "" },
-    { code: "TT-0016", artist: "Pink Floyd", title: "LIVE (Boot)", location: "Bar cubbies", price: 100, genre: "", cover: "" },
-    { code: "TT-0017", artist: "2 Live Crew", title: "Move Somthin", location: "Bar cubbies", price: 40, genre: "", cover: "" },
-    { code: "TT-0018", artist: "Alien", title: "S/T", location: "Bar cubbies", price: 40, genre: "", cover: "" },
-    { code: "TT-0019", artist: "Umphreys McGee", title: "Hall of fame", location: "Bar cubbies", price: 80, genre: "", cover: "" },
-    { code: "TT-0020", artist: "The Monzas", title: "Hey! I Know You", location: "Bar cubbies", price: 500, genre: "", cover: "" },
-    { code: "TT-0021", artist: "Bruce Springsteen", title: "Born to Run (Promo 45)", location: "Bar cubbies", price: 40, genre: "", cover: "" },
-    { code: "TT-0022", artist: "AIR", title: "Music for Museum", location: "Bar cubbies", price: 350, genre: "", cover: "" },
-    { code: "TT-0023", artist: "Jimmy Buffett", title: "Down to Earth", location: "Bar cubbies", price: 350, genre: "", cover: "" },
-    { code: "TT-0024", artist: "Black Lips/KE$HA TP", title: "\"They's A Person Of The World\" (45)", location: "Bar cubbies", price: 90, genre: "", cover: "" },
-    { code: "TT-0025", artist: "Hotline Miami", title: "ST", location: "Bar cubbies", price: 250, genre: "", cover: "" },
-    { code: "TT-0026", artist: "Fetti", title: "Roma", location: "Bar cubbies", price: 275, genre: "", cover: "" },
-    { code: "TT-0027", artist: "Jungle", title: "Volcano", location: "Bar cubbies", price: 75, genre: "", cover: "" },
-    { code: "TT-0028", artist: "Gene Barber and Cavaliers", title: "I need a love (45)", location: "Bar cubbies", price: 100, genre: "", cover: "" },
-    { code: "TT-0029", artist: "Quasimodo", title: "The unseen", location: "Bar cubbies", price: 50, genre: "", cover: "" },
-    { code: "TT-0030", artist: "Bobby Hutcherson", title: "Enjoy The View", location: "Bar cubbies", price: 60, genre: "", cover: "" },
-    { code: "TT-0031", artist: "AFI", title: "December Underground 45 Box (45)", location: "Wall Trove", price: 175, genre: "", cover: "" },
-    { code: "TT-0032", artist: "Byard Lancaster", title: "It's not up to us", location: "Wall Trove", price: 200, genre: "", cover: "" },
-    { code: "TT-0033", artist: "Chet Baker", title: "Let's Get Lost ST", location: "Wall Trove", price: 65, genre: "", cover: "" },
-    { code: "TT-0034", artist: "Small Pools", title: "Love tap!", location: "Wall Trove", price: 75, genre: "", cover: "" },
-    { code: "TT-0035", artist: "Tinariwen", title: "Aman Iman", location: "Wall Trove", price: 75, genre: "", cover: "" },
-    { code: "TT-0036", artist: "Major Lazer", title: "Peace Is The Mission (Sealed)", location: "Wall Trove", price: 90, genre: "", cover: "" },
-    { code: "TT-0037", artist: "Vulfpeck", title: "2011-2014", location: "Wall Trove", price: 175, genre: "", cover: "" },
-    { code: "TT-0038", artist: "Red Hot + Cool", title: "Stolen Moments", location: "Wall Trove", price: 40, genre: "", cover: "" },
-    { code: "TT-0039", artist: "De La Soul", title: "3 Feet High And Rising", location: "Wall Trove", price: 100, genre: "", cover: "" },
-    { code: "TT-0040", artist: "Status Quo", title: "Messages from the status quo", location: "Wall Trove", price: 50, genre: "", cover: "" },
-    { code: "TT-0041", artist: "The Wedding Present", title: "(no title)", location: "Wall Trove", price: 60, genre: "", cover: "" },
-    { code: "TT-0042", artist: "Smyrna", title: "Harvest Song", location: "Wall Trove", price: 100, genre: "", cover: "" },
-    { code: "TT-0043", artist: "Curtis Mayfield", title: "Curtis", location: "Wall Trove", price: 100, genre: "", cover: "" },
-    { code: "TT-0044", artist: "MC 900", title: "Hell With the Lid Off", location: "Wall Trove", price: 75, genre: "", cover: "" },
-    { code: "TT-0045", artist: "Kiss", title: "Love Gun (Promo)", location: "Wall Trove", price: 75, genre: "", cover: "" },
-    { code: "TT-0046", artist: "Beastie Boys", title: "Paul's Boutique", location: "Trove bin: Freshest", price: 65, genre: "", cover: "" },
-    { code: "TT-0047", artist: "De La Soul", title: "Say no go", location: "Trove bin: Freshest", price: 50, genre: "", cover: "" },
-    { code: "TT-0048", artist: "De La Soul", title: "Say No Go", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
-    { code: "TT-0049", artist: "2 Live Crew", title: "Is What We Are", location: "Trove bin: Freshest", price: 60, genre: "", cover: "" },
-    { code: "TT-0050", artist: "2 Live Crew", title: "As Nasty As They Wanna Be", location: "Trove bin: Freshest", price: 80, genre: "", cover: "" },
-    { code: "TT-0051", artist: "Schoolly D", title: "Saturday Night The Album", location: "Trove bin: Freshest", price: 60, genre: "", cover: "" },
-    { code: "TT-0052", artist: "Joni Mitchell", title: "Lennie and Dom Songs (Boot)", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
-    { code: "TT-0053", artist: "Antidope", title: "Go Pogo", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
-    { code: "TT-0054", artist: "Jimmy Smith", title: "The sounds of", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
-    { code: "TT-0055", artist: "Tommy Flanagan Trio", title: "Moodville", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
-    { code: "TT-0056", artist: "Thomas Chapin", title: "Spirits Rebellions", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
-    { code: "TT-0057", artist: "Drive Like Jehu", title: "Headhunter", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
-    { code: "TT-0058", artist: "Jerry & Mike", title: "Duck 1", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
-    { code: "TT-0059", artist: "The Fall", title: "Extricate", location: "Trove bin: Freshest", price: 65, genre: "", cover: "" },
-    { code: "TT-0060", artist: "Republic", title: "New World Order", location: "Trove bin: Freshest", price: 130, genre: "", cover: "" },
-    { code: "TT-0061", artist: "Smiths", title: "Meat is murder", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
-    { code: "TT-0062", artist: "Joy Division", title: "1977-1980", location: "Trove bin: Freshest", price: 90, genre: "", cover: "" },
-    { code: "TT-0063", artist: "Dead Kennedys", title: "Fresh Fruit or Rotting Vegetables", location: "Trove bin: Freshest", price: 50, genre: "", cover: "" },
-    { code: "TT-0064", artist: "Güngör", title: "Ghosts Upon The Earth", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
-    { code: "TT-0065", artist: "Ben E. King", title: "Don't Play That Song", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
-    { code: "TT-0066", artist: "Blue Magic", title: "Magic #", location: "Trove bin: Freshest", price: 60, genre: "", cover: "" },
-    { code: "TT-0067", artist: "Bob Dylan", title: "(no title)", location: "Trove bin: Freshest", price: 50, genre: "", cover: "" },
-    { code: "TT-0068", artist: "Black Ivory", title: "Don't Turn Around", location: "Trove bin: Freshest", price: 50, genre: "", cover: "" },
-    { code: "TT-0069", artist: "Big Boi", title: "Boomiverse", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
-    { code: "TT-0070", artist: "Young family", title: "Series 5", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
-    { code: "TT-0071", artist: "Max Roach", title: "4 plays", location: "Trove bin: Freshest", price: 90, genre: "", cover: "" },
-    { code: "TT-0072", artist: "Ed Sheeran", title: "You Need Me", location: "Trove bin: Freshest", price: 60, genre: "", cover: "" },
-    { code: "TT-0073", artist: "Robert Ashley", title: "Perfect lives", location: "Rock", price: 40, genre: "Rock", cover: "" },
-    { code: "TT-0074", artist: "Billy Bragg & Wilco", title: "Mermaid Avenue Vol. 2", location: "Rock", price: 175, genre: "Rock", cover: "" },
-    { code: "TT-0075", artist: "Carl & the Passions", title: "So Tough", location: "Rock", price: 50, genre: "Rock", cover: "" },
-    { code: "TT-0076", artist: "Julie Driscoll", title: "(no title)", location: "Rock", price: 40, genre: "Rock", cover: "" },
-    { code: "TT-0077", artist: "Embers", title: "Roll", location: "Rock", price: 40, genre: "Rock", cover: "" },
-    { code: "TT-0078", artist: "Mountain Burgundy", title: "(no title)", location: "Rock", price: 70, genre: "Rock", cover: "" },
-    { code: "TT-0079", artist: "Nico", title: "Desert shore", location: "Rock", price: 75, genre: "Rock", cover: "" },
-    { code: "TT-0080", artist: "Nielsen & Pearson", title: "If you should set sail", location: "Rock", price: 40, genre: "Rock", cover: "" },
-    { code: "TT-0081", artist: "Nightbird", title: "Cosmic Connections", location: "Rock", price: 50, genre: "Rock", cover: "" },
-    { code: "TT-0082", artist: "Sam Phillips", title: "Martinis & Bikinis", location: "Rock", price: 60, genre: "Rock", cover: "" },
-    { code: "TT-0083", artist: "The Pretenders", title: "LIVE @ Santa Monica Civic", location: "Rock", price: 60, genre: "Rock", cover: "" },
-    { code: "TT-0084", artist: "Sister Hazel", title: "20 Stages", location: "Rock", price: 180, genre: "Rock", cover: "" },
-    { code: "TT-0085", artist: "Starflyer 59", title: "Dial M", location: "Rock", price: 45, genre: "Rock", cover: "" },
-    { code: "TT-0086", artist: "Tiny Habits", title: "All For Something", location: "Rock", price: 50, genre: "Rock", cover: "" },
-    { code: "TT-0087", artist: "Tree Fox", title: "Rough Trade", location: "Rock", price: 45, genre: "Rock", cover: "" },
-    { code: "TT-0088", artist: "One Republic", title: "Native", location: "Indie Pop", price: 60, genre: "Indie/Pop", cover: "" },
-    { code: "TT-0089", artist: "Montaigne", title: "Complex (Red)", location: "Indie Pop", price: 60, genre: "Indie/Pop", cover: "" },
-    { code: "TT-0090", artist: "Ed Sheeran", title: "Songs I Wrote With Amy", location: "Indie Pop", price: 50, genre: "Indie/Pop", cover: "" },
-    { code: "TT-0091", artist: "STRFKR", title: "Miracle Mile", location: "Indie Pop", price: 40, genre: "Indie/Pop", cover: "" },
-    { code: "TT-0092", artist: "Cannibal Corpse", title: "Red before black", location: "Indie Pop", price: 40, genre: "Indie/Pop", cover: "" },
-    { code: "TT-0093", artist: "White Fence", title: "Growing Faith", location: "Indie Pop", price: 40, genre: "Indie/Pop", cover: "" },
-    { code: "TT-0094", artist: "Big Black", title: "Atomizer", location: "Hard Rock/Punk/Metal", price: 40, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0095", artist: "Bono Boys", title: "(no title)", location: "Hard Rock/Punk/Metal", price: 60, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0096", artist: "Dragnet", title: "The fall", location: "Hard Rock/Punk/Metal", price: 80, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0097", artist: "First Strike", title: "Only For You (Signed)", location: "Hard Rock/Punk/Metal", price: 100, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0098", artist: "Living Death", title: "Vengeance of Hell", location: "Hard Rock/Punk/Metal", price: 45, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0099", artist: "Osker", title: "Idle will kill", location: "Hard Rock/Punk/Metal", price: 50, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0100", artist: "The Saints", title: "Eternally Yours", location: "Hard Rock/Punk/Metal", price: 45, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0101", artist: "Savatage", title: "Power of the Night ('85 EU)", location: "Hard Rock/Punk/Metal", price: 55, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0102", artist: "Scratch Acid", title: "Berserker", location: "Hard Rock/Punk/Metal", price: 40, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0103", artist: "Stormwitch", title: "Tales of Terror", location: "Hard Rock/Punk/Metal", price: 55, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0104", artist: "Thor", title: "Only The Strong", location: "Hard Rock/Punk/Metal", price: 50, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0105", artist: "Upright Citizens", title: "Open Eyes Open Ears", location: "Hard Rock/Punk/Metal", price: 40, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0106", artist: "XTRMST", title: "S/T (Signed)", location: "Hard Rock/Punk/Metal", price: 95, genre: "Hard Rock/Punk", cover: "" },
-    { code: "TT-0107", artist: "Aesop Rock", title: "Float", location: "HipHop", price: 95, genre: "Hip Hop", cover: "" },
-    { code: "TT-0108", artist: "Eagle Eye Cherry", title: "Save Tonight", location: "Electronic", price: 70, genre: "Electronic", cover: "" },
-    { code: "TT-0109", artist: "Aluna George", title: "Body Music", location: "Electronic", price: 50, genre: "Electronic", cover: "" },
-    { code: "TT-0110", artist: "The Herbaliser", title: "Blow Your Headphones", location: "Electronic", price: 60, genre: "Electronic", cover: "" },
-    { code: "TT-0111", artist: "HKE", title: "HK", location: "Electronic", price: 50, genre: "Electronic", cover: "" },
-    { code: "TT-0112", artist: "Lewis", title: "L'Amour", location: "Electronic", price: 44, genre: "Electronic", cover: "" },
-    { code: "TT-0113", artist: "Lizzy Mercier", title: "Descloux", location: "Electronic", price: 75, genre: "Electronic", cover: "" },
-    { code: "TT-0114", artist: "Mr. Twin Sister", title: "(no title)", location: "Electronic", price: 40, genre: "Electronic", cover: "" },
-    { code: "TT-0115", artist: "Report: Drug Addiction", title: "(no title)", location: "Electronic", price: 40, genre: "Electronic", cover: "" },
-    { code: "TT-0116", artist: "Shpongle", title: "Codex VI", location: "Electronic", price: 40, genre: "Electronic", cover: "" },
-    { code: "TT-0117", artist: "Whitehouse", title: "Great White Death", location: "Electronic", price: 50, genre: "Electronic", cover: "" },
-    { code: "TT-0118", artist: "Darrell Banks", title: "Is Here", location: "Soul/R&B/Funk/Disco", price: 60, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0119", artist: "James Brown", title: "Shout and Shimmy", location: "Soul/R&B/Funk/Disco", price: 100, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0120", artist: "Dwayne Dopson", title: "Get down", location: "Soul/R&B/Funk/Disco", price: 40, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0121", artist: "Impressions", title: "The never ending", location: "Soul/R&B/Funk/Disco", price: 80, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0122", artist: "Martha and the Vandals", title: "Come get these memories", location: "Soul/R&B/Funk/Disco", price: 50, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0123", artist: "Garet Mimis", title: "Cry baby", location: "Soul/R&B/Funk/Disco", price: 55, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0124", artist: "Wilson Pickett", title: "The Midnight Mover", location: "Soul/R&B/Funk/Disco", price: 50, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0125", artist: "Strikers", title: "The strikers", location: "Soul/R&B/Funk/Disco", price: 45, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0126", artist: "Wilson Williams", title: "Up the Down Stairs", location: "Soul/R&B/Funk/Disco", price: 75, genre: "Soul/R&B", cover: "" },
-    { code: "TT-0127", artist: "Val Anthony", title: "What Can I Say", location: "Jazz", price: 50, genre: "Jazz", cover: "" },
-    { code: "TT-0128", artist: "Brian Blade", title: "Landmarks", location: "Jazz", price: 65, genre: "Jazz", cover: "" },
-    { code: "TT-0129", artist: "Sonny Clark", title: "Cool Struttin (09 Blue Note 45 Ltd)", location: "Jazz", price: 150, genre: "Jazz", cover: "" },
-    { code: "TT-0130", artist: "Ahmad Jamal", title: "73", location: "Jazz", price: 60, genre: "Jazz", cover: "" },
-    { code: "TT-0131", artist: "Shelly Manne", title: "At the Black Hawk", location: "Jazz", price: 60, genre: "Jazz", cover: "" },
-    { code: "TT-0132", artist: "Jackie McLean", title: "Fat Jazz", location: "Jazz", price: 90, genre: "Jazz", cover: "" },
-    { code: "TT-0133", artist: "Harry Partch", title: "(no title)", location: "Jazz", price: 100, genre: "Jazz", cover: "" },
-    { code: "TT-0134", artist: "Gabor Szabo", title: "Dreams", location: "Jazz", price: 60, genre: "Jazz", cover: "" },
-    { code: "TT-0135", artist: "Larry Young", title: "Young Blues", location: "Jazz", price: 225, genre: "Jazz", cover: "" },
-    { code: "TT-0136", artist: "Dan & Shay", title: "Obsessed", location: "Country/Folk", price: 135, genre: "Country/Folk", cover: "" },
-    { code: "TT-0137", artist: "Scotty McCreery", title: "Seasons Change", location: "Country/Folk", price: 70, genre: "Country/Folk", cover: "" },
-    { code: "TT-0138", artist: "Winding river", title: "(no title)", location: "Country/Folk", price: 60, genre: "Country/Folk", cover: "" },
-    { code: "TT-0139", artist: "Women of Old Time Music", title: "S/T", location: "Country/Folk", price: 40, genre: "Country/Folk", cover: "" },
-    { code: "TT-0140", artist: "Satyajit Ray", title: "Goopy gyne & bagha Byrne", location: "World/Latin/Reggae", price: 200, genre: "World/Latin", cover: "" },
-    { code: "TT-0141", artist: "Inezita Barroso", title: "Vamos Falar De Brasil, Novamente…", location: "World/Latin/Reggae", price: 40, genre: "World/Latin", cover: "" },
-    { code: "TT-0142", artist: "Johnny Reviens", title: "Les Rocl", location: "World/Latin/Reggae", price: 50, genre: "World/Latin", cover: "" },
-    { code: "TT-0143", artist: "Tom MacDonald", title: "Exposed", location: "Misc", price: 60, genre: "", cover: "" },
-    { code: "TT-0144", artist: "Tee Vee Toons", title: "Television's Greatest Hits of Cable TV", location: "Misc", price: 50, genre: "", cover: "" },
-    { code: "TT-0145", artist: "Tee Vee Toons", title: "Television's Greatest Hits of Black and White", location: "Misc", price: 50, genre: "", cover: "" },
-    { code: "TT-0146", artist: "Tee Vee Toons", title: "Television's Greatest Hits of Remote Control", location: "Misc", price: 50, genre: "", cover: "" },
-    { code: "TT-0147", artist: "Under The Skin", title: "Mondo ST", location: "Misc", price: 80, genre: "", cover: "" }
+    { code: "TT-0015", artist: "2 Live Crew", title: "Move Somethin'", location: "Bar cubbies", price: 40, genre: "", cover: "" },
+    { code: "TT-0016", artist: "Jerry Goldsmith", title: "Alien (Original Motion Picture Soundtrack)", location: "Bar cubbies", price: 40, genre: "", cover: "" },
+    { code: "TT-0017", artist: "The Monzas", title: "Hey! I Know You", location: "Bar cubbies", price: 500, genre: "", cover: "" },
+    { code: "TT-0018", artist: "Bruce Springsteen", title: "Born to Run (Promo 45)", location: "Bar cubbies", price: 40, genre: "", cover: "" },
+    { code: "TT-0019", artist: "AIR", title: "Music for Museum", location: "Bar cubbies", price: 350, genre: "", cover: "" },
+    { code: "TT-0020", artist: "Jimmy Buffett", title: "Down to Earth", location: "Bar cubbies", price: 350, genre: "", cover: "" },
+    { code: "TT-0021", artist: "*45* Black Lips/KE$HA TP", title: "\"They's A Person Of The World\"", location: "Bar cubbies", price: 90, genre: "", cover: "" },
+    { code: "TT-0022", artist: "Hotline Miami", title: "Soundtrack", location: "Bar cubbies", price: 250, genre: "", cover: "" },
+    { code: "TT-0023", artist: "Fetti", title: "Roma", location: "Bar cubbies", price: 275, genre: "", cover: "" },
+    { code: "TT-0024", artist: "Gene Barber and Cavaliers 45", title: "I Need a Love", location: "Bar cubbies", price: 100, genre: "", cover: "" },
+    { code: "TT-0025", artist: "Quasimodo", title: "The Unseen", location: "Bar cubbies", price: 50, genre: "", cover: "" },
+    { code: "TT-0026", artist: "Bobby Hutcherson", title: "Enjoy the View", location: "Bar cubbies", price: 60, genre: "", cover: "" },
+    { code: "TT-0027", artist: "Byard Lancaster", title: "It's Not Up to Us", location: "Wall Trove", price: 200, genre: "", cover: "" },
+    { code: "TT-0028", artist: "Chet Baker", title: "Chet Baker Sings and Plays from the Film \"Let's Get Lost\"", location: "Wall Trove", price: 65, genre: "", cover: "" },
+    { code: "TT-0029", artist: "Small Pools", title: "Love Tap!", location: "Wall Trove", price: 75, genre: "", cover: "" },
+    { code: "TT-0030", artist: "Tinariwen", title: "Aman Iman: Water Is Life", location: "Wall Trove", price: 75, genre: "", cover: "" },
+    { code: "TT-0031", artist: "Major Lazer", title: "Peace Is the Mission (Sealed)", location: "Wall Trove", price: 90, genre: "", cover: "" },
+    { code: "TT-0032", artist: "Vulfpeck", title: "2011-2014", location: "Wall Trove", price: 175, genre: "", cover: "" },
+    { code: "TT-0033", artist: "Red Hot + Cool", title: "Stolen Moments: Red Hot + Cool", location: "Wall Trove", price: 40, genre: "", cover: "" },
+    { code: "TT-0034", artist: "De La Soul", title: "3 Feet High and Rising", location: "Wall Trove", price: 100, genre: "", cover: "" },
+    { code: "TT-0035", artist: "Status Quo", title: "Messages from the Status Quo", location: "Wall Trove", price: 50, genre: "", cover: "" },
+    { code: "TT-0036", artist: "The Wedding Present", title: "Bizarro", location: "Wall Trove", price: 60, genre: "", cover: "" },
+    { code: "TT-0037", artist: "Smyrna", title: "Harvest Song", location: "Wall Trove", price: 100, genre: "", cover: "" },
+    { code: "TT-0038", artist: "Curtis Mayfield", title: "Curtis", location: "Wall Trove", price: 100, genre: "", cover: "" },
+    { code: "TT-0039", artist: "MC 900 Ft. Jesus", title: "Hell with the Lid Off", location: "Wall Trove", price: 75, genre: "", cover: "" },
+    { code: "TT-0040", artist: "KISS", title: "Love Gun (Promo)", location: "Wall Trove", price: 75, genre: "", cover: "" },
+    { code: "TT-0041", artist: "De La Soul", title: "Say No Go", location: "Trove bin: Freshest", price: 50, genre: "", cover: "" },
+    { code: "TT-0042", artist: "De La Soul", title: "Say No Go", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
+    { code: "TT-0043", artist: "2 Live Crew", title: "2 Live Crew Is What We Are", location: "Trove bin: Freshest", price: 60, genre: "", cover: "" },
+    { code: "TT-0044", artist: "2 Live Crew", title: "As Nasty as They Wanna Be", location: "Trove bin: Freshest", price: 80, genre: "", cover: "" },
+    { code: "TT-0045", artist: "Schoolly D", title: "Saturday Night! The Album", location: "Trove bin: Freshest", price: 60, genre: "", cover: "" },
+    { code: "TT-0046", artist: "Antidope", title: "Go Pogo", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
+    { code: "TT-0047", artist: "Jimmy Smith", title: "The Sounds of Jimmy Smith", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
+    { code: "TT-0048", artist: "Thomas Chapin", title: "Spirits Rebellious", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
+    { code: "TT-0049", artist: "Drive Like Jehu", title: "Headhunter", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
+    { code: "TT-0050", artist: "Jerry & Mike", title: "Duck 1", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
+    { code: "TT-0051", artist: "The Fall", title: "Extricate", location: "Trove bin: Freshest", price: 65, genre: "", cover: "" },
+    { code: "TT-0052", artist: "Republic", title: "New World Order", location: "Trove bin: Freshest", price: 130, genre: "", cover: "" },
+    { code: "TT-0053", artist: "Güngör", title: "Ghosts Upon The Earth", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
+    { code: "TT-0054", artist: "Ben E. King", title: "Don't Play That Song", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
+    { code: "TT-0055", artist: "Blue Magic", title: "Magic #", location: "Trove bin: Freshest", price: 60, genre: "", cover: "" },
+    { code: "TT-0056", artist: "Black Ivory", title: "Don't Turn Around", location: "Trove bin: Freshest", price: 50, genre: "", cover: "" },
+    { code: "TT-0057", artist: "Big Boi", title: "Boomiverse", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
+    { code: "TT-0058", artist: "Young Family", title: "Series 5", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
+    { code: "TT-0059", artist: "Robert Ashley", title: "Perfect Lives", location: "Rock", price: 40, genre: "", cover: "" },
+    { code: "TT-0060", artist: "Billy Bragg & Wilco", title: "Mermaid Avenue Vol. II", location: "Rock", price: 175, genre: "", cover: "" },
+    { code: "TT-0061", artist: "Carl & the Passions", title: "So Tough", location: "Rock", price: 50, genre: "", cover: "" },
+    { code: "TT-0062", artist: "Julie Driscoll", title: "1969", location: "Rock", price: 40, genre: "", cover: "" },
+    { code: "TT-0063", artist: "Mountain Burgundy", title: "", location: "Rock", price: 70, genre: "", cover: "" },
+    { code: "TT-0064", artist: "Nico", title: "Desertshore", location: "Rock", price: 75, genre: "", cover: "" },
+    { code: "TT-0065", artist: "Nielsen & Pearson", title: "If You Should Set Sail", location: "Rock", price: 40, genre: "", cover: "" },
+    { code: "TT-0066", artist: "Nightbird", title: "Cosmic Connections", location: "Rock", price: 50, genre: "", cover: "" },
+    { code: "TT-0067", artist: "Sam Phillips", title: "Martinis & Bikinis", location: "Rock", price: 60, genre: "", cover: "" },
+    { code: "TT-0068", artist: "The Pretenders", title: "Live @ Santa Monica Civic", location: "Rock", price: 60, genre: "", cover: "" },
+    { code: "TT-0069", artist: "Sister Hazel", title: "20 Stages", location: "Rock", price: 180, genre: "", cover: "" },
+    { code: "TT-0070", artist: "Starflyer 59", title: "Dial M", location: "Rock", price: 45, genre: "", cover: "" },
+    { code: "TT-0071", artist: "Tiny Habits", title: "All for Something", location: "Rock", price: 50, genre: "", cover: "" },
+    { code: "TT-0072", artist: "Tree Fox", title: "Rough Trade", location: "Rock", price: 45, genre: "", cover: "" },
+    { code: "TT-0073", artist: "OneRepublic", title: "Native", location: "Indie Pop", price: 60, genre: "", cover: "" },
+    { code: "TT-0074", artist: "Montaigne", title: "Complex (Red)", location: "Indie Pop", price: 60, genre: "", cover: "" },
+    { code: "TT-0075", artist: "Ed Sheeran", title: "Songs I Wrote with Amy", location: "Indie Pop", price: 50, genre: "", cover: "" },
+    { code: "TT-0076", artist: "STRFKR", title: "Miracle Mile", location: "Indie Pop", price: 40, genre: "", cover: "" },
+    { code: "TT-0077", artist: "White Fence", title: "Is Growing Faith", location: "Indie Pop", price: 40, genre: "", cover: "" },
+    { code: "TT-0078", artist: "Big Black", title: "Atomizer", location: "Hard Rock/Punk/Metal", price: 40, genre: "", cover: "" },
+    { code: "TT-0079", artist: "Bono Boys", title: "", location: "Hard Rock/Punk/Metal", price: 60, genre: "", cover: "" },
+    { code: "TT-0080", artist: "Dragnet", title: "The Fall", location: "Hard Rock/Punk/Metal", price: 80, genre: "", cover: "" },
+    { code: "TT-0081", artist: "First Strike", title: "Only For You (Signed)", location: "Hard Rock/Punk/Metal", price: 100, genre: "", cover: "" },
+    { code: "TT-0082", artist: "Living Death", title: "Vengeance of Hell", location: "Hard Rock/Punk/Metal", price: 45, genre: "", cover: "" },
+    { code: "TT-0083", artist: "Osker", title: "Idle Will Kill", location: "Hard Rock/Punk/Metal", price: 50, genre: "", cover: "" },
+    { code: "TT-0084", artist: "The Saints", title: "Eternally Yours", location: "Hard Rock/Punk/Metal", price: 45, genre: "", cover: "" },
+    { code: "TT-0085", artist: "Savatage", title: "Power of the Night ('85 EU)", location: "Hard Rock/Punk/Metal", price: 55, genre: "", cover: "" },
+    { code: "TT-0086", artist: "Scratch Acid", title: "Berserker", location: "Hard Rock/Punk/Metal", price: 40, genre: "", cover: "" },
+    { code: "TT-0087", artist: "Stormwitch", title: "Tales of Terror", location: "Hard Rock/Punk/Metal", price: 55, genre: "", cover: "" },
+    { code: "TT-0088", artist: "Thor", title: "Only The Strong", location: "Hard Rock/Punk/Metal", price: 50, genre: "", cover: "" },
+    { code: "TT-0089", artist: "Upright Citizens", title: "Open Eyes Open Ears", location: "Hard Rock/Punk/Metal", price: 40, genre: "", cover: "" },
+    { code: "TT-0090", artist: "XTRMST", title: "XTRMST (Signed)", location: "Hard Rock/Punk/Metal", price: 95, genre: "", cover: "" },
+    { code: "TT-0091", artist: "Aesop Rock", title: "Float", location: "HipHop", price: 95, genre: "", cover: "" },
+    { code: "TT-0092", artist: "Eagle-Eye Cherry", title: "Save Tonight", location: "Electronic", price: 70, genre: "", cover: "" },
+    { code: "TT-0093", artist: "AlunaGeorge", title: "Body Music", location: "Electronic", price: 50, genre: "", cover: "" },
+    { code: "TT-0094", artist: "The Herbaliser", title: "Blow Your Headphones", location: "Electronic", price: 60, genre: "", cover: "" },
+    { code: "TT-0095", artist: "HKE", title: "HK", location: "Electronic", price: 50, genre: "", cover: "" },
+    { code: "TT-0096", artist: "Lewis", title: "L'Amour", location: "Electronic", price: 44, genre: "", cover: "" },
+    { code: "TT-0097", artist: "Lizzy Mercier Descloux", title: "Press Color", location: "Electronic", price: 75, genre: "", cover: "" },
+    { code: "TT-0098", artist: "Mr. Twin Sister", title: "Mr Twin Sister", location: "Electronic", price: 40, genre: "", cover: "" },
+    { code: "TT-0099", artist: "Report: Drug Addiction", title: "A View from the Belly", location: "Electronic", price: 40, genre: "", cover: "" },
+    { code: "TT-0100", artist: "Shpongle", title: "Codex VI", location: "Electronic", price: 40, genre: "", cover: "" },
+    { code: "TT-0101", artist: "Whitehouse", title: "Great White Death", location: "Electronic", price: 50, genre: "", cover: "" },
+    { code: "TT-0102", artist: "Darrell Banks", title: "Darrell Banks Is Here!", location: "Electronic", price: 60, genre: "", cover: "" },
+    { code: "TT-0103", artist: "James Brown", title: "Shout and Shimmy", location: "Soul/R&B/Funk/Disco", price: 100, genre: "", cover: "" },
+    { code: "TT-0104", artist: "Dwayne Dopson", title: "Get Down", location: "Soul/R&B/Funk/Disco", price: 40, genre: "", cover: "" },
+    { code: "TT-0105", artist: "The Impressions", title: "The Never Ending Impressions", location: "Soul/R&B/Funk/Disco", price: 80, genre: "", cover: "" },
+    { code: "TT-0106", artist: "Garnet Mimms", title: "Cry Baby", location: "Soul/R&B/Funk/Disco", price: 55, genre: "", cover: "" },
+    { code: "TT-0107", artist: "Wilson Pickett", title: "The Midnight Mover", location: "Soul/R&B/Funk/Disco", price: 50, genre: "", cover: "" },
+    { code: "TT-0108", artist: "The Strikers", title: "The Strikers", location: "Soul/R&B/Funk/Disco", price: 45, genre: "", cover: "" },
+    { code: "TT-0109", artist: "Wilson Williams", title: "Up the Down Stairs", location: "Soul/R&B/Funk/Disco", price: 75, genre: "", cover: "" },
+    { code: "TT-0110", artist: "Val Anthony", title: "What Can I Say", location: "Jazz", price: 50, genre: "", cover: "" },
+    { code: "TT-0111", artist: "Brian Blade", title: "Landmarks", location: "Jazz", price: 65, genre: "", cover: "" },
+    { code: "TT-0112", artist: "Sonny Clark", title: "Cool Struttin (09 Blue Note 45 Ltd)", location: "Jazz", price: 150, genre: "", cover: "" },
+    { code: "TT-0113", artist: "Ahmad Jamal", title: "73", location: "Jazz", price: 60, genre: "", cover: "" },
+    { code: "TT-0114", artist: "Shelly Manne", title: "At the Blackhawk", location: "Jazz", price: 60, genre: "", cover: "" },
+    { code: "TT-0115", artist: "Jackie McLean", title: "Fat Jazz", location: "Jazz", price: 90, genre: "", cover: "" },
+    { code: "TT-0116", artist: "Harry Partch", title: "30 Years of Lyrical and Dramatic Music", location: "Jazz", price: 100, genre: "", cover: "" },
+    { code: "TT-0117", artist: "Gabor Szabo", title: "Dreams", location: "Jazz", price: 60, genre: "", cover: "" },
+    { code: "TT-0118", artist: "Larry Young", title: "Young Blues", location: "Jazz", price: 225, genre: "", cover: "" },
+    { code: "TT-0119", artist: "Dan & Shay", title: "Obsessed", location: "Country/Folk", price: 135, genre: "", cover: "" },
+    { code: "TT-0120", artist: "Scotty McCreery", title: "Seasons Change", location: "Country/Folk", price: 70, genre: "", cover: "" },
+    { code: "TT-0121", artist: "Winding River", title: "Winding River", location: "Country/Folk", price: 60, genre: "", cover: "" },
+    { code: "TT-0122", artist: "Women of Old Time Music", title: "Women of Old Time Music", location: "Country/Folk", price: 40, genre: "", cover: "" },
+    { code: "TT-0123", artist: "Inezita Barroso", title: "Vamos Falar De Brasil, Novamente…", location: "World/Latin/Reggae", price: 40, genre: "", cover: "" },
+    { code: "TT-0124", artist: "Johnny Reviens", title: "les rocl", location: "World/Latin/Reggae", price: 50, genre: "", cover: "" },
+    { code: "TT-0125", artist: "Tom MacDonald", title: "Exposed", location: "Misc", price: 60, genre: "", cover: "" },
+    { code: "TT-0126", artist: "Tee Vee Toons", title: "Television's Greatest Hits of Cable TV", location: "Misc", price: 50, genre: "", cover: "" },
+    { code: "TT-0127", artist: "Tee Vee Toons", title: "Television's Greatest Hits of Black and White", location: "Misc", price: 50, genre: "", cover: "" },
+    { code: "TT-0128", artist: "Tee Vee Toons", title: "Television's Greatest Hits of Remote Control", location: "Misc", price: 50, genre: "", cover: "" },
+    { code: "TT-0129", artist: "Mica Levi", title: "Under the Skin (Original Motion Picture Soundtrack)", location: "Misc", price: 80, genre: "", cover: "" },
+    { code: "TT-0130", artist: "Apples in Stereo", title: "Fun Trick Noisemaker", location: "Misc", price: 200, genre: "", cover: "" },
+    { code: "TT-0131", artist: "Cliff Jordan", title: "Blowing in from Chicago", location: "Misc", price: 800, genre: "", cover: "" },
+    { code: "TT-0132", artist: "Ronald Ingraham Concert Choir", title: "Saturday Morning with RICC", location: "Misc", price: 45, genre: "", cover: "" },
+    { code: "TT-0133", artist: "George Duke", title: "No Rhyme, No Reason", location: "Misc", price: 40, genre: "", cover: "" },
+    { code: "TT-0134", artist: "Forrest Frank", title: "Child of God", location: "Misc", price: 125, genre: "", cover: "" },
+    { code: "TT-0135", artist: "Thomas Chapin", title: "Spirits Rebellious", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
+    { code: "TT-0136", artist: "In Trousers", title: "ST", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
+    { code: "TT-0137", artist: "George Duke", title: "No Rhyme, No Reason", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
+    { code: "TT-0138", artist: "Taj Mahal", title: "Present Awakening", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
+    { code: "TT-0139", artist: "Drive Like Jehu", title: "Drive Like Jehu", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
+    { code: "TT-0140", artist: "Paul Hibbets", title: "Childhood Dream", location: "Trove bin: Freshest", price: 200, genre: "", cover: "" },
+    { code: "TT-0141", artist: "Andrew Hill", title: "Judgement!", location: "Trove bin: Freshest", price: 0, genre: "", cover: "" },
+    { code: "TT-0142", artist: "Albert Hash", title: "Whitetop", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
+    { code: "TT-0143", artist: "Leaf River", title: "Sonshine", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
+    { code: "TT-0144", artist: "Frantic", title: "Conception (Sealed)", location: "Trove bin: Freshest", price: 150, genre: "", cover: "" },
+    { code: "TT-0145", artist: "Eli's", title: "S/T", location: "Trove bin: Freshest", price: 45, genre: "", cover: "" },
+    { code: "TT-0146", artist: "JuJu", title: "A Message from Mozambique", location: "Trove bin: Freshest", price: 400, genre: "", cover: "" },
+    { code: "TT-0147", artist: "45\" The Annuals", title: "Hungry / Once in a Lifetime", location: "Trove bin: Freshest", price: 250, genre: "", cover: "" },
+    { code: "TT-0148", artist: "*45* Richie sings", title: "Dream Lover", location: "Trove bin: Freshest", price: 100, genre: "", cover: "" },
+    { code: "TT-0149", artist: "The Overtones", title: "Rustic (45)", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
+    { code: "TT-0150", artist: "Soft Rock", title: "Soft Rock", location: "Trove bin: Freshest", price: 500, genre: "", cover: "" },
+    { code: "TT-0151", artist: "The Wrens", title: "The Meadowlands", location: "Trove bin: Freshest", price: 400, genre: "", cover: "" },
+    { code: "TT-0152", artist: "The Pyramids", title: "Lalibela", location: "Trove bin: Freshest", price: 750, genre: "", cover: "" },
+    { code: "TT-0153", artist: "Sam Gendel and Sam Wilkes", title: "Music for Saxophone and Bass Guitar", location: "Trove bin: Freshest", price: 400, genre: "", cover: "" },
+    { code: "TT-0154", artist: "Wild Sugar", title: "Bring It Here", location: "Trove bin: Freshest", price: 40, genre: "", cover: "" },
+    { code: "TT-0155", artist: "65daysofstatic", title: "No Man's Sky: Music for an Infinite Universe", location: "Trove bin: Freshest", price: 140, genre: "", cover: "" },
+    { code: "TT-0156", artist: "Richard Pryor", title: "I Hope I'm Funny", location: "Trove bin: Freshest", price: 90, genre: "", cover: "" }
   ],
   DEMO_BACKFILL: [
     { code: "TB-0001", artist: "Sly Johnson", title: "Complete Mythology", location: "Backfill", price: 70, genre: "", cover: "" },
@@ -472,6 +549,7 @@ window.HD_CONFIG = {
     { code: "TB-0032", artist: "Music Machine", title: "The Eagle Never Hunts the Fly (45)", location: "Backfill", price: 75, genre: "", cover: "" }
   ]
 };
+
 </script>
 <script>
 (function(){
@@ -487,7 +565,7 @@ const fmtTime = iso=> new Date(iso).toLocaleTimeString([], {hour:'numeric',minut
 
 const S = {
   view:'home', who:null, pin:'', entry:'', feed:[], err:'', busy:false,
-  rfmt:'Vinyl', ritems:[], rc:{}, atype:null, aprint:true, rorder:null, rpend:null, rscan:{}, rbad:{}, rlast:null, rpack:null, rnopack:false, alisted:{}, flow:'opening', fq:'', notePop:false, note:null, itype:null, iphoto:null, check:[], open:{}, confirm:false, troveList:[], tfound:{}, tq:'', tonly:false, tload:false
+  rfmt:'Vinyl', ritems:[], rc:{}, atype:null, acond:null, alast:null, aprint:true, rorder:null, rpend:null, rscan:{}, rbad:{}, rlast:null, rpack:null, rnopack:false, alisted:{}, flow:'opening', fq:'', notePop:false, note:null, itype:null, iphoto:null, check:[], open:{}, confirm:false, troveList:[], tfound:{}, tq:'', tonly:false, tload:false
 };
 // restore shift
 (function(){
@@ -561,7 +639,7 @@ function vHome(){
     return headerHTML()+bannerHTML()+noteHTML()+'<button class="openbig" data-act="go:opening">'+(started?'Continue opening':'Open')+'</button>';
   }
   const tile=(act,t,s)=>'<button class="tile" data-act="'+act+'"><span class="t">'+t+'</span><span class="s">'+(s||'\u00a0')+'</span></button>';
-  const soon=(t)=>'<div class="tile soon" aria-disabled="true"><span class="t">'+t+'</span><span class="s">Soon</span></div>';
+  const soon=(t,d)=>'<div class="tile soon" aria-disabled="true"><span class="t">'+t+'</span><span class="s">'+(d?d+' \u00b7 ':'')+'Soon</span></div>';
   const dr=S.feed.filter(e=>e.task==='dropoff').length, cl=latest('closing'), op=latest('opening')||{ts:new Date().toISOString()};
   const openTile='<div class="tile pill done" aria-label="Opening done"><span class="t">Open</span><span class="s">Done \u00b7 '+fmtTime(op.ts)+'</span></div>';
   const closeTile=cl
@@ -569,12 +647,12 @@ function vHome(){
     : '<button class="tile pill todo" data-act="go:closing"><span class="t">Close</span><span class="s">Not done</span></button>';
   const cat=(n,body)=>'<div class="col"><h3 class="cat">'+n+'</h3>'+body+'</div>';
   return headerHTML(openTile+closeTile)+bannerHTML()+noteHTML()+'<button class="findbar" data-act="go:find"><b>\u2315</b> Find a record</button><div class="cols">'+
-    cat('Records',tile('go:trove','Trove records','View the list \u00b7 check the shelf')+tile('go:addrecord','Add a record','')+tile('go:receive','Receive records','')+soon('Print labels'))+
-    cat('Beer',soon('Change keg')+soon('Receive keg')+soon('Menu screen'))+
-    cat('Customers',tile('go:dropoff','Customer drop-off',dr?dr+' today':'')+tile('go:request','Customer request',''))+
-    cat('Shop',tile('go:note','Note for next shift','')+tile('go:issue','Report an issue',''))+'</div>';
+    cat('Records',tile('go:trove','Trove records','See the list, or check the shelf')+tile('go:addrecord','Add records','New, Trove or used')+tile('go:labels','Print labels','Print the sticker sheet for new records'))+
+    cat('Beer',tile('go:kegs','Beer menu','Kick a keg, change a price, put one on tap')+tile('go:rkeg','Receive keg','Log a delivery, with the invoice photo'))+
+    cat('Customers',tile('go:dropoff','Customer drop&#8209;off','Log records a customer left'+(dr?' \u00b7 '+dr+' today':''))+tile('go:request','Customer request','Record what a customer is looking for'))+
+    cat('Shop',tile('go:note','Note for next shift','Leave a heads-up for whoever opens')+tile('go:issue','Report an issue','Flag a problem for the manager'))+'</div>';
 }
-function topHTML(t,act,right){ return '<div class="top"><button class="btn ghost" data-act="'+(act||'home')+'">\u2039 Back</button><h2>'+t+'</h2>'+(right||'')+'<button class="lnk" data-act="home" style="margin-left:auto;font-size:18px;font-weight:700;opacity:.85">HD Backstage</button></div>'; }
+function topHTML(t,act,right,nohome){ return '<div class="top"><button class="btn ghost" data-act="'+(act||'home')+'">\u2039 Back</button><h2>'+t+'</h2>'+(right||'')+'</div>'; }
 
 const K=()=>'hd.'+(S.flow==='closing'?'close':'open')+'.'+today();
 const KT=()=>'hd.trove.'+(S.tstand?'s':S.flow==='closing'?'c':'o')+'.'+today();
@@ -587,6 +665,8 @@ function resolved_(i){
   return false;
 }
 const tkey=i=>i.artist+'|'+i.title;
+const ORDKEY='hd.trove.order2';
+function setTrove(L){ const o=LS.get(ORDKEY,null); L=(L||[]).slice(); if(o&&o.length){ const ix={}; o.forEach((c,n)=>ix[c]=n); const big=1e6; L=L.map((it,n)=>[it,n]).sort((a,b)=>((ix[a[0].code]??big)-(ix[b[0].code]??big))||(a[1]-b[1])).map(x=>x[0]); } S.troveList=L; }
 const initials=i=>(String(i.artist||i.title||'?').replace(/^the\s+/i,'').trim().slice(0,2)).toUpperCase();
 const COVKEY='hd.covers';
 let COV=LS.get(COVKEY,{});
@@ -604,9 +684,32 @@ async function covFetch(el){
   try{
     const r=await fetch('https://itunes.apple.com/search?media=music&entity=album&limit=5&term='+encodeURIComponent((a+' '+t).trim()));
     if(!r.ok) throw new Error(r.status);
-    const j=await r.json(), w=a.toLowerCase().split(' ')[0].replace(/^the$/,'');
-    const hit=(j.results||[]).find(x=>(x.artistName||'').toLowerCase().includes(w)&&(!t||(x.collectionName||'').toLowerCase().includes(t.toLowerCase().split(' ')[0])));
-    COV[k]=hit?hit.artworkUrl100.replace('100x100bb','200x200bb'):'';
+    const j=await r.json(), nz=x=>String(x||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(Boolean);
+    const aw=nz(a).filter(x=>x!=='the')[0]||'', tw=nz(t).filter(x=>x.length>2);
+    let best=null, bs=0;
+    (j.results||[]).forEach(x=>{ if(!nz(x.artistName).join(' ').includes(aw)) return; const cw=nz(x.collectionName); const sc=tw.length?tw.filter(w=>cw.includes(w)).length/tw.length:0; if(sc>bs){ bs=sc; best=x; } });
+    const hit=bs>=0.6?best:null;
+    let url=hit?hit.artworkUrl100.replace('100x100bb','200x200bb'):'';
+    const DT=LS.get('hd.discogs',null), DK=C.DISCOGS_KEY, DS=C.DISCOGS_SECRET;
+    if(!url&&(DT||(DK&&DS))){ // Discogs: best coverage for obscure vinyl pressings
+      try{
+        await new Promise(r=>setTimeout(r,1100));
+        const d=await fetch('https://api.discogs.com/database/search?type=release&per_page=8&q='+encodeURIComponent((a+' '+t).trim())+(DT?'&token='+encodeURIComponent(DT):'&key='+encodeURIComponent(DK)+'&secret='+encodeURIComponent(DS))).then(r=>r.json());
+        let bd=null, ds=-1;
+        (d.results||[]).forEach(x=>{ const full=nz(x.title), img=x.cover_image||x.thumb||''; if(!img||/spacer\.gif/.test(img)) return; if(!full.join(' ').includes(aw)) return; const sc=tw.length?tw.filter(w=>full.includes(w)).length/tw.length:1; if(sc>ds){ ds=sc; bd=x; } });
+        if(bd&&ds>=0.6) url=bd.cover_image||bd.thumb;
+      }catch(e){}
+    }
+    if(!url){ // last source: MusicBrainz + Cover Art Archive (free, better for obscure pressings)
+      try{
+        await new Promise(r=>setTimeout(r,1100));
+        const m=await fetch('https://musicbrainz.org/ws/2/release-group/?fmt=json&limit=5&query='+encodeURIComponent('releasegroup:"'+t+'" AND artist:"'+a+'"')).then(r=>r.json());
+        let mb=null, ms=0;
+        (m['release-groups']||[]).forEach(x=>{ const an=nz((x['artist-credit']||[]).map(c=>c.name).join(' ')).join(' '); if(!an.includes(aw)) return; const cw=nz(x.title); const sc=tw.length?tw.filter(w=>cw.includes(w)).length/tw.length:0; if(sc>ms){ ms=sc; mb=x; } });
+        if(mb&&ms>=0.6){ const u='https://coverartarchive.org/release-group/'+mb.id+'/front-250'; const h=await fetch(u,{method:'HEAD'}); if(h.ok) url=u; }
+      }catch(e){}
+    }
+    COV[k]=url;
     LS.set(COVKEY,COV);
     if(COV[k]) document.querySelectorAll('.cov.ph').forEach(n=>{ if(n.dataset.k===k){ const im=document.createElement('img'); im.className='cov'; im.alt=''; im.src=COV[k]; im.dataset.ph=n.textContent; n.replaceWith(im); } });
   }catch(e){ _covStop=Date.now()+60000; }
@@ -644,7 +747,7 @@ function troveListHTML(){
   if(!L.length) return '<p class="hint" style="margin-top:20px">'+(S.tload?'Loading\u2026':'Nothing here.')+'</p>';
   let out='', loc=null;
   L.forEach(i=>{
-    if(i.location!==loc){ loc=i.location; out+='<div class="tloc">'+esc(loc||'No location')+'</div>'; }
+    if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span></div>'; }
     const on=!!S.tfound[tkey(i)];
     out+='<button class="trow '+(on?'on':'')+'" role="checkbox" aria-checked="'+on+'" data-act="tfound" data-k="'+esc(tkey(i))+'"><span class="box">'+(on?'\u2713':'')+'</span>'+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span><span class="pr">'+priceFmt(i.price)+'</span></button>';
   });
@@ -661,17 +764,33 @@ function beep(kind){
   }catch(e){}
 }
 function tpanelHTML(){
-  const nx=troveNext(), m=S.tmsg;
-  if(!S.tscan) return '<div class="tpanel" id="tpanel"><div class="big"><small>Scanner</small>Tap Start, then scan each record in shelf order.</div><button class="btn go" data-act="tstart">Start scanning</button></div>';
-  const nxt = nx ? '<span>Next: <b>'+esc(nx.artist)+' \u00b7 '+esc(nx.title)+'</b> ('+esc(nx.location||'')+')</span>' : '<span>Everything is scanned.</span>';
-  if(!m) return '<div class="tpanel" id="tpanel"><div class="big"><small>Ready</small>Scan the first record'+nxt+'</div><button class="btn ghost" data-act="ttest">Test sound</button></div>';
-  return '<div class="tpanel '+m.k+'" id="tpanel"><div class="big"><small>'+esc(m.h)+'</small>'+esc(m.t)+nxt+'</div>'+(m.k==='bad'?'<button class="btn ghost" data-act="tdismiss">OK</button>':'<button class="btn ghost" data-act="ttest">Test sound</button>')+'</div>';
+  const nx=troveNext(), m=S.tmsg, c=troveCounts(), pct=c.n?Math.round(100*c.f/c.n):0;
+  const next = nx
+    ? '<div class="nextcard">'+covHTML(nx)+'<div class="nx"><div class="lbl">Scan this record next</div><b>'+esc(nx.title)+'</b><span>'+esc(nx.artist)+'</span><em>Shelf: '+esc(nx.location||'?')+'</em></div></div>'
+    : '<div class="nextcard"><div class="nx"><div class="lbl">All done</div><b>Every record is checked</b><span>Tap Finish check below.</span></div></div>';
+  const msg = !m ? '<div class="tmsg wait"><b>Waiting for a scan</b><span>Point the scanner at the barcode and pull the trigger.</span></div>'
+    : '<div class="tmsg '+m.k+'"><b>'+esc(m.h)+'</b><span>'+esc(m.t)+'</span>'+(m.k==='bad'?'<button class="btn ghost" data-act="tdismiss">OK, got it</button>':'')+'</div>';
+  return '<div id="tpanel" class="tp"><div class="prog"><span class="pc">'+c.f+' of '+c.n+' checked</span><div class="bar"><i style="width:'+pct+'%"></i></div></div>'+next+msg+'</div>';
+}
+function tstartHTML(){
+  const first=troveSorted()[0];
+  const stp=(n,h,p,x)=>'<li><span class="num">'+n+'</span><div><b>'+h+'</b><p>'+(p||'')+'</p>'+(x||'')+'</div></li>';
+  return '<div class="guide"><h3>Check the Trove in 3 steps</h3><ol class="steps">'+
+    stp(1,'Get ready','Turn the scanner on and turn the iPad volume up.','<button class="btn ghost" data-act="ttest">Test the sound</button>')+
+    stp(2,'Tap the green button below','The screen will show which record to scan first.')+
+    stp(3,'Scan every record, in shelf order','You\u2019ll hear a beep for each good scan. A loud buzz means a record is out of order.'+(first?' Start with <b>'+esc(first.artist)+' \u00b7 '+esc(first.title)+'</b> ('+esc(first.location||'')+').':''))+
+    '</ol></div><button class="bigstart" data-act="tstart">Start scanning</button>';
+}
+function tfootHTML(){
+  const c=troveCounts();
+  if(S.tconfirm) return '<div class="stickybar" id="tfoot"><div class="tconf"><b>'+c.nf+' record'+(c.nf===1?'':'s')+' haven\u2019t been checked.</b><span>Finish anyway? They will be reported as not found.</span><div class="tcb"><button class="btn ghost" data-act="tkeep">Keep scanning</button><button class="btn warn" data-act="trovedone">Finish anyway</button></div></div></div>';
+  return '<div class="stickybar" id="tfoot"><button class="btn go" id="tdone" data-act="trovedone">'+(c.nf?'Finish check ('+c.nf+' not checked)':'Finish check')+'</button></div>';
 }
 function troveScan(code){
   code=String(code||'').trim(); if(code.length<3) return;
   const it=(S.troveList||[]).find(i=>String(i.code||'').toLowerCase()===code.toLowerCase());
   if(!it){ S.tmsg={k:'bad',h:'Not a Trove barcode',t:code}; beep('bad'); }
-  else if(S.tfound[tkey(it)]){ S.tmsg={k:'dup',h:'Already scanned',t:it.artist+' \u00b7 '+it.title}; beep('dup'); }
+  else if(S.tfound[tkey(it)]){ S.tmsg={k:'dup',h:'Already checked',t:it.artist+' \u00b7 '+it.title}; beep('dup'); }
   else{
     const nx=troveNext(), inOrder=nx&&tkey(nx)===tkey(it);
     S.tfound[tkey(it)]=true; LS.set(KT(),S.tfound);
@@ -685,35 +804,40 @@ function tbrowseListHTML(){
   const L=src.filter(i=>q.every(w=>(i.artist+' '+i.title+' '+i.location+' '+(i.genre||'')).toLowerCase().includes(w)));
   if(!L.length) return '<p class="hint" style="margin-top:20px">'+(S.tload?'Loading\u2026':'Nothing found.')+'</p>';
   const cnt={}; L.forEach(i=>cnt[i.location]=(cnt[i.location]||0)+1);
+  const canDrag=S.tseg!=='back'&&!q.length;
   let out='', loc=null;
   L.forEach(i=>{
-    if(i.location!==loc){ loc=i.location; out+='<div class="tloc">'+esc(loc||'No location')+' \u00b7 '+cnt[loc]+'</div>'; }
-    out+='<div class="trow ro">'+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span></div>';
+    if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span><span class="n">'+cnt[loc]+' records</span></div>'; }
+    out+='<div class="trow ro" data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span></div>';
   });
   return out;
 }
 function vTBrowse(){
   const nf=(S.troveList||[]).length, nb=(C.DEMO_BACKFILL||[]).length, seg=(k,t)=>'<button class="tchip '+(S.tseg===k?'on':'')+'" data-act="tseg" data-v="'+k+'">'+t+'</button>';
-  return topHTML('Trove records','home')+bannerHTML()+
+  return topHTML('Trove records','home','',true)+bannerHTML()+
   '<div class="tact"><button class="btn go" data-act="tcheck">Run a Trove check<small>Scan every record on the floor to see what\u2019s missing</small></button>'+
-  '<button class="btn ghost" data-act="go:addrecord">Add a Trove record<small>Log a new record and print its label</small></button></div>'+
+  '<button class="btn ghost" data-act="addtrove">Add a Trove record<small>Log a new record and print its label</small></button></div>'+
+  ((LS.get('hd.discogs',null)||(C.DISCOGS_KEY&&C.DISCOGS_SECRET))?'':'<div class="dtok"><b>Get more album covers</b><span>Paste your Discogs token once. It stays on this iPad.</span><input id="dtk" placeholder="Discogs token" autocomplete="off"><button class="btn ghost" data-act="dtoksave">Save</button></div>')+
   '<div class="tbar"><input id="tbq" placeholder="Search artist, title, genre or shelf" autocomplete="off" value="'+esc(S.tbq||'')+'">'+seg('floor','On the floor ('+nf+')')+seg('back','Backfill ('+nb+')')+'</div>'+
-  '<div id="tblist">'+tbrowseListHTML()+'</div>';
+  '<p class="hint" style="margin:10px 0 0">'+(S.tseg==='back'?'Backfill records. Not part of the shelf check.':'Drag \u2261 to reorder. The Trove check follows this order.')+'</p><div id="tblist">'+tbrowseListHTML()+'</div>';
 }
 function troveCounts(){ const n=S.troveList.length, f=S.troveList.filter(i=>S.tfound[tkey(i)]).length; return {n,f,nf:n-f}; }
 function troveDoneLabel(){ const c=troveCounts(); return c.nf?'Done ('+c.nf+' not found)':'Done'; }
 function vTrove(){
-  const c=troveCounts();
-  return topHTML('Trove','oback','<span class="chip" id="tcount" style="margin-left:auto">'+c.f+' / '+c.n+'</span>')+bannerHTML()+
-  tpanelHTML()+'<div class="tbar"><input id="tq" placeholder="Search" autocomplete="off" value="'+esc(S.tq)+'"><button class="tchip '+(S.tonly?'on':'')+'" data-act="tonly">Not found</button></div>'+
-  '<div id="tlist">'+troveListHTML()+'</div>'+
-  '<div class="stickybar"><button class="btn go" id="tdone" data-act="trovedone">'+troveDoneLabel()+'</button></div>';
+  const c=troveCounts(), top=topHTML('Trove check','oback','<span class="chip" id="tcount" style="margin-left:auto">'+c.f+' / '+c.n+'</span>')+bannerHTML();
+  if(!S.tscan) return top+tstartHTML();
+  return top+tpanelHTML()+
+    '<button class="tchip" style="margin-top:12px;align-self:flex-start" data-act="tshow">'+(S.tshow?'Hide the list':'Check off by hand')+'</button>'+
+    (S.tshow?'<p class="hint" style="margin:10px 0 0">Tap any record to check it off by hand. Tap again to undo. Scanning still works too.</p>':'')+
+    (S.tshow?'<div class="tbar" style="margin-top:12px"><input id="tq" placeholder="Search" autocomplete="off" value="'+esc(S.tq)+'"><button class="tchip '+(S.tonly?'on':'')+'" data-act="tonly">Not checked</button></div><div id="tlist">'+troveListHTML()+'</div>':'')+
+    tfootHTML();
 }
 function findResults(){
   const q=(S.fq||'').trim().toLowerCase().split(/\s+/).filter(Boolean);
   const hit=t=>q.every(w=>t.toLowerCase().includes(w)), st=C.STORE||'Raleigh', out=[];
   (C.DEMO_NEW||[]).forEach(i=>{ if(hit(i.artist+' '+i.title)) out.push({store:st,a:i.artist,t:i.title,p:i.price,n:i.stock,g:i.genre,w:i.stock?('Shelf: New records, '+i.genre+' section'):'File under: New records, '+i.genre+' section'}); });
   (S.troveList||[]).forEach(i=>{ if(hit(i.artist+' '+i.title)) out.push({store:st,a:i.artist,t:i.title,p:i.price,n:1,g:i.genre||'',w:'Shelf: Trove, '+(i.location||'no location')}); });
+  LS.get('hd.used',[]).forEach(i=>{ if(hit(i.artist+' '+i.title)) out.push({store:st,a:i.artist,t:i.title,p:i.price,n:1,g:i.genre||'',w:'Shelf: Used'+(i.genre?', '+i.genre+' section':'')+(i.condition?' \u00b7 '+i.condition:'')}); });
   (C.DEMO_BACKFILL||[]).forEach(i=>{ if(hit(i.artist+' '+i.title)) out.push({store:st,a:i.artist,t:i.title,p:i.price,n:1,g:i.genre||'',w:'Backfill cubby (not on the floor yet)'}); });
   (C.DEMO_ORDERS||[]).forEach(o=>o.lines.forEach(l=>{ if(hit(l.artist+' '+l.title)) out.push({store:st,a:tc(l.artist),t:tc(l.title),p:msrpPrice(l.list),n:null,g:'',w:'Not in yet. On order ('+o.id+')'}); }));
   return out;
@@ -739,8 +863,8 @@ function vFind(){
 function refreshTrove(){
   const l=document.getElementById('tlist'); if(l) l.innerHTML=troveListHTML();
   const c=troveCounts(), t=document.getElementById('tcount'); if(t) t.textContent=c.f+' / '+c.n;
-  const d=document.getElementById('tdone'); if(d) d.textContent=troveDoneLabel();
   const p=document.getElementById('tpanel'); if(p) p.outerHTML=tpanelHTML();
+  const f=document.getElementById('tfoot'); if(f) f.outerHTML=tfootHTML();
   coverScan();
 }
 function neededText(){
@@ -768,7 +892,7 @@ function vRequest(){
   const added=S.ritems.map((r,k)=>'<div class="radded"><span><b>'+esc(r.artist)+'</b> \u00b7 '+esc(r.album)+' <span class="o">'+esc(r.format)+'</span></span><button class="btn ghost" data-act="rdel" data-i="'+k+'">Remove</button></div>').join('');
   return topHTML('Customer request')+bannerHTML()+
   '<div class="form"><label>Name<input id="rname" autocomplete="off" value="'+esc(c.name||'')+'"></label>'+
-  '<div class="pair"><label>Phone<input id="rphone" type="tel" autocomplete="off" value="'+esc(c.phone||'')+'"></label><label>Email<input id="remail" type="email" autocomplete="off" value="'+esc(c.email||'')+'"></label></div>'+
+  '<div class="pair"><label>Phone<input id="rphone" type="tel" autocomplete="off" value="'+esc(c.phone||'')+'"></label><label>Email<input id="remail" type="email" autocomplete="off" value="'+esc(c.email||'')+'"></label></div><p class="eerr" id="eerr" hidden>That doesn\u2019t look like an email address. Check it, like name@example.com.</p><p class="eerr" id="perr" hidden>That phone number needs 10 digits, like 919-555-1212.</p>'+
   added+
   '<div class="pair"><label>Artist<input id="rartist" autocomplete="off" value="'+esc((S.rpre||{}).artist||'')+'"></label><label>Album<input id="ralbum" autocomplete="off" value="'+esc((S.rpre||{}).album||'')+'"></label></div>'+
   '<div><label>Format</label><div class="fmts" style="margin-top:8px">'+f.map(x=>'<button data-act="rfmt" data-v="'+x+'" class="'+(S.rfmt===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
@@ -777,28 +901,33 @@ function vRequest(){
 }
 function msrpPrice(v){ const n=parseFloat(v); return isFinite(n)&&n>0 ? Math.ceil(n)+1 : null; }
 function vAddRec(){
-  const T=['New','Used','Trove'], t=S.atype;
-  const seg=(arr,cur,act)=>'<div class="fmts">'+arr.map(x=>'<button data-act="'+act+'" data-v="'+x+'" class="'+(cur===x?'on':'')+'">'+(x==='Trove'?'Trove inventory':x)+'</button>').join('')+'</div>';
-  let body='';
-  if(t){
-    const fmt='<label>Format<select id="aformat"><option>Vinyl</option><option>Tape</option><option>CD</option><option>45</option></select></label>';
-    body='<div class="pair"><label>Artist<input id="aartist" autocomplete="off"></label><label>Album<input id="aalbum" autocomplete="off"></label></div>'+
-      '<div class="pair"><label>Genre<select id="agenre"><option value="">Choose a genre</option>'+C.GENRES.map(x=>'<option>'+esc(x)+'</option>').join('')+'</select></label>'+fmt+'</div>';
-    if(t==='New'){
-      body+='<div class="pair"><label>Barcode<input id="abar" inputmode="numeric" autocomplete="off" placeholder="Scan it"></label><label>Suggested MSRP<span class="pre"><b>$</b><input id="amsrp" inputmode="decimal" autocomplete="off"></span></label></div>'+
-        '<div class="row2"><button class="btn ghost" data-act="agen">No barcode? Make one</button><span class="calc" id="acalc">Price: enter the MSRP</span></div>';
-    } else {
-      const locs=['Backfill','Bar wall','Bar cubbies','Trove wall','Trove bin'];
-      body+='<div class="pair"><label>Price<span class="pre"><b>$</b><input id="aprice" inputmode="decimal" autocomplete="off"></span></label>'+
-        (t==='Trove'?'<label>Shelf location<select id="aloc"><option value="">Choose a location</option>'+locs.map(x=>'<option>'+x+'</option>').join('')+'</select></label>':
-         '<div><label>Barcode label</label><div class="fmts"><button data-act="aprintq" class="'+(S.aprint?'on':'')+'">'+(S.aprint?'Added to print queue':'Add to print queue')+'</button></div></div>')+'</div>';
-      if(t==='Trove') body+='<div class="pair"><div><label>Also listed on</label><div class="fmts" style="margin-top:7px">'+['Discogs','eBay','Email'].map(x=>'<button data-act="alisted" data-v="'+x+'" class="'+(S.alisted[x]?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
-        '<div><label>Barcode label</label><p class="hint" style="margin:14px 0 0">Added to the print queue automatically.</p></div></div>';
-    }
-    body+='<label><span>Notes <span class="o">(optional, e.g. blue special original pressing)</span></span><input id="anotes" autocomplete="off"></label>'+
-      '<div><button class="btn go" id="sub" data-act="saveaddrec" disabled>Add record</button></div>';
+  const t=S.atype;
+  if(!t){
+    const c=(act,h,d)=>'<button class="btn ghost" data-act="'+act+'">'+h+'<small>'+d+'</small></button>';
+    return topHTML('Add records')+bannerHTML()+'<p class="hint" style="margin:0 0 6px">What are you adding?</p><div class="addpick">'+
+      c('go:receive','New','Check in a distributor order that just arrived')+
+      c('atype" data-v="Trove','Trove','One special record. Gets a shelf spot and a label')+
+      c('atype" data-v="Used','Used','One used record. Artist, album, condition, price')+'</div>';
   }
-  return topHTML('Add a record')+bannerHTML()+'<div class="form tight" style="max-width:none"><div><label>What kind of record?</label><div style="margin-top:8px">'+seg(T,t,'atype')+'</div></div>'+body+'</div>';
+  const L=S.alast||{}, sel=(arr,cur,ph)=>(ph?'<option value="">'+ph+'</option>':'')+arr.map(x=>'<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>').join('');
+  const fmt='<label>Format<select id="aformat">'+sel(['Vinyl','Tape','CD','45'],L.format)+'</select></label>';
+  let body='<div class="pair"><label>Artist<input id="aartist" autocomplete="off"></label><label>Album<input id="aalbum" autocomplete="off"></label></div>'+
+    '<div class="pair"><label>Genre<select id="agenre">'+sel(C.GENRES,L.genre,'Choose a genre')+'</select></label>'+fmt+'</div>';
+  if(t==='Used'){
+    const CO=['Mint','NM','VG+','VG','G'];
+    body+='<div><label><span>Condition <span class="o">(optional)</span></span></label><div class="fmts" style="margin-top:7px">'+CO.map(x=>'<button data-act="acond" data-v="'+x+'" class="'+(S.acond===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
+      '<div class="pair"><label>Price<span class="pre"><b>$</b><input id="aprice" inputmode="decimal" autocomplete="off"></span></label>'+
+      '<div><label>Barcode label</label><div class="fmts" style="margin-top:7px"><button data-act="aprintq" class="'+(S.aprint?'on':'')+'">'+(S.aprint?'Added to print queue':'Add to print queue')+'</button></div></div></div>';
+  } else {
+    const locs=['Backfill','Bar wall','Bar cubbies','Trove wall','Trove bin'];
+    body+='<div class="pair"><label>Price<span class="pre"><b>$</b><input id="aprice" inputmode="decimal" autocomplete="off"></span></label>'+
+      '<label>Shelf location<select id="aloc"><option value="">Choose a location</option>'+locs.map(x=>'<option>'+x+'</option>').join('')+'</select></label></div>'+
+      '<div class="pair"><div><label>Also listed on</label><div class="fmts" style="margin-top:7px">'+['Discogs','eBay','Email'].map(x=>'<button data-act="alisted" data-v="'+x+'" class="'+(S.alisted[x]?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
+      '<div><label>Barcode label</label><p class="hint" style="margin:14px 0 0">Added to the print queue automatically.</p></div></div>';
+  }
+  body+='<label><span>Notes <span class="o">(optional'+(t==='Used'?', e.g. water damage on sleeve':', e.g. blue special original pressing')+')</span></span><input id="anotes" autocomplete="off"></label>'+
+    '<div><button class="btn go" id="sub" data-act="saveaddrec" disabled>'+(t==='Used'?'Add record':'Add record')+'</button></div>';
+  return topHTML(t==='Used'?'Add a used record':'Add a Trove record','addback')+bannerHTML()+'<div class="form tight" style="max-width:none">'+body+'</div>';
 }
 /* ---------- receive records ---------- */
 const tc=x=>String(x||'').toLowerCase().replace(/\b[a-z]/g,m=>m.toUpperCase());
@@ -869,18 +998,168 @@ function vCash(){
   '<div><button class="btn go" id="sub" data-act="savecash" disabled>Log it</button></div></div>';
 }
 function vDrop(){
-  return topHTML('Customer drop-off')+bannerHTML()+
+  return topHTML('Customer drop&#8209;off')+bannerHTML()+
   '<div class="form">'+
   '<label>Name<input id="cname" autocomplete="off"></label>'+
   '<div class="pair"><label>Phone<input id="cphone" type="tel" autocomplete="off"></label>'+
-  '<label>Email<input id="cemail" type="email" autocomplete="off"></label></div>'+
+  '<label>Email<input id="cemail" type="email" autocomplete="off"></label></div><p class="eerr" id="eerr" hidden>That doesn\u2019t look like an email address. Check it, like name@example.com.</p><p class="eerr" id="perr" hidden>That phone number needs 10 digits, like 919-555-1212.</p>'+
     '<label>What they dropped off<textarea id="citems"></textarea></label>'+
-  '<label>Records <span class="o">(optional)</span><input id="ccount" type="number" inputmode="numeric" min="0"></label>'+
+  '<div class="drp" style="display:flex;gap:12px;align-items:center"><div style="display:flex;gap:12px;align-items:center"><button class="btn ghost camb" data-act="iphoto" aria-label="'+(S.iphoto?'Retake photo':'Take a photo of the drop-off')+'"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.2l1.4-2h6.8l1.4 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.8"/></svg></button><span class="camt">'+(S.iphoto?'Photo added. Tap the camera to retake.':'Take a photo of the drop-off')+'</span><input id="iphotoin" type="file" accept="image/*" capture="environment" hidden><div id="iprev">'+iprevHTML()+'</div></div></div>'+
   '<div><button class="btn go" id="sub" data-act="savedrop" disabled>Log drop-off</button></div></div>';
 }
 
+
+/* ---------- print labels (Avery 8161, 1" x 4", 2 x 10) ---------- */
+const C128=["11011001100", "11001101100", "11001100110", "10010011000", "10010001100", "10001001100", "10011001000", "10011000100", "10001100100", "11001001000", "11001000100", "11000100100", "10110011100", "10011011100", "10011001110", "10111001100", "10011101100", "10011100110", "11001110010", "11001011100", "11001001110", "11011100100", "11001110100", "11101101110", "11101001100", "11100101100", "11100100110", "11101100100", "11100110100", "11100110010", "11011011000", "11011000110", "11000110110", "10100011000", "10001011000", "10001000110", "10110001000", "10001101000", "10001100010", "11010001000", "11000101000", "11000100010", "10110111000", "10110001110", "10001101110", "10111011000", "10111000110", "10001110110", "11101110110", "11010001110", "11000101110", "11011101000", "11011100010", "11011101110", "11101011000", "11101000110", "11100010110", "11101101000", "11101100010", "11100011010", "11101111010", "11001000010", "11110001010", "10100110000", "10100001100", "10010110000", "10010000110", "10000101100", "10000100110", "10110010000", "10110000100", "10011010000", "10011000010", "10000110100", "10000110010", "11000010010", "11001010000", "11110111010", "11000010100", "10001111010", "10100111100", "10010111100", "10010011110", "10111100100", "10011110100", "10011110010", "11110100100", "11110010100", "11110010010", "11011011110", "11011110110", "11110110110", "10101111000", "10100011110", "10001011110", "10111101000", "10111100010", "11110101000", "11110100010", "10111011110", "10111101110", "11101011110", "11110101110", "11010000100", "11010010000", "11010011100"];
+function code128(s){ // Code 128-B -> bit string of modules
+  s=String(s); let sum=104, bits=C128[104];
+  for(let i=0;i<s.length;i++){ const v=s.charCodeAt(i)-32; if(v<0||v>95) continue; bits+=C128[v]; sum+=v*(i+1); }
+  bits+=C128[sum%103]+'1100011101011'; return bits;
+}
+function barSVG(s){
+  const b=code128(s); let x=0, out='';
+  for(let i=0;i<b.length;){ if(b[i]==='1'){ let j=i; while(j<b.length&&b[j]==='1') j++; out+='<rect x="'+i+'" y="0" width="'+(j-i)+'" height="1"/>'; i=j; } else i++; }
+  return '<svg class="bars" xmlns="http://www.w3.org/2000/svg" viewBox="-10 0 '+(b.length+20)+' 1" preserveAspectRatio="none" shape-rendering="crispEdges">'+out+'</svg>';
+}
+const PQ='hd.printq', PS='hd.printstart';
+const pqGet=()=>LS.get(PQ,[]);
+function pqAdd(r){ const q=pqGet(); q.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,6),code:r.code||'',artist:r.artist||'',title:r.title||r.album||'',genre:r.genre||'',price:r.price,notes:r.notes||''}); LS.set(PQ,q); }
+function labelHTML(r){
+  if(!r) return '<div class="lbl blank"></div>';
+  const pr=(r.price===0||r.price)?'$'+Number(r.price).toLocaleString('en-US',{maximumFractionDigits:2}):'';
+  return '<div class="lbl"><div class="lt"><div class="lh"><b>HUNKY DORY</b><span>'+esc(r.genre||'')+'</span></div><div class="la">'+esc(r.artist)+'</div><div class="ll">'+esc(r.title)+'</div><div class="ln">'+esc(r.notes||'')+'</div></div>'+
+    '<div class="lr"><div class="lp">'+esc(pr)+'</div>'+(r.code?barSVG(r.code)+'<div class="lc">'+esc(r.code)+'</div>':'')+'</div></div>';
+}
+function pageHTML(slots){ return '<div class="ppage">'+slots.map(labelHTML).join('')+'</div>'; }
+function sheetPages(){
+  const q=pqGet(), start=Math.min(19,Math.max(0,LS.get(PS,0))); const slots=Array(start).fill(null).concat(q); const pages=[];
+  for(let i=0;i<slots.length;i+=20){ const p=slots.slice(i,i+20); while(p.length<20) p.push(null); pages.push(p); }
+  return pages;
+}
+function vLabels(){
+  const q=pqGet(), start=Math.min(19,Math.max(0,LS.get(PS,0))), n=q.length, pages=sheetPages().length;
+  const rows=q.map((r,i)=>'<div class="pqrow"><span class="tx"><b>'+esc(r.title||'(no title)')+'</b><span>'+esc(r.artist)+(r.genre?' · '+esc(r.genre):'')+'</span></span><span class="pr">'+esc(r.price===0||r.price?'$'+r.price:'')+'</span><button class="x" data-act="pqdel" data-i="'+i+'" aria-label="Remove">✕</button></div>').join('');
+  const cells=Array.from({length:20},(_,k)=>{ const cls=k<start?'used':(k-start<n&&k-start<20?'will':''); return '<button class="pcell '+cls+'" data-act="pstart" data-k="'+k+'">'+(k+1)+'</button>'; }).join('');
+  const done=S.pprinted&&n ? '<div class="tmsg ok" style="margin-top:12px"><b>Sent to the printer</b><span>If they printed fine, clear the queue.</span><button class="btn go" data-act="pqclear">Clear queue and move the start spot</button></div>' : '';
+  return topHTML('Print labels')+bannerHTML()+
+  '<div class="plwrap"><div class="plleft"><div class="plh"><b>Waiting to print</b><span class="chip">'+n+'</span></div>'+
+  '<input id="pqs" class="pqs" placeholder="Add a record to print. Search artist or title" autocomplete="off" value="'+esc(S.pqs||'')+'"><div id="pqres">'+pqResHTML()+'</div>'+
+  '<div class="pqlist">'+(rows||'<p class="hint">Nothing waiting. Records you add with “Add to print queue” show up here. Search above to reprint any record.</p>')+'</div></div>'+
+  '<div class="plright"><div class="plh"><b>Preview</b><span class="o">first label</span></div><div class="pprev">'+(n?labelHTML(q[0]):'<div class="lbl blank"><span>No labels yet</span></div>')+'</div>'+
+  '<div class="plh" style="margin-top:14px"><b>Start on label</b><span class="o">Tap the first empty spot on your sheet</span></div><div class="pgrid">'+cells+'</div>'+
+  '<button class="btn go" id="pprint" data-act="pprint" '+(n?'':'disabled')+'>'+(n?'Print '+n+' label'+(n===1?'':'s')+(pages>1?' ('+pages+' sheets)':''):'Nothing to print')+'</button>'+done+'</div></div>';
+}
+function pqResHTML(){
+  const q=(S.pqs||'').trim().toLowerCase().split(/\s+/).filter(Boolean); if(!q.length) return '';
+  const src=[].concat(S.troveList||[],LS.get('hd.used',[])).filter(i=>q.every(w=>(i.artist+' '+i.title).toLowerCase().includes(w))).slice(0,5);
+  if(!src.length) return '<p class="hint" style="margin:6px 0">No match.</p>';
+  return '<div class="pqres">'+src.map(i=>'<div class="pqrow"><span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span><span class="pr">'+esc(i.price?'$'+i.price:'')+'</span><button class="btn ghost add" data-act="pqadd" data-c="'+esc(i.code||'')+'" data-a="'+esc(i.artist)+'" data-t="'+esc(i.title)+'">+ Add</button></div>').join('')+'</div>';
+}
+function doPrint(){
+  let el=document.getElementById('psheet'); if(!el){ el=document.createElement('div'); el.id='psheet'; document.body.appendChild(el); }
+  el.innerHTML=sheetPages().map(pageHTML).join(''); S.pprinted=true;
+  setTimeout(()=>{ try{ window.print(); }catch(e){} render(); },50);
+}
+
+/* ---------- change keg ---------- */
+const KEGK='hd.kegs4';
+const kegs=()=>{ let k=LS.get(KEGK,null); if(!k){ k=JSON.parse(JSON.stringify(C.DEMO_KEGS||[])); LS.set(KEGK,k); } return k; };
+const kfind=(L,key)=>L.find(x=>x.key===key);
+const kfmt=p=>p?'$'+Number(p).toFixed(2):'';
+function kegCommit(L,summary,data){ LS.set(KEGK,L); S.ks=null; render(); toast(summary); submit('keg',summary,data||{},true); }
+function kegDay(){ const d=new Date().getDay(); return d===4?'Thursday: $1 off all drafts (the Tap Board applies it).':d===0?'Sunday: all drafts $5 (the Tap Board applies it).':''; }
+function kegTapTile(L,n){
+  const k=L.find(x=>x.status==='tap'&&x.tap===n);
+  return k ? '<button class="kt" data-act="ktile" data-n="'+n+'"><span class="kgrip" aria-label="Drag to move">\u2261</span><span class="kn">'+n+'</span><span class="kx"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+(k.style?' · '+esc(k.style):'')+'</span></span><span class="kp">'+(k.price?kfmt(k.price):'<em>No price</em>')+'</span></button>'
+    : '<button class="kt open" data-act="ktile" data-n="'+n+'"><span class="kn">'+n+'</span><span class="kx"><b>Open tap</b><span>Tap to put a keg on</span></span></button>';
+}
+function kegSheetHTML(L){
+  const ks=S.ks; if(!ks) return '';
+  const cancel='<button class="btn ghost" data-act="kclose">Cancel</button>', wrap=(h,body,foot)=>'<div class="kscrim" data-act="kclose"><div class="ksheet" role="dialog" aria-modal="true"><div><h2>'+h[0]+'</h2><p class="hint" style="margin:6px 0 0">'+(h[1]||'')+'</p></div>'+body+'<div class="krow">'+foot+'</div></div></div>';
+  const deck=L.filter(x=>x.status==='deck');
+  if(ks.t==='tap'){ const k=L.find(x=>x.status==='tap'&&x.tap===ks.n);
+    return wrap([esc(k.beer),'Tap '+ks.n+' · '+esc(k.brewery)+' · '+(k.price?kfmt(k.price):'no price yet')],'','<button class="btn danger" data-act="kkick" data-key="'+esc(k.key)+'" data-n="'+ks.n+'">Kicked</button><button class="btn ghost" data-act="kprice" data-key="'+esc(k.key)+'" data-n="0">Price</button>'+cancel); }
+  if(ks.t==='open') return wrap(['Tap '+ks.n+' is open','Pick the keg going on.'], deck.length?'<div class="kpick">'+deck.map(k=>'<button data-act="kdoplace" data-key="'+esc(k.key)+'" data-n="'+ks.n+'"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+'</span></button>').join('')+'</div>':'<p class="hint">Nothing on deck right now.</p>',cancel);
+  if(ks.t==='putontap'){ const k=kfind(L,ks.key);
+    const g='<div class="kgrid">'+Array.from({length:C.TAP_COUNT||12},(_,i)=>{ const n=i+1, used=L.some(x=>x.status==='tap'&&x.tap===n); return '<button '+(used?'disabled':'data-act="kdoplace" data-key="'+esc(ks.key)+'" data-n="'+n+'"')+'>'+n+'</button>'; }).join('')+'</div>';
+    return wrap([esc(k.beer),'Which tap is it going on? Taken taps are dimmed.'],g,cancel); }
+  if(ks.t==='move'){ const k=kfind(L,ks.key);
+    const g='<div class="kgrid">'+Array.from({length:C.TAP_COUNT||12},(_,i)=>{ const n=i+1, o=L.find(x=>x.status==='tap'&&x.tap===n); return n===ks.from?'<button disabled>'+n+'<small>here</small></button>':'<button class="'+(o?'swap':'')+'" data-act="kdomove" data-key="'+esc(ks.key)+'" data-n="'+n+'" data-from="'+ks.from+'">'+n+'<small>'+(o?'swap':'open')+'</small></button>'; }).join('')+'</div>';
+    return wrap(['Move '+esc(k.beer),'Now on tap '+ks.from+'. Taps with a beer swap places.'],g,cancel); }
+  if(ks.t==='price'){ const k=kfind(L,ks.key);
+    const chips=[5,5.5,6,6.5,7,7.5,8,9].map(v=>'<button data-act="kchip" data-v="'+v.toFixed(2)+'">$'+v.toFixed(2)+'</button>').join('');
+    return wrap([esc(k.beer),esc(k.brewery)+' · price for a 12oz pour'],'<input class="kmoney" id="kpr" inputmode="decimal" placeholder="$0.00" value="'+esc(k.price||'')+'"><div class="kchips">'+chips+'</div>',cancel+'<button class="btn go" data-act="ksaveprice" data-key="'+esc(k.key)+'" data-n="'+ks.n+'">'+(ks.n?'Save and put on tap '+ks.n:'Save price')+'</button>'); }
+  return '';
+}
+function vKegs(){
+  const L=kegs(), tab=S.kv||'taps', deck=L.filter(x=>x.status==='deck'), emp=L.filter(x=>x.status==='empty'), poured=L.filter(x=>x.status==='tap').length, N=C.TAP_COUNT||12;
+  const tb=(id,t,n)=>'<button class="tchip '+(tab===id?'on':'')+'" data-act="kgtab" data-v="'+id+'">'+t+(n==null?'':' · '+n)+'</button>';
+  let body='';
+  if(tab==='taps') body='<p class="hint" style="margin:0 0 10px">Drag a beer by the handle to move it or swap taps. Tap a beer to kick it or change its price. Tap an open slot to put a keg on.</p><div class="kboard">'+Array.from({length:N},(_,i)=>kegTapTile(L,i+1)).join('')+'</div>';
+  else if(tab==='deck') body='<p class="hint" style="margin:0 0 10px">Kegs in the cooler waiting for a tap. Drag the handle to change the order.</p>'+(deck.length?deck.map((k,i)=>'<div class="kcard" data-key="'+esc(k.key)+'"><span class="kgrip" aria-label="Drag to reorder">\u2261</span><span class="kx" style="flex:1"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+(k.style?' · '+esc(k.style):'')+'</span></span><button class="chip'+(k.price?'':' warn')+'" data-act="kprice" data-key="'+esc(k.key)+'" data-n="0">'+(k.price?kfmt(k.price)+' ✎':'Add price')+'</button><button class="btn go" data-act="kplace" data-key="'+esc(k.key)+'">Put on tap</button></div>').join(''):'<p class="hint">Nothing on deck.</p>');
+  else body='<p class="hint" style="margin:0 0 10px">Marked empty by mistake? Undo puts the keg back.</p>'+(emp.length?emp.map(k=>{ const back=k.lastTap&&!L.some(x=>x.status==='tap'&&x.tap===k.lastTap); return '<div class="kcard"><span class="kx" style="flex:1"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+'</span></span><button class="btn ghost" data-act="kundo" data-key="'+esc(k.key)+'">'+(back?'Undo, back to tap '+k.lastTap:'Undo')+'</button></div>'; }).join(''):'<p class="hint">No empties.</p>');
+  const day=kegDay();
+  return topHTML('Beer menu','home','<span class="chip" style="margin-left:auto">'+poured+' of '+N+' taps pouring</span>')+bannerHTML()+
+    '<div class="tbar" style="margin-bottom:10px">'+tb('taps','Taps')+tb('deck','On deck',deck.length)+tb('empties','Empties',emp.length)+'</div>'+(day?'<p class="hint" style="margin:0 0 10px">'+day+'</p>':'')+body+kegSheetHTML(L);
+}
+
+const POUR={div:20,plus:1,step:0.5}; /* from the Keg Tracker: sixtel / 20 + $1, rounded to $0.50 */
+const SIZE={'1/6':1,'1/4':1.5,'1/2':3};
+function pourPrice(cost,size){ const f=SIZE[String(size||'1/6').replace(/\s*bbl.*/i,'').trim()]; if(!f||!(cost>0)) return null; const raw=cost/(POUR.div*f)+POUR.plus; return Math.floor(raw/POUR.step+0.5+1e-9)*POUR.step; }
+async function kegScan(){
+  const sm = window.claude&&window.claude.use ? await window.claude.use('sample') : null;
+  if(!sm) throw new Error('nosample');
+  const blob = await (await fetch(S.iphoto)).blob();
+  const known = kegs().map(k=>k.beer+' | '+k.brewery).join('\n');
+  const prompt='This is a photo of a beer distributor delivery invoice. Return ONLY JSON: {"supplier":string,"invoice":string,"kegs":[{"brewery":string,"beer":string,"size":string,"cost":number}]}. '+
+   'Include only kegs being delivered: lines with a product and a price that are NOT crossed out or struck through. Exclude lines starting "Empty" (returned kegs), key deposits, deposits, totals. cost is the PRICE column, not the deposit. size like "1/6 bbl". '+
+   'Product text looks like "Brewery-Beer Name 1/6 bbl" and may be cut off at the edge of the photo. If a name is cut off or abbreviated, use the matching entry from this known list (its exact beer and brewery spelling) when one clearly matches; otherwise give what is visible. Known beers (beer | brewery):\n'+known;
+  const r = await sm.json(prompt,{images:[blob],modelTier:'default',cache:false});
+  if(!r||!Array.isArray(r.kegs)) throw new Error('bad');
+  return r;
+}
+async function kegAuto(){
+  S.rkBusy=true; S.err=''; render();
+  try{
+    const r=await kegScan(); const kegsIn=r.kegs.filter(k=>k&&k.beer&&k.cost>0);
+    if(!kegsIn.length) throw new Error('none');
+    const L=kegs(), id=Date.now(), out=[];
+    kegsIn.forEach(k=>{ const price=pourPrice(k.cost,k.size); const o={key:k.beer+'|'+k.brewery,beer:k.beer,brewery:k.brewery,style:'',price,status:'deck',tap:null,days:0,lastTap:null,supplier:r.supplier||'',scanId:id}; L.push(o); out.push({beer:k.beer,brewery:k.brewery,cost:k.cost,price}); });
+    LS.set(KEGK,L);
+    S.rkBusy=false; S.rkDone={id,kegs:out,supplier:r.supplier,invoice:r.invoice}; render();
+    api('log',{who:S.who,task:'kegrecv',summary:'Kegs received from '+(r.supplier||'invoice')+': '+out.map(k=>k.beer+(k.price?' ('+kfmt(k.price)+')':'')).join(', '),data:{supplier:r.supplier,invoice:r.invoice,kegs:out,photo:S.iphoto.split(',')[1],auto:true}}).then(refreshFeed).catch(()=>{});
+  }catch(e){
+    S.rkBusy=false; S.err = e.message==='nosample' ? '' : 'Couldn’t read that invoice. Add the kegs by hand below, or retake the photo.'; render();
+  }
+}
+function keqHTML(cost){
+  const f=SIZE[S.ksize||'1/6'], c=parseFloat(cost);
+  if(!(c>0)) return '<b>How the pour price works</b><br>Keg cost ÷ '+(POUR.div*f)+' + $'+POUR.plus+', rounded to the nearest $'+POUR.step.toFixed(2)+'. Example: $100 sixtel = $6.00. Half barrels: type the price yourself.';
+  const raw=c/(POUR.div*f)+POUR.plus;
+  return '<b>$'+c.toFixed(2)+' ÷ '+(POUR.div*f)+' + $'+POUR.plus+' = $'+raw.toFixed(2)+'</b> → rounds to <b>$'+pourPrice(c,S.ksize||'1/6').toFixed(2)+'</b>';
+}
+function vRKeg(){
+  if(S.rkBusy) return topHTML('Receive keg','home','',false)+bannerHTML()+'<div class="kbig" style="margin-top:20px;min-height:260px"><span><b>Reading the invoice\u2026</b><span>This takes a few seconds</span></span></div>';
+  if(S.rkDone){ const d=S.rkDone; return topHTML('Receive keg')+bannerHTML()+'<div class="kdone" style="margin-top:6px"><span class="kcam" style="font-size:56px;color:var(--ok)">\u2713</span><div><b>'+d.kegs.length+' keg'+(d.kegs.length===1?'':'s')+' on deck</b><div class="hint" style="margin:4px 0 0">From '+esc(d.supplier||'the invoice')+(d.invoice?' \u00b7 invoice '+esc(d.invoice):'')+'</div></div></div>'+
+    d.kegs.map(k=>'<div class="kcard" style="margin-top:12px"><span class="kx" style="flex:1"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+' \u00b7 cost '+kfmt(k.cost)+'</span></span>'+(k.price?'<span class="kp">'+kfmt(k.price)+'</span>':'<em class="kp" style="color:var(--warn)">Add price</em>')+'</div>').join('')+
+    '<div class="krow" style="margin-top:18px"><button class="btn ghost" data-act="kundoscan">Undo</button><button class="btn go" data-act="kscandone">Done</button></div>'; }
+  const sup=['Hopfly','Artisan','DSSOLVR','Mad Mole','Sneaky Penguin','Proof','Advintage','Tryon','Flying Machine','Millennium','Casita','Vicious Fishes'];
+  const L=S.rk||[], inp='<input id="kphotoin" type="file" accept="image/*" capture="environment" hidden>';
+  const big=S.iphoto
+    ? '<div class="kdone"><img class="iimg" alt="" src="'+S.iphoto+'"><div><b>Invoice photo ✓</b><div><button class="btn ghost" data-act="kphoto" style="margin-top:8px">Retake</button></div></div></div>'
+    : '<button class="kbig" data-act="kphoto"><span class="kcam">○</span><span><b>Take a photo of the invoice</b><span>Do this first</span></span></button>';
+  return topHTML('Receive keg')+bannerHTML()+big+inp+
+  '<div class="form" style="margin-top:18px"><div class="hint" style="margin:0"><b>Add the kegs by hand</b></div>'+
+  '<label>Supplier<input id="ksup" list="ksups" autocomplete="off" value="'+esc(S.ksup||'')+'"><datalist id="ksups">'+sup.map(x=>'<option value="'+x+'">').join('')+'</datalist></label>'+
+  L.map((k,i)=>'<div class="kcard" style="margin:0"><span class="kx" style="flex:1"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+'</span></span><span class="kp">'+kfmt(k.price)+'</span><button class="btn ghost" data-act="krm" data-n="'+i+'">Remove</button></div>').join('')+
+  '<div class="pair"><label>Beer<input id="kbeer" autocomplete="off"></label><label>Brewery<input id="kbrew" autocomplete="off"></label></div>'+
+  '<label>Sixtel (1/6 barrel) cost from the invoice<div class="pre"><b>$</b><input class="money" id="kcost" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label>'+
+  '<div class="keq" id="keq">'+keqHTML('')+'</div>'+
+  '<div style="display:flex;gap:12px;align-items:flex-end"><label style="flex:1">Price for a 12oz pour <span class="o">(filled in for you, you can change it)</span><div class="pre"><b>$</b><input class="money" id="kprice" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label><button class="btn ghost" id="kadd" data-act="kadd" disabled>Add keg</button></div>'+
+  '<div><button class="btn go" id="sub" data-act="savekegrecv" disabled>Put '+L.length+' keg'+(L.length===1?'':'s')+' on deck</button></div></div>';
+}
 function render(){
-  const v = {login:vLogin,home:vHome,opening:vOpening,trove:vTrove,tbrowse:vTBrowse,request:vRequest,addrec:vAddRec,recvlist:vRecvList,recv:vRecv,find:vFind,note:vNote,issue:vIssue,cash:vCash,drop:vDrop}[S.view]();
+  const v = {login:vLogin,home:vHome,opening:vOpening,trove:vTrove,tbrowse:vTBrowse,request:vRequest,addrec:vAddRec,recvlist:vRecvList,kegs:vKegs,rkeg:vRKeg,labels:vLabels,recv:vRecv,find:vFind,note:vNote,issue:vIssue,cash:vCash,drop:vDrop}[S.view]();
   document.getElementById('app').innerHTML = v + (S.notePop&&S.note&&S.view==='home' ? notePopHTML() : '');
   bindForms(); coverScan();
 }
@@ -892,23 +1171,25 @@ function bindForms(){
   const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
   const check=()=>{
     let ok=false;
+    const EML=v=>!v||/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), ef=document.getElementById(S.view==='drop'?'cemail':'remail'), eo=EML(ef?ef.value.trim():''), ee=document.getElementById('eerr'); if(ee) ee.hidden=eo; if(ef) ef.style.borderColor=eo?'':'var(--bad)';
+    const pf=document.getElementById(S.view==='drop'?'cphone':'rphone'), pv=pf?pf.value.replace(/\D/g,''):'', po=!(pf&&pf.value.trim())||pv.length===10||(pv.length===11&&pv[0]==='1'), pe=document.getElementById('perr'); if(pe) pe.hidden=po; if(pf) pf.style.borderColor=po?'':'var(--bad)';
     if(S.view==='cash') ok = MONEY.test(val('drawer')) && MONEY.test(val('deposit'));
     if(S.view==='note') ok = !!val('nt');
+    if(S.view==='rkeg'){ const pr=parseFloat(val('kprice')); const ka=document.getElementById('kadd'); if(ka) ka.disabled=!(val('kbeer')&&val('kbrew')&&pr>0); ok=!!val('ksup')&&(S.rk||[]).length>0; }
     if(S.view==='issue') ok = !!S.itype && (!!val('idet') || !!S.iphoto);
     if(S.view==='addrec'){
       const pr=v=>/^\d{1,5}(\.\d{1,2})?$/.test(v)&&parseFloat(v)>0;
-      ok = !!S.atype && !!val('aartist') && !!val('aalbum') && !!val('agenre');
-      if(S.atype==='New'){ ok = ok && !!val('abar') && !!msrpPrice(val('amsrp')); const p=msrpPrice(val('amsrp')); const c=document.getElementById('acalc'); if(c) c.textContent = p?'Price: $'+p:'Price: enter the MSRP'; }
-      if(S.atype==='Used') ok = ok && pr(val('aprice'));
+      ok = !!S.atype && S.atype!=='New' && !!val('aartist') && !!val('aalbum') && !!val('agenre');
+            if(S.atype==='Used') ok = ok && pr(val('aprice'));
       if(S.atype==='Trove') ok = ok && pr(val('aprice')) && !!val('aloc');
     }
     if(S.view==='request'){
-      const who=!!val('rname') && !!(val('rphone')||val('remail')), cur=!!val('rartist') && !!val('ralbum');
+      const who=!!val('rname') && !!(val('rphone')||val('remail')) && eo && po, cur=!!val('rartist') && !!val('ralbum');
       ok = who && (cur || S.ritems.length>0);
       const add=document.getElementById('radd'); if(add) add.disabled = !(who&&cur);
       sub.textContent = 'Send'+((S.ritems.length+(cur?1:0))>1?' '+(S.ritems.length+(cur?1:0))+' requests':'');
     }
-    if(S.view==='drop') ok = !!val('cname') && !!val('citems') && !!(val('cphone')||val('cemail'));
+    if(S.view==='drop') ok = !!val('cname') && !!val('citems') && !!(val('cphone')||val('cemail')) && eo && po;
     sub.disabled = !ok || S.busy;
   };
   document.querySelectorAll('input,textarea,select').forEach(e=>e.addEventListener('input',check));
@@ -918,11 +1199,11 @@ function bindForms(){
 
 /* ---------- actions ---------- */
 function toast(m){ const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=m; document.getElementById('screen').appendChild(t); setTimeout(()=>t.remove(),2200); }
-async function submit(task, summary, data){
+async function submit(task, summary, data, stay){
   S.busy=true; S.err=''; const sub=document.getElementById('sub'); if(sub) sub.disabled=true;
   try{
     await api('log',{who:S.who,task,summary,data});
-    S.busy=false; S.confirm=false; await refreshFeed(); S.view='home'; render(); toast('Logged ✓'); return true;
+    S.busy=false; S.confirm=false; await refreshFeed(); if(!stay) S.view='home'; render(); if(!stay) toast('Logged ✓'); return true;
   }catch(e){
     S.busy=false; if(/PIN/.test(e.message)){ logout(); return false; } S.err='Couldn’t save. Check the wifi and try again.';
     render(); return false;
@@ -931,7 +1212,8 @@ async function submit(task, summary, data){
 function go(view){
   S.view=view; S.err=''; S.confirm=false;
   if(view==='opening'){ S.open=LS.get(K(),{}); }
-  if(view==='find'){ S.fq=''; if(!S.troveList.length) S.troveList=(C.DEMO_TROVE||[]).slice(); }
+  if(view==='labels'&&!(S.troveList||[]).length) setTrove(C.DEMO_TROVE);
+  if(view==='find'){ S.fq=''; if(!S.troveList.length) setTrove(C.DEMO_TROVE); }
   render();
   if(view==='find'){ const e=document.getElementById('fq'); if(e) e.focus(); }
 }
@@ -952,7 +1234,9 @@ async function tryLogin(){
 }
 function logout(){ if(C.TEST_SKIP&&DEMO){ S.view='home'; render(); return; } S.who=null; S.pin=''; S.entry=''; S.feed=[]; LS.set('hd.shift',null); S.view='login'; render(); }
 document.addEventListener('input',ev=>{
+  if(ev.target&&ev.target.id==='kcost'){ const c=ev.target.value, p=pourPrice(parseFloat(c),S.ksize||'1/6'); const q=document.getElementById('keq'); if(q) q.innerHTML=keqHTML(c); const pr=document.getElementById('kprice'); if(pr&&p!=null){ pr.value=p.toFixed(2); } if(S.recheck) S.recheck(); return; }
   if(ev.target&&ev.target.id==='fq'){ S.fq=ev.target.value; const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); const x=document.getElementById('fx'); if(x) x.style.display=S.fq?'block':'none'; return; }
+  if(ev.target&&ev.target.id==='pqs'){ S.pqs=ev.target.value; const l=document.getElementById('pqres'); if(l) l.innerHTML=pqResHTML(); return; }
   if(ev.target&&ev.target.id==='tbq'){ S.tbq=ev.target.value; const l=document.getElementById('tblist'); if(l) l.innerHTML=tbrowseListHTML(); coverScan(); return; }
   if(ev.target&&ev.target.id==='tq'){ S.tq=ev.target.value; refreshTrove(); return; }
   const e=ev.target.closest&&ev.target.closest('.oin'); if(!e) return;
@@ -981,10 +1265,11 @@ function shrink(file,max){
   });
 }
 document.addEventListener('change',async ev=>{
+  if(ev.target&&ev.target.id==='kphotoin'&&ev.target.files[0]){ try{ S.iphoto=await shrink(ev.target.files[0],1600); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; render(); return; } kegAuto(); return; }
   if(!ev.target||ev.target.id!=='iphotoin'||!ev.target.files[0]) return;
   try{ S.iphoto=await shrink(ev.target.files[0],1280); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; }
   const p=document.getElementById('iprev'); if(p) p.innerHTML=iprevHTML();
-  const b=document.querySelector('[data-act=iphoto]'); if(b) b.textContent=S.iphoto?'Retake photo':'Add photo';
+  const b=document.querySelector('[data-act=iphoto]'); if(b&&S.view!=='drop') b.textContent=S.iphoto?'Retake photo':'Add photo'; if(S.view==='drop'){ const t=document.querySelector('.camt'); if(t) t.textContent=S.iphoto?'Photo added. Tap the camera to retake.':'Take a photo of the drop-off'; }
   if(S.recheck) S.recheck();
 });
 document.addEventListener('change',async ev=>{
@@ -992,6 +1277,55 @@ document.addEventListener('change',async ev=>{
   try{ S.rpack=await shrink(ev.target.files[0],1280); S.rnopack=false; }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; }
   render(); focusScan();
 });
+let _kd=null, _kjd=false;
+document.addEventListener('click',ev=>{ if(_kjd){ ev.stopPropagation(); ev.preventDefault(); } },true);
+document.addEventListener('pointerdown',ev=>{
+  if(S.view!=='kegs'||S.ks) return; const t=ev.target; if(!t.closest) return;
+  const grip=t.closest('.kgrip'), row=t.closest('.kt:not(.open)')||t.closest('.kcard[data-key]');
+  if(!row||(ev.pointerType!=='mouse'&&!grip)||(t.closest('button.btn,button.chip')&&!grip)) return;
+  _kd={row,x:ev.clientX,y:ev.clientY,on:false,deck:row.classList.contains('kcard'),id:ev.pointerId};
+});
+document.addEventListener('pointermove',ev=>{
+  if(!_kd) return; const d=_kd;
+  if(!d.on){ if(Math.hypot(ev.clientX-d.x,ev.clientY-d.y)<8) return; d.on=true;
+    const r=d.row.getBoundingClientRect(), g=d.row.cloneNode(true); g.classList.add('kghost'); g.style.cssText='position:fixed;z-index:60;pointer-events:none;width:'+r.width+'px;left:'+r.left+'px;top:'+r.top+'px;margin:0;opacity:.92;box-shadow:0 14px 36px rgba(0,0,0,.55)';
+    document.body.appendChild(g); d.ghost=g; d.dx=ev.clientX-r.left; d.dy=ev.clientY-r.top; d.row.classList.add('kdrag'); }
+  ev.preventDefault(); d.ghost.style.left=(ev.clientX-d.dx)+'px'; d.ghost.style.top=(ev.clientY-d.dy)+'px';
+  const sc=document.getElementById('scroll'); if(sc){ const rr=sc.getBoundingClientRect(); if(ev.clientY<rr.top+90) sc.scrollTop-=14; else if(ev.clientY>rr.bottom-90) sc.scrollTop+=14; }
+  document.querySelectorAll('.kdrop,.kdrop-b,.kdrop-a').forEach(x=>x.classList.remove('kdrop','kdrop-b','kdrop-a'));
+  const el=document.elementFromPoint(ev.clientX,ev.clientY), tg=el&&el.closest(d.deck?'.kcard[data-key]':'.kt'); d.tg=null;
+  if(tg&&tg!==d.row){ d.tg=tg; if(d.deck){ const b=tg.getBoundingClientRect(); d.after=ev.clientY>b.top+b.height/2; tg.classList.add(d.after?'kdrop-a':'kdrop-b'); } else tg.classList.add('kdrop'); }
+},{passive:false});
+function kdEnd(){
+  const d=_kd; _kd=null; if(!d||!d.on) return;
+  d.ghost.remove(); d.row.classList.remove('kdrag'); document.querySelectorAll('.kdrop,.kdrop-b,.kdrop-a').forEach(x=>x.classList.remove('kdrop','kdrop-b','kdrop-a'));
+  _kjd=true; setTimeout(()=>{ _kjd=false; },80);
+  if(!d.tg) return; const L=kegs();
+  if(d.deck){ const k=kfind(L,d.row.dataset.key), t=kfind(L,d.tg.dataset.key); L.splice(L.indexOf(k),1); let i=L.indexOf(t); if(d.after) i++; L.splice(i,0,k); LS.set(KEGK,L); render(); }
+  else { const from=+d.row.dataset.n, to=+d.tg.dataset.n, k=L.find(x=>x.status==='tap'&&x.tap===from), o=L.find(x=>x.status==='tap'&&x.tap===to); if(o) o.tap=from; k.tap=to;
+    kegCommit(L,o?'Swapped taps '+from+' and '+to+': '+k.beer+' / '+o.beer:'Moved '+k.beer+' from tap '+from+' to tap '+to,{beer:k.beer,from,to,action:'move'}); }
+}
+document.addEventListener('pointerup',kdEnd); document.addEventListener('pointercancel',kdEnd);
+let _drag=null;
+document.addEventListener('pointerdown',ev=>{
+  const g=ev.target.closest&&ev.target.closest('.trow.ro .grip'); if(!g) return;
+  ev.preventDefault(); const row=g.closest('.trow'); g.setPointerCapture(ev.pointerId); row.classList.add('drag'); _drag={row,g};
+});
+document.addEventListener('pointermove',ev=>{
+  if(!_drag) return; const {row}=_drag, y=ev.clientY, sc=document.getElementById('scroll'), r=sc.getBoundingClientRect();
+  if(y<r.top+110) sc.scrollTop-=14; else if(y>r.bottom-90) sc.scrollTop+=14;
+  const sibs=[...row.parentNode.querySelectorAll('.trow.ro')].filter(x=>x!==row&&x.dataset.loc===row.dataset.loc);
+  if(!sibs.length) return;
+  const target=sibs.find(x=>{ const b=x.getBoundingClientRect(); return y<b.top+b.height/2; });
+  if(target){ if(row.nextSibling!==target) target.parentNode.insertBefore(row,target); }
+  else { const last=sibs[sibs.length-1]; if(last.nextSibling!==row) last.parentNode.insertBefore(row,last.nextSibling); }
+});
+function dragEnd(){
+  if(!_drag) return; const row=_drag.row; row.classList.remove('drag'); _drag=null;
+  const codes=[...document.querySelectorAll('#tblist .trow.ro')].map(x=>x.dataset.code);
+  LS.set(ORDKEY,codes); setTrove(S.troveList); const sc=document.getElementById('scroll'), st=sc?sc.scrollTop:0; render(); const s2=document.getElementById('scroll'); if(s2) s2.scrollTop=st;
+}
+document.addEventListener('pointerup',dragEnd); document.addEventListener('pointercancel',dragEnd);
 let _tb='', _tt=null;
 document.addEventListener('keydown',ev=>{
   if(S.view==='trove' && S.tscan){
@@ -1015,24 +1349,31 @@ document.addEventListener('click', async ev=>{
   else if(a.startsWith('go:')){
     const t=a.slice(3);
     if(t==='opening'||t==='closing'){ S.flow=t; go('opening'); }
-    else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='request'){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ go('recvlist'); return; }
-    if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); S.troveList=j.items||[]; }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
-    if(t==='addrecord'){ S.atype=null; S.alisted={}; S.aprint=true; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',note:'note',issue:'issue',find:'find'}[t]); }
+    else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='dropoff'){ S.iphoto=null; } if(t==='request'){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ go('recvlist'); return; }
+    if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
+    if(t==='kegs'){ S.kv='taps'; S.ks=null; }
+    if(t==='rkeg'){ S.ksize='1/6'; S.iphoto=null; S.rk=[]; S.ksup=''; S.rkBusy=false; S.rkDone=null; }
+    if(t==='labels'){ S.pqs=''; S.pprinted=false; }
+    if(t==='addrecord'){ S.atype=null; S.alisted={}; S.aprint=true; S.acond=null; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',kegs:'kegs',rkeg:'rkeg',labels:'labels',note:'note',issue:'issue',find:'find'}[t]); }
   }
   else if(a==='go:trove'){}
   else if(a==='tseg'){ S.tseg=b.dataset.v; render(); }
-  else if(a==='tcheck'){ S.tstand=true; S.flow='opening'; S.tfound=LS.get('hd.trove.s.'+today(),{}); S.tq=''; S.tonly=false; S.tscan=false; S.tmsg=null; S.tbad={}; S.view='trove'; render(); }
+  else if(a==='tcheck'){ S.tstand=true; S.flow='opening'; S.tfound=LS.get('hd.trove.s.'+today(),{}); S.tq=''; S.tonly=false; S.tscan=false; S.tmsg=null; S.tbad={}; S.tshow=false; S.tconfirm=false; S.view='trove'; render(); }
   else if(a==='otrove'){ S.tstand=false;
-    S.tfound=LS.get(KT(),{}); S.tq=''; S.tonly=false; S.tscan=false; S.tmsg=null; S.tbad={}; S.view='trove'; S.tload=true; render();
-    try{ const j=await api('trove'); S.troveList=j.items||[]; S.err=''; }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; }
+    S.tfound=LS.get(KT(),{}); S.tq=''; S.tonly=false; S.tscan=false; S.tmsg=null; S.tbad={}; S.tshow=false; S.tconfirm=false; S.view='trove'; S.tload=true; render();
+    try{ const j=await api('trove'); setTrove(j.items); S.err=''; }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; }
     S.tload=false; render();
   }
-  else if(a==='tstart'){ S.tscan=true; S.tmsg=null; beep('ok'); const q=document.getElementById('tq'); if(q) q.blur(); refreshTrove(); }
+  else if(a==='tstart'){ S.tscan=true; S.tshow=true; S.tmsg=null; S.tconfirm=false; beep('ok'); render(); }
+  else if(a==='dtoksave'){ const v=(document.getElementById('dtk')||{}).value; if(v&&v.trim().length>10){ LS.set('hd.discogs',v.trim()); Object.keys(COV).forEach(k=>{ if(!COV[k]) delete COV[k]; }); LS.set(COVKEY,COV); render(); toast('Saved. Covers will fill in as you scroll.'); } }
+  else if(a==='tshow'){ S.tshow=!S.tshow; render(); }
+  else if(a==='tkeep'){ S.tconfirm=false; refreshTrove(); }
   else if(a==='ttest'){ beep('ok'); setTimeout(()=>beep('bad'),500); }
   else if(a==='tdismiss'){ S.tmsg=null; refreshTrove(); }
   else if(a==='oback'){ S.view=S.tstand?'tbrowse':'opening'; render(); }
   else if(a==='tfound'){ const k=b.dataset.k; S.tfound[k]=!S.tfound[k]; if(!S.tfound[k]) delete S.tfound[k]; LS.set(KT(),S.tfound); refreshTrove(); }
   else if(a==='tonly'){ S.tonly=!S.tonly; b.classList.toggle('on',S.tonly); refreshTrove(); }
+  else if(a==='trovedone'&&!S.tconfirm&&troveCounts().nf>0){ S.tconfirm=true; refreshTrove(); }
   else if(a==='trovedone'&&S.tstand){ const miss=S.troveList.filter(i=>!S.tfound[tkey(i)]); S.tmsg=null; S.view='tbrowse'; S.err=miss.length?'Check finished. Not found: '+miss.slice(0,5).map(i=>i.artist+' - '+i.title).join('; ')+(miss.length>5?' +'+(miss.length-5)+' more':''):''; render(); }
   else if(a==='trovedone'){
     const ti=steps_().findIndex(s=>s.trove), miss=S.troveList.filter(i=>!S.tfound[tkey(i)]);
@@ -1080,17 +1421,47 @@ document.addEventListener('click', async ev=>{
     submit('receive','Received order '+o.id+': '+got+' of '+total+' scanned'+(short.length?', '+short.length+' short':'')+(extra.length?', '+extra.length+' not on order':''),
       {order:o.id,expected:total,scanned:got,short,over,extra,packing:S.rpack?S.rpack.split(',')[1]:'',noPacking:S.rnopack}).then(ok=>{ if(ok){ LS.set(RK(),null); S.rorder=null; S.rscan={}; S.rbad={}; S.rlast=null; S.rpack=null; S.rnopack=false; } });
   }
-  else if(a==='atype'){ S.atype=b.dataset.v; S.aprint=true; S.alisted={}; render(); }
+  else if(a==='atype'){ S.atype=b.dataset.v; S.aprint=true; S.alisted={}; S.acond=null; render(); }
+  else if(a==='kgtab'){ S.kv=b.dataset.v; render(); }
+  else if(a==='ktile'){ const n=+b.dataset.n, L=kegs(); S.ks={t:L.some(x=>x.status==='tap'&&x.tap===n)?'tap':'open',n}; render(); }
+  else if(a==='kclose'){ if(ev.target===b||b.tagName==='BUTTON'){ S.ks=null; render(); } }
+  else if(a==='kkick'){ const L=kegs(), k=kfind(L,b.dataset.key); const n=k.tap; k.lastTap=n; k.status='empty'; k.tap=null; k.days=0; kegCommit(L,'Kicked: '+k.beer+' (tap '+n+')',{beer:k.beer,brewery:k.brewery,tap:n,action:'kick'}); }
+  else if(a==='kmove'){ S.ks={t:'move',key:b.dataset.key,from:+b.dataset.n}; render(); }
+  else if(a==='kdomove'){ const L=kegs(), k=kfind(L,b.dataset.key), to=+b.dataset.n, from=+b.dataset.from, o=L.find(x=>x.status==='tap'&&x.tap===to); if(o) o.tap=from; k.tap=to; kegCommit(L,o?'Swapped taps '+from+' and '+to+': '+k.beer+' / '+o.beer:'Moved '+k.beer+' from tap '+from+' to tap '+to,{beer:k.beer,from,to,action:'move'}); }
+  else if(a==='kprice'){ S.ks={t:'price',key:b.dataset.key,n:+b.dataset.n}; render(); }
+  else if(a==='kchip'){ const e=document.getElementById('kpr'); if(e) e.value=b.dataset.v; }
+  else if(a==='ksaveprice'){ const v=parseFloat(String((document.getElementById('kpr')||{}).value||'').replace(/[^0-9.]/g,'')); if(!(v>0)){ toast('Enter a price, like 6.50'); return; }
+    const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n; k.price=v;
+    if(n){ k.status='tap'; k.tap=n; k.days=0; kegCommit(L,'On tap '+n+': '+k.beer+' ('+kfmt(v)+')',{beer:k.beer,brewery:k.brewery,tap:n,price:v,action:'place'}); }
+    else kegCommit(L,'Price: '+k.beer+' '+kfmt(v),{beer:k.beer,price:v,action:'price'}); }
+  else if(a==='kplace'){ S.ks={t:'putontap',key:b.dataset.key}; render(); }
+  else if(a==='kdoplace'){ const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n;
+    if(!k.price){ S.ks={t:'price',key:k.key,n}; render(); return; }
+    k.status='tap'; k.tap=n; k.days=0; kegCommit(L,'On tap '+n+': '+k.beer+' ('+kfmt(k.price)+')',{beer:k.beer,brewery:k.brewery,tap:n,price:k.price,action:'place'}); }
+  else if(a==='kundo'){ const L=kegs(), k=kfind(L,b.dataset.key), free=k.lastTap&&!L.some(x=>x.status==='tap'&&x.tap===k.lastTap); if(free){ k.status='tap'; k.tap=k.lastTap; } else k.status='deck'; kegCommit(L,'Keg restored: '+k.beer,{beer:k.beer,action:'undo'}); }
+  else if(a==='kup'||a==='kdown'){ const L=kegs(), d=L.filter(x=>x.status==='deck'), i=d.findIndex(x=>x.key===b.dataset.key), j=a==='kup'?i-1:i+1; if(i<0||j<0||j>=d.length) return;
+    const ia=L.indexOf(d[i]), ib=L.indexOf(d[j]); [L[ia],L[ib]]=[L[ib],L[ia]]; LS.set(KEGK,L); render(); }
+  else if(a==='pqdel'){ const q=pqGet(); q.splice(+b.dataset.i,1); LS.set(PQ,q); S.pprinted=false; render(); }
+  else if(a==='pqadd'){ pqAdd({code:b.dataset.c,artist:b.dataset.a,title:b.dataset.t,price:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).price,genre:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).genre}); S.pqs=''; S.pprinted=false; render(); toast('Added to the queue'); }
+  else if(a==='pstart'){ LS.set(PS,+b.dataset.k); S.pprinted=false; render(); }
+  else if(a==='pprint'){ doPrint(); }
+  else if(a==='pqclear'){ const n=pqGet().length, st=LS.get(PS,0); LS.set(PS,(st+n)%20); LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
+  else if(a==='addback'){ S.atype=null; render(); }
+  else if(a==='addtrove'){ S.atype='Trove'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); }
+  else if(a==='acond'){ S.acond=S.acond===b.dataset.v?null:b.dataset.v; document.querySelectorAll('[data-act=acond]').forEach(x=>x.classList.toggle('on',x.dataset.v===S.acond)); }
   else if(a==='aprintq'){ S.aprint=!S.aprint; b.classList.toggle('on',S.aprint); b.textContent=S.aprint?'Added to print queue':'Add to print queue'; }
   else if(a==='alisted'){ const k=b.dataset.v; S.alisted[k]=!S.alisted[k]; b.classList.toggle('on',!!S.alisted[k]); }
   else if(a==='agen'){ const e=document.getElementById('abar'); if(e){ e.value='HD'+String(Date.now()).slice(-9); e.dispatchEvent(new Event('input')); } }
   else if(a==='saveaddrec'){
-    const t=S.atype, price = t==='New' ? msrpPrice(val('amsrp')) : parseFloat(val('aprice'));
+    const t=S.atype, price=parseFloat(val('aprice'));
     const d={type:t,artist:val('aartist'),album:val('aalbum'),genre:val('agenre'),format:document.getElementById('aformat').value,price,notes:val('anotes')};
-    if(t==='New'){ d.barcode=val('abar'); d.msrp=parseFloat(val('amsrp')); }
-    d.printLabel = t==='Trove' ? true : t==='Used' ? S.aprint : false;
-    if(t==='Trove'){ d.location=val('aloc'); d.status=d.location==='Backfill'?'Backfill':'Active'; d.listed=Object.keys(S.alisted).filter(k=>S.alisted[k]).join(', '); }
-    submit('record','Added '+t+': '+d.artist+' - '+d.album+' ($'+price+')',d).then(ok=>{ if(ok){ S.atype=null; S.alisted={}; S.aprint=true; } });
+    d.printLabel = t==='Trove' ? true : S.aprint;
+    if(t==='Used'){ d.condition=S.acond||''; const u=LS.get('hd.used',[]); d.code='UD-'+String(u.length+1).padStart(4,'0'); }
+    if(t==='Trove'){ const mx=(S.troveList||[]).reduce((m,i)=>Math.max(m,parseInt(String(i.code||'').replace(/\D/g,''))||0),0); d.code='TT-'+String(mx+1).padStart(4,'0'); d.location=val('aloc'); d.status=d.location==='Backfill'?'Backfill':'Active'; d.listed=Object.keys(S.alisted).filter(k=>S.alisted[k]).join(', '); }
+    submit('record','Added '+t+': '+d.artist+' - '+d.album+' ($'+price+')',d,t==='Used').then(ok=>{ if(!ok) return;
+      if(d.printLabel) pqAdd({code:d.code||'',artist:d.artist,title:d.album,genre:d.genre,price,notes:d.notes});
+      if(t==='Used'){ const u=LS.get('hd.used',[]); u.push({code:d.code,artist:d.artist,title:d.album,genre:d.genre,format:d.format,price,condition:d.condition,notes:d.notes}); LS.set('hd.used',u); S.alast={genre:d.genre,format:d.format}; S.acond=null; S.aprint=true; S.view='addrec'; render(); const e=document.getElementById('aartist'); if(e) e.focus(); toast('Added \u2713 Next record'); }
+      else { S.atype=null; S.alisted={}; S.aprint=true; } });
   }
   else if(a==='rfmt'){ S.rfmt=b.dataset.v; document.querySelectorAll('.fmts button').forEach(x=>x.classList.toggle('on',x===b)); }
   else if(a==='fclear'){ S.fq=''; const e=document.getElementById('fq'); if(e){ e.value=''; e.focus(); } const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); b.style.display='none'; }
@@ -1106,9 +1477,21 @@ document.addEventListener('click', async ev=>{
     if(val('rartist')&&val('ralbum')) items.push({artist:val('rartist'),album:val('ralbum'),format:S.rfmt,notes:val('rnotes')});
     submit('request','Request: '+items.map(r=>r.artist+' - '+r.album).join('; '),{name:val('rname'),phone:val('rphone'),email:val('remail'),items}).then(ok=>{ if(ok){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } });
   }
+  else if(a==='kscandone'){ S.rkDone=null; S.iphoto=null; go('home'); }
+  else if(a==='kundoscan'){ const d=S.rkDone; if(d){ const L=kegs().filter(k=>!(k.scanId===d.id)); LS.set(KEGK,L); } S.rkDone=null; S.iphoto=null; S.rk=[]; render(); toast('Undone'); }
+  else if(a==='ksize'){ S.ksize=b.dataset.v; document.querySelectorAll('.fmts button[data-act=ksize]').forEach(x=>x.classList.toggle('on',x===b)); const c=document.getElementById('kcost').value, p=pourPrice(parseFloat(c),S.ksize); const q=document.getElementById('keq'); if(q) q.innerHTML=keqHTML(c); const pr=document.getElementById('kprice'); if(pr&&p!=null) pr.value=p.toFixed(2); if(S.recheck) S.recheck(); }
+  else if(a==='kphoto'){ S.ksup=val('ksup'); document.getElementById('kphotoin').click(); }
+  else if(a==='kadd'){ const pr=parseFloat(val('kprice')); if(!(val('kbeer')&&val('kbrew')&&pr>0)) return; S.ksup=val('ksup'); (S.rk=S.rk||[]).push({beer:val('kbeer'),brewery:val('kbrew'),price:pr}); render(); }
+  else if(a==='krm'){ S.ksup=val('ksup'); S.rk.splice(+b.dataset.n,1); render(); }
+  else if(a==='savekegrecv'){
+    const L=kegs(), sup=val('ksup'), ks=S.rk||[];
+    ks.forEach(k=>L.push({key:k.beer+'|'+k.brewery,beer:k.beer,brewery:k.brewery,style:'',price:k.price,status:'deck',tap:null,days:0,lastTap:null,supplier:sup}));
+    LS.set(KEGK,L);
+    submit('kegrecv','Kegs received from '+sup+': '+ks.map(k=>k.beer+' ('+kfmt(k.price)+')').join(', '),{supplier:sup,kegs:ks,photo:S.iphoto?S.iphoto.split(',')[1]:'',noPhoto:!S.iphoto},true).then(ok=>{ if(ok){ const n=ks.length; S.rk=[]; S.iphoto=null; S.ksup=''; S.view='home'; render(); toast(n+' keg'+(n===1?'':'s')+' on deck \u2713'); } });
+  }
   else if(a==='savedrop'){
-    const n=val('ccount');
-    submit('dropoff','Drop-off'+(n?': about '+n+' records':''),{name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),count:n});
+    const n='';
+    submit('dropoff','Drop-off',{name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),count:'',photo:S.iphoto?S.iphoto.split(',')[1]:''});
   }
 });
 
