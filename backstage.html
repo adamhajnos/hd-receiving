@@ -1447,7 +1447,7 @@ function doPrint(){
 }
 
 /* ---------- change keg ---------- */
-const KEGK='hd.kegs4';
+const KEGK='hd.kegs5';
 const kegs=()=>{ let k=LS.get(KEGK,null); if(!k){ k=JSON.parse(JSON.stringify(C.DEMO_KEGS||[])); LS.set(KEGK,k); } return k; };
 const kfind=(L,key)=>L.find(x=>x.key===key);
 const kfmt=p=>p?'$'+Number(p).toFixed(2):'';
@@ -1466,7 +1466,7 @@ function kegSheetHTML(L){
     return wrap([esc(k.beer),'Tap '+ks.n+' · '+esc(k.brewery)+' · '+(k.price?kfmt(k.price):'no price yet')],'','<button class="btn danger" data-act="kkick" data-key="'+esc(k.key)+'" data-n="'+ks.n+'">Kicked</button><button class="btn ghost" data-act="kprice" data-key="'+esc(k.key)+'" data-n="0">Price</button>'+cancel); }
   if(ks.t==='open') return wrap(['Tap '+ks.n+' is open','Pick the keg going on.'], deck.length?'<div class="kpick">'+deck.map(k=>'<button data-act="kdoplace" data-key="'+esc(k.key)+'" data-n="'+ks.n+'"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+'</span></button>').join('')+'</div>':'<p class="hint">Nothing on deck right now.</p>',cancel);
   if(ks.t==='san'){ const k=kfind(L,ks.key);
-    return wrap(['Run Star San first','Before '+esc(k.beer)+' goes on tap '+ks.n+': run Star San through the coupler and the line.'],'<p class="hint" style="margin:0;font-size:20px;color:var(--fg)">Only tap Done once it\u2019s been run through.</p>',cancel+'<button class="btn go" data-act="ksan" data-key="'+esc(ks.key)+'" data-n="'+ks.n+'">Star San done. Put on tap '+ks.n+'</button>'); }
+    return wrap(['Run Star San first','Before '+esc(k.beer)+' goes on tap '+ks.n+': run Star San through the coupler and the line.'],'<p class="hint" style="margin:0;font-size:20px;color:var(--fg)">Only tap Complete once it\u2019s been run through.</p>',cancel+'<button class="btn go" data-act="ksan" data-key="'+esc(ks.key)+'" data-n="'+ks.n+'">Complete</button>'); }
   if(ks.t==='putontap'){ const k=kfind(L,ks.key);
     const g='<div class="kgrid">'+Array.from({length:C.TAP_COUNT||12},(_,i)=>{ const n=i+1, used=L.some(x=>x.status==='tap'&&x.tap===n); return '<button '+(used?'disabled':'data-act="kdoplace" data-key="'+esc(ks.key)+'" data-n="'+n+'"')+'>'+n+'</button>'; }).join('')+'</div>';
     return wrap([esc(k.beer),'Which tap is it going on? Taken taps are dimmed.'],g,cancel); }
