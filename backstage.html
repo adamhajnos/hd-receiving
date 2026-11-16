@@ -922,10 +922,33 @@ function findResults(){
   (C.DEMO_ORDERS||[]).forEach(o=>o.lines.forEach(l=>{ if(hit(l.artist+' '+l.title)) out.push({store:st,a:tc(l.artist),t:tc(l.title),p:msrpPrice(l.list),n:null,g:'',w:'Not in yet. On order ('+o.id+')'}); }));
   return out;
 }
+let _fdt=null,_fdid=0;
+function fdSoon(){ clearTimeout(_fdt); const q=(S.fq||'').trim(), my=++_fdid; if(q.length<3){ S.fd={q:'',list:[],busy:false,err:''}; return; }
+  S.fd={q,list:[],busy:true,err:''};
+  _fdt=setTimeout(async()=>{ const nq=unorm(q); let out=[], artist='', err='', arts=[];
+    try{
+      const ar=await dget('database/search?type=artist&per_page=5&q='+encodeURIComponent(q)); if(my!==_fdid) return;
+      const top=(ar.results||[])[0], hit=top&&unorm(dcl(top.title))===nq?top:null; arts=hit?[]:(ar.results||[]).map(x=>dcl(x.title)).filter((n,i,a)=>n&&a.indexOf(n)===i).slice(0,5);
+      if(hit){ artist=dcl(hit.title);
+        const rl=await dget('artists/'+hit.id+'/releases?sort=year&sort_order=asc&per_page=100'); if(my!==_fdid) return; const seen={};
+        (rl.releases||[]).forEach(x=>{ if(x.type!=='master'||!/^main$/i.test(x.role||'Main')) return; const k=ukey(artist,x.title); if(seen[k]) return; seen[k]=1; out.push({artist,album:x.title,year:x.year||''}); }); }
+      if(!out.length){ const j=await dget('database/search?type=master&per_page=30&q='+encodeURIComponent(q)); if(my!==_fdid) return; const seen={};
+        (j.results||[]).forEach(x=>{ const n=usplit(x.title), k=ukey(n.artist,n.album); if(!n.artist||seen[k]) return; seen[k]=1; out.push({artist:n.artist,album:n.album,year:x.year||'',thumb:(x.cover_image&&!/spacer/.test(x.cover_image))?x.cover_image:(x.thumb||'')}); }); }
+    }catch(e){ if(my!==_fdid) return; err='Can’t reach Discogs ('+(e&&e.message||'error')+').'; }
+    S.fd={q,list:out,busy:false,err,artist,arts};
+    const l=document.getElementById('flist'); if(l&&S.view==='find') l.innerHTML=findHTML(); },350); }
 function findHTML(){
   if(!(S.fq||'').trim()) return '<p class="hint" style="margin-top:20px">Type an artist or title.</p>';
   const all=findResults(); S.fres=all;
-  const qq=esc((S.fq||'').trim()), nis='<div class="fres out" style="margin-top:12px"><div class="nm"><b>Not what they want?</b> \u00b7 \u201C'+qq+'\u201D</div><div class="meta"><span class="stk">NOT IN OUR SYSTEM \u00b7 0</span><span class="wh">Never had it in stock</span><button class="btn ghost rq" data-act="freqq">Request it</button></div></div>';
+  const qq=esc((S.fq||'').trim()), fd=S.fd=S.fd||{list:[],busy:false}, have=new Set(all.map(r=>ukey(r.a,r.t)));
+  const dl=(fd.list||[]).filter(r=>!have.has(ukey(r.artist,r.album))); S.fd.show=dl.slice(0,12);
+  let nis='<div class="fgrp" style="margin-top:14px">'+(fd.artist?esc(String(fd.artist).toUpperCase())+' \u00b7 ALBUMS WE DON\u2019T HAVE':'NOT IN OUR SYSTEM')+'</div>'+(fd.err?'<p class="hint">'+esc(fd.err)+'</p>':'');
+  if(fd.busy) nis+='<p class="hint">Checking Discogs\u2026</p>';
+  if((fd.arts||[]).length) nis+='<div class="uh" style="margin:10px 0 6px;font-weight:700">Artists</div>'+fd.arts.map((n,i)=>'<button class="fres out" data-act="fdart" data-i="'+i+'" style="width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center"><span class="nm"><b>'+esc(n)+'</b></span><span class="wh">See albums \u203A</span></button>').join('')+'<div class="uh" style="margin:14px 0 6px;font-weight:700">Albums</div>';
+  { const hd=fd.artist?'':(all.length?'More from Discogs':'From Discogs'); if(hd&&S.fd.show.length&&!(fd.arts||[]).length) nis=nis.replace(/<div class="fgrp"[^>]*>[^<]*<\/div>/,'<div class="uh" style="margin-top:14px">'+hd+'</div>'); }
+  S.fd.show.forEach((r,i)=>{ nis+=uRow(r.artist,r.album,r.year,'Request it','data-act-x="1" data-fi="'+i+'"',r.thumb).replace('data-act="upick"','data-act="freqd" data-i="'+i+'"'); });
+  if(!fd.busy&&!S.fd.show.length) nis+='<div class="fres out"><div class="nm"><b>Not on Discogs?</b> \u00b7 \u201C'+qq+'\u201D</div><div class="meta"><span class="stk">NOT IN OUR SYSTEM \u00b7 0</span><button class="btn ghost rq" data-act="freqq">Request what I typed</button></div></div>';
+  if(dl.length>12) nis+='<p class="hint">+'+(dl.length-12)+' more. Type the album name to narrow it down.</p>';
   if(!all.length) return nis;
   const L=all.slice(0,4); let h='', cur=null;
   L.forEach((r,i)=>{
@@ -1677,6 +1700,19 @@ async function stList(items,start,page,pages){ await stReady(); const c=stCanvas
   return stBlob(c); }
 /*ST-END*/
 
+/* last picture: invite a request */
+async function stOutro(){ await stReady(); const c=stCanvas(), x=c.getContext('2d'); stBg(x);
+  stHead(x,300,100,780,36,5,12,'LOOKING FOR SOMETHING SPECIFIC?',50);
+  stChrome(x,60,520,960,760,40,[30,10]); const L=stLabel(x,72,532,936,736,30,8);
+  const tx0=L.ix+60, tw=L.iw-120, cx=tx0+tw/2;
+  x.font=stF(128,{i:true}); const lines=stWrap(x,'LET US ORDER IT FOR YOU',tw), tH=lines.length*128*.95, tot=tH+44+84; let y=L.iy+(L.ih-tot)/2;
+  lines.forEach((ln,i)=>stDraw(x,ln,cx,y+i*121.6+121.6*.875,stF(128,{i:true}),ST.INK,0)); y+=tH+44;
+  stBanner(x,tx0+60,y,tw-120,84,32,5,'LINK IN BIO',46,{w:800,track:.1});
+  x.restore();
+  stDraw(x,'TELL US THE ARTIST AND THE ALBUM',540,1540+24+5.5,stT(30),ST.CREAM,6);
+  stDraw(x,'HUNKY DORY RECORDS · RALEIGH',540,1540+72+5.5,stT(30),ST.CREAM,6);
+  return stBlob(c); }
+
 /* ---------- the "Post to Instagram" sheets ---------- */
 const BCK='hd.brewcity', ARK='hd.arrivals';
 function postRevoke(p){ if(!p) return; (p.urls||[]).forEach(u=>{ try{ URL.revokeObjectURL(u); }catch(e){} }); p.urls=[]; }
@@ -1713,6 +1749,7 @@ async function postMakeRecs(){
   try{ const items=arrGet().items, pages=[]; for(let i=0;i<items.length;i+=10) pages.push(items.slice(i,i+10));
     const blobs=[await stCover(items.length,new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}))], names=['hd-new-records-00-cover.jpg'];
     for(let i=0;i<pages.length;i++){ blobs.push(await stList(pages[i],i*10+1,i+1,pages.length)); names.push('hd-new-records-'+stPad(i+1)+'.jpg'); }
+    blobs.push(await stOutro()); names.push('hd-new-records-99-request.jpg');
     stSetUrls(p,blobs,names); p.stage='ready';
   }catch(e){ p.stage='err'; }
   if(S.post===p) render();
@@ -1842,7 +1879,7 @@ document.addEventListener('input',ev=>{
   if(ev.target&&ev.target.id==='ugenre'){ S.u.genre=ev.target.value; uCheck(); return; }
   if(ev.target&&ev.target.id==='unotes'){ S.u.notes=ev.target.value; return; }
   if(ev.target&&ev.target.id==='kcost'){ const c=ev.target.value, p=pourPrice(parseFloat(c),S.ksize||'1/6'); const q=document.getElementById('keq'); if(q) q.innerHTML=keqHTML(c); const pr=document.getElementById('kprice'); if(pr&&p!=null){ pr.value=p.toFixed(2); } if(S.recheck) S.recheck(); return; }
-  if(ev.target&&ev.target.id==='fq'){ S.fq=ev.target.value; const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); const x=document.getElementById('fx'); if(x) x.style.display=S.fq?'block':'none'; return; }
+  if(ev.target&&ev.target.id==='fq'){ S.fq=ev.target.value; fdSoon(); const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); const x=document.getElementById('fx'); if(x) x.style.display=S.fq?'block':'none'; return; }
   if(ev.target&&ev.target.id==='pqs'){ S.pqs=ev.target.value; const l=document.getElementById('pqres'); if(l) l.innerHTML=pqResHTML(); return; }
   if(ev.target&&ev.target.id==='tbq'){ S.tbq=ev.target.value; const l=document.getElementById('tblist'); if(l) l.innerHTML=tbrowseListHTML(); coverScan(); return; }
   if(ev.target&&ev.target.id==='tq'){ S.tq=ev.target.value; refreshTrove(); return; }
@@ -2151,7 +2188,9 @@ document.addEventListener('click', async ev=>{
       else { S.atype=null; S.alisted={}; S.aprint=true; } });
   }
   else if(a==='rfmt'){ S.rfmt=b.dataset.v; document.querySelectorAll('.fmts button').forEach(x=>x.classList.toggle('on',x===b)); }
-  else if(a==='fclear'){ S.fq=''; const e=document.getElementById('fq'); if(e){ e.value=''; e.focus(); } const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); b.style.display='none'; }
+  else if(a==='fclear'){ S.fq=''; fdSoon(); const e=document.getElementById('fq'); if(e){ e.value=''; e.focus(); } const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); b.style.display='none'; }
+  else if(a==='fdart'){ const n=((S.fd||{}).arts||[])[+b.dataset.i]; if(n){ S.fq=n; const e=document.getElementById('fq'); if(e) e.value=n; fdSoon(); const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); } }
+  else if(a==='freqd'){ const r=((S.fd||{}).show||[])[+b.dataset.i]; if(r){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre={artist:r.artist,album:r.album}; go('request'); } }
   else if(a==='freqq'){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre={artist:(S.fq||'').trim(),album:''}; go('request'); }
   else if(a==='freq'){ const r=(S.fres||[])[+b.dataset.i]; if(r){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre={artist:r.a,album:r.t}; go('request'); } }
   else if(a==='radd'||a==='rdel'){
