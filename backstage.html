@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="robots" content="noindex,nofollow">
 <title>HD Backstage</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Public+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:ital,wght@0,700;0,800;1,800&family=Public+Sans:wght@400;500;600;700;800&family=Special+Elite&display=swap">
 <style>
 :root{
   --bg:#F6F6F5; --panel:#FFFFFF; --line:rgba(20,17,13,.15); --fg:#141414; --muted:#6B6B6B; --accent:#FF6A1F;
@@ -261,7 +261,7 @@ div.tile.done{cursor:default}
 .cols .tile .t{flex-direction:column;align-items:flex-start;gap:8px;font-size:25px;line-height:1.1}
 .cols .tile .t svg{width:32px;height:32px;color:var(--cc);box-sizing:content-box;padding:7px;border-radius:14px;background:var(--cb)}
 .cols .tile .s{font-size:16px}
-.k-records{--cc:#FF6A1F;--cb:#FFF1E8}.k-beerthc{--cc:#C98A0B;--cb:#FDF3DA}.k-customers{--cc:#2E7D5B;--cb:#E7F3EC}.k-shop{--cc:#3A3A3A;--cb:#EDEDEB}
+.k-records{--cc:#FF6A1F;--cb:#FFF1E8}.k-beerthc{--cc:#C98A0B;--cb:#FDF3DA}.k-customers{--cc:#2E7D5B;--cb:#E7F3EC}.k-shop{--cc:#2F6FDE;--cb:#E6EEFB}
 
 /* choice buttons with icons */
 .addpick .btn,.tact .btn{flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:18px!important}
@@ -925,7 +925,8 @@ function findResults(){
 function findHTML(){
   if(!(S.fq||'').trim()) return '<p class="hint" style="margin-top:20px">Type an artist or title.</p>';
   const all=findResults(); S.fres=all;
-  if(!all.length) return '<p class="hint" style="margin-top:20px">Nothing found. Try fewer words.</p>';
+  const qq=esc((S.fq||'').trim()), nis='<div class="fres out" style="margin-top:12px"><div class="nm"><b>Not what they want?</b> \u00b7 \u201C'+qq+'\u201D</div><div class="meta"><span class="stk">NOT IN OUR SYSTEM \u00b7 0</span><span class="wh">Never had it in stock</span><button class="btn ghost rq" data-act="freqq">Request it</button></div></div>';
+  if(!all.length) return nis;
   const L=all.slice(0,4); let h='', cur=null;
   L.forEach((r,i)=>{
     if(r.store!==cur){ cur=r.store; h+='<div class="fgrp">'+esc(String(cur).toUpperCase())+(cur===(C.STORE||'Raleigh')?' \u00b7 THIS STORE':'')+'</div>'; }
@@ -934,7 +935,7 @@ function findHTML(){
       '<div class="meta"><span class="stk">'+stk+'</span>'+(r.g?'<span class="gn">'+esc(r.g)+'</span>':'')+'<span class="wh">'+esc(r.w)+'</span><button class="btn ghost rq" data-act="freq" data-i="'+i+'">Request</button></div></div>';
   });
   if(all.length>4) h+='<p class="hint">+'+(all.length-4)+' more. Type more to narrow it down.</p>';
-  return h;
+  return h+nis;
 }
 function vFind(){
   return topHTML('Find a record')+bannerHTML()+
@@ -1315,7 +1316,8 @@ function rSave(){ LS.set(RK(),{scan:S.rscan,bad:S.rbad,last:S.rlast,nopack:S.rno
 function rStatus(l){ const g=S.rscan[l.upc]||0; return g===0?'':g<l.qty?'part':g===l.qty?'ok':'over'; }
 function vRecvList(){
   const os=(C.DEMO_ORDERS||[]).map(o=>'<button class="tile" data-act="rpick" data-id="'+esc(o.id)+'"><span class="t">Order '+esc(o.id)+'</span><span class="s">Submitted '+esc(o.submitted)+' · '+o.lines.length+' records</span></button>').join('');
-  return topHTML('Receive records')+bannerHTML()+'<p class="hint" style="margin:0 0 6px">Which order just arrived?</p><div class="tiles">'+(os||'<p class="hint">No open orders.</p>')+'</div>';
+  const na=arrGet().items.length;
+  return topHTML('Receive records')+bannerHTML()+'<p class="hint" style="margin:0 0 6px">Which order just arrived?</p><div class="tiles">'+(os||'<p class="hint">No open orders.</p>')+'</div>'+(na?'<div style="margin-top:18px"><button class="btn ghost" data-act="parr">New arrivals for Instagram ('+na+' record'+(na===1?'':'s')+')</button></div>':'');
 }
 function vRecv(){
   const o=rOrder();
@@ -1540,6 +1542,7 @@ function vRKeg(){
   supField('k',sup,S.ksup,S.kOther)+
   L.map((k,i)=>'<div class="kcard" style="margin:0"><span class="kx" style="flex:1"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+'</span></span><span class="kp">'+kfmt(k.price)+'</span><button class="btn ghost" data-act="krm" data-n="'+i+'">Remove</button></div>').join('')+
   '<div class="pair"><label>Beer<input id="kbeer" autocomplete="off"></label><label>Brewery<input id="kbrew" autocomplete="off"></label></div>'+
+  '<label>Brewery city, state <span class="o">(for the Instagram post)</span><input id="kcity" autocomplete="off" placeholder="Charleston, SC"></label>'+
   '<label>Sixtel (1/6 barrel) cost from the invoice<div class="pre"><b>$</b><input class="money" id="kcost" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label>'+
   '<div class="keq" id="keq">'+keqHTML('')+'</div>'+
   '<div style="display:flex;gap:12px;align-items:flex-end"><label style="flex:1">Price for a 12oz pour <span class="o">(filled in for you, you can change it)</span><div class="pre"><b>$</b><input class="money" id="kprice" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label><button class="btn ghost" id="kadd" data-act="kadd" disabled>Add keg</button></div>'+
@@ -1557,7 +1560,8 @@ function vRStock(){
   return topHTML('Receive stock')+bannerHTML()+'<p class="hint" style="margin:0 0 6px">What came in?</p><div class="addpick">'+
     '<button class="btn ghost" data-act="go:rkeg">'+bi('keg','Kegs','Photo of the invoice, then they go on deck')+'</button>'+
     '<button class="btn ghost" data-act="go:rcans">'+bi('beer','Cans','Beer, THC, soda, water and more. Photo of the invoice first')+'</button>'+
-    '<button class="btn ghost" data-act="go:rsnacks">'+bi('bag','Snacks','Chips, candy and more. Photo of the invoice first')+'</button></div>';
+    '<button class="btn ghost" data-act="go:rsnacks">'+bi('bag','Snacks','Chips, candy and more. Photo of the invoice first')+'</button>'+
+    '<button class="btn ghost" data-act="rlist">'+bi('photo','Records','Scan the box. Then make the Instagram Stories')+'</button></div>';
 }
 function vRCans(){
   const SN=S.cmode==='snacks', TY=SN?['Chips','Candy','Jerky','Other']:['Beer','THC','Soda','Water','Other'], UN=SN?['Cases','Boxes']:['Cases','Packs'];
@@ -1575,9 +1579,177 @@ function vRCans(){
   '<div><button class="btn ghost" id="cadd" data-act="cadd" disabled>Add item</button></div>'+
   '<div><button class="btn go" id="sub" data-act="savecans" disabled>Log '+L.length+' item'+(L.length===1?'':'s')+'</button></div></div>';
 }
+/*ST-START*/
+/* ---------- Instagram Stories: drawn right here on the iPad (nothing runs through Claude) ---------- */
+const ST={RED:'#D2332A',CREAM:'#F1DFBC',INK:'#1D1512'};
+const stF=(px,o)=>((o&&o.i)?'italic ':'')+((o&&o.w)||800)+' '+px+'px "Barlow Condensed","Arial Narrow",sans-serif';
+const stT=px=>px+'px "Special Elite","Courier New",monospace';
+let _stFonts=null;
+function stReady(){ if(!_stFonts&&document.fonts&&document.fonts.load){ _stFonts=Promise.all(['italic 800 40px "Barlow Condensed"','800 40px "Barlow Condensed"','700 40px "Barlow Condensed"','40px "Special Elite"'].map(f=>document.fonts.load(f,'AaBb0123 —'))).catch(()=>{}); } return _stFonts||Promise.resolve(); }
+function stCanvas(){ const c=document.createElement('canvas'); c.width=1080; c.height=1920; return c; }
+function stW(x,t,tr){ if(!tr) return x.measureText(t).width; let w=0; for(const ch of t) w+=x.measureText(ch).width+tr; return w; }
+function stDraw(x,t,cx,base,font,col,tr,left){ x.font=font; x.fillStyle=col; x.textAlign='left'; x.textBaseline='alphabetic';
+  const w=stW(x,t,tr); let px=left?cx:cx-w/2;
+  if(!tr){ x.fillText(t,px,base); return; }
+  for(const ch of t){ x.fillText(ch,px,base); px+=x.measureText(ch).width+tr; } }
+function stWrap(x,t,maxW){ const ws=t.split(/\s+/), L=[]; let cur=''; ws.forEach(w=>{ const n=cur?cur+' '+w:w; if(!cur||x.measureText(n).width<=maxW) cur=n; else { L.push(cur); cur=w; } }); if(cur) L.push(cur); return L; }
+function stRR(x,X,Y,W,H,r){ x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+W,Y,X+W,Y+H,r); x.arcTo(X+W,Y+H,X,Y+H,r); x.arcTo(X,Y+H,X,Y,r); x.arcTo(X,Y,X+W,Y,r); x.closePath(); }
+function stHex(x,X,Y,W,H,c){ x.beginPath(); x.moveTo(X+c,Y); x.lineTo(X+W-c,Y); x.lineTo(X+W,Y+H/2); x.lineTo(X+W-c,Y+H); x.lineTo(X+c,Y+H); x.lineTo(X,Y+H/2); x.closePath(); }
+function stBg(x){ x.save(); x.translate(540,921.6); x.scale(763.7,1412); const g=x.createRadialGradient(0,0,0,0,0,1); g.addColorStop(0,'#3A1912'); g.addColorStop(.55,'#1B0C09'); g.addColorStop(1,'#0F0807'); x.fillStyle=g; x.fillRect(-3,-3,6,6); x.restore(); }
+function stChrome(x,X,Y,W,H,r,sh){ x.save(); if(sh){ x.shadowColor='rgba(0,0,0,.7)'; x.shadowBlur=sh[0]; x.shadowOffsetY=sh[1]; }
+  const g=x.createLinearGradient(0,Y,0,Y+H); [[0,'#6E6860'],[.16,'#EDE8DF'],[.44,'#8A847C'],[.58,'#2A2724'],[.88,'#AFA99F'],[1,'#4B4741']].forEach(s=>g.addColorStop(s[0],s[1]));
+  x.fillStyle=g; stRR(x,X,Y,W,H,r); x.fill(); x.restore(); }
+function stLabel(x,X,Y,W,H,r,bd){ x.fillStyle=ST.RED; stRR(x,X,Y,W,H,r); x.fill();
+  const ix=X+bd,iy=Y+bd,iw=W-2*bd,ih=H-2*bd; x.save(); stRR(x,ix,iy,iw,ih,Math.max(r-bd,4)); x.clip();
+  x.save(); x.translate(ix+iw/2,iy+ih*.45); x.scale(iw/2*1.4142,ih*.55*1.4142); const g=x.createRadialGradient(0,0,0,0,0,1); g.addColorStop(0,'#F4E5C4'); g.addColorStop(.75,'#EBD3A6'); g.addColorStop(1,'#E0C28F'); x.fillStyle=g; x.fillRect(-2,-2,4,4); x.restore();
+  return {ix,iy,iw,ih}; }
+function stPanel(x,X,Y,W,H,bd,sh){ const g=x.createLinearGradient(X,0,X+W,0); g.addColorStop(0,'#2B2623'); g.addColorStop(1,'#1B1715'); x.fillStyle=g; x.fillRect(X,Y,W,H);
+  const e=(x0,y0,x1,y1,rx,ry,rw,rh)=>{ const q=x.createLinearGradient(x0,y0,x1,y1); q.addColorStop(0,'rgba(0,0,0,.8)'); q.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=q; x.fillRect(rx,ry,rw,rh); };
+  e(X,0,X+sh,0,X,Y,sh,H); e(X+W,0,X+W-sh,0,X+W-sh,Y,sh,H); e(0,Y,0,Y+sh,X,Y,W,sh); e(0,Y+H,0,Y+H-sh,X,Y+H-sh,W,sh);
+  x.fillStyle=ST.RED; x.fillRect(X+W,Y,bd,H); }
+function stKey(x,X,Y,S,r,d,hi,lo){ x.fillStyle='#0B0908'; stRR(x,X,Y+d,S,S,r); x.fill();
+  const g=x.createLinearGradient(0,Y,0,Y+S); g.addColorStop(0,'#F6D27A'); g.addColorStop(.55,'#E8B04A'); g.addColorStop(1,'#C98A22'); x.fillStyle=g; stRR(x,X,Y,S,S,r); x.fill();
+  x.save(); stRR(x,X,Y,S,S,r); x.clip(); x.fillStyle='rgba(255,255,255,.65)'; x.fillRect(X,Y,S,hi); x.fillStyle='rgba(120,70,10,.55)'; x.fillRect(X,Y+S-lo,S,lo); x.restore(); }
+function stBanner(x,X,Y,W,H,cut,bd,text,size,o){ o=o||{}; x.fillStyle=ST.RED; stHex(x,X,Y,W,H,cut); x.fill(); x.fillStyle=ST.CREAM; stHex(x,X+bd,Y+bd,W-2*bd,H-2*bd,cut-Math.round(bd*.7)); x.fill();
+  const maxW=W-2*cut-8, tr=s=>(o.track||0)*s, f=s=>stF(s,{w:o.w||700}); let s=size; x.font=f(s); while(s>20&&stW(x,text,tr(s))>maxW){ s-=2; x.font=f(s); }
+  stDraw(x,text,X+W/2,Y+H/2+s*.4,f(s),ST.INK,tr(s)); }
+function stHead(x,top,h,w,cut,bd,rule,text,size){ x.fillStyle=ST.RED; x.fillRect(60,top+h/2-rule/2,960,rule); stBanner(x,540-w/2,top,w,h,cut,bd,text,size,{w:800,track:.14}); }
+function stBlob(c){ return new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('blob')),'image/jpeg',.95)); }
+function stPad(n){ return String(n).padStart(2,'0'); }
+
+/* one beer: "New on tap" */
+async function stBeer(b){ await stReady(); const c=stCanvas(), x=c.getContext('2d'); stBg(x);
+  stHead(x,300,100,700,40,6,14,'NEW ON TAP',70);
+  stChrome(x,60,490,960,800,40,[30,10]); const L=stLabel(x,72,502,936,776,30,8);
+  stPanel(x,L.ix,L.iy,270,L.ih,5,18);
+  const kx=L.ix+19, ky=L.iy+(L.ih-232)/2; stKey(x,kx,ky,232,22,7,2,8);
+  stDraw(x,'TAP',kx+116,ky+22.5+43.2,stF(48),ST.INK,6.72); stDraw(x,stPad(b.tap),kx+116,ky+74.5+127.5,stF(150),ST.INK,0);
+  const tx0=L.ix+275+34, tw=L.iw-275-68, cx=tx0+tw/2;
+  const name=(b.name||'').toUpperCase(), n=name.length; let ts=n>32?70:n>24?88:n>14?106:130, lines, tH, styleLines, sH;
+  const style=(b.style||'').trim(), abv=b.abv?String(b.abv).replace(/[^0-9.]/g,'')+'%':'';
+  for(;;){ x.font=stF(ts,{i:true}); lines=stWrap(x,'“'+name+'”',tw); if(lines.every(l=>x.measureText(l).width<=tw)||ts<=40) break; ts-=4; }
+  const sf=46; x.font=stF(sf,{w:700}); const parts=[style,abv?abv+' ABV':''].filter(Boolean);
+  const one=parts.reduce((a,p)=>a+x.measureText(p).width,0)+(parts.length>1?49:0);
+  styleLines=!parts.length?[]:(one<=tw?[parts]:parts.map(p=>[p])); sH=styleLines.length*55.2;
+  const pr=b.price?'$'+Number(b.price).toFixed(2):'';
+  const total=()=>{ tH=lines.length*ts; return tH+44+84+(sH?44+sH+14:44)+(pr?125.4:0); };
+  while(total()>740&&ts>40){ ts-=4; x.font=stF(ts,{i:true}); lines=stWrap(x,'“'+name+'”',tw); }
+  let y=L.iy+(L.ih-total())/2;
+  lines.forEach((ln,i)=>stDraw(x,ln,cx,y+i*ts+ts*.9,stF(ts,{i:true}),ST.INK,0)); y+=tH+44;
+  stBanner(x,tx0,y,tw,84,32,5,b.city?b.brewery+' — '+b.city:b.brewery,40,{w:700}); y+=84+44;
+  styleLines.forEach(row=>{ x.font=stF(sf,{w:700}); const ws=row.map(p=>x.measureText(p).width), tot=ws.reduce((a,v)=>a+v,0)+(row.length>1?49:0); let px=cx-tot/2;
+    row.forEach((p,i)=>{ stDraw(x,p,px,y+sf,stF(sf,{w:700}),ST.INK,0,true); px+=ws[i]; if(i<row.length-1){ x.fillStyle=ST.RED; x.fillRect(px+22,y+8,5,40); px+=49; } }); y+=55.2; });
+  if(sH) y+=14;
+  if(pr) stDraw(x,pr,cx,y+115.5,stF(132),ST.INK,0);
+  x.fillStyle=ST.CREAM; x.restore();
+  stDraw(x,'NOW POURING AT',540,1370+25.5+7.5,stT(34),ST.CREAM,6.8); stDraw(x,'HUNKY DORY RECORDS · RALEIGH',540,1370+76.5+7.5,stT(34),ST.CREAM,6.8);
+  x.fillStyle=ST.RED; x.fillRect(60,1616,960,14);
+  return stBlob(c); }
+
+/* cover for the new-records set */
+async function stCover(count,dateTxt){ await stReady(); const c=stCanvas(), x=c.getContext('2d'); stBg(x);
+  stHead(x,300,100,780,36,5,12,'NEW IN THE BINS',60);
+  stChrome(x,60,520,960,760,40,[30,10]); const L=stLabel(x,72,532,936,736,30,8);
+  stPanel(x,L.ix,L.iy,290,L.ih,5,18);
+  const kx=L.ix+20, ky=L.iy+(L.ih-250)/2; stKey(x,kx,ky,250,24,8,2,8);
+  stDraw(x,'NEW',kx+125,ky+(250-187)/2+41.4,stF(46),ST.INK,6.44); stDraw(x,String(count),kx+125,ky+(250-187)/2+74.5+127.5,stF(count>99?110:150),ST.INK,0);
+  const tx0=L.ix+295+30, tw=L.iw-295-60, cx=tx0+tw/2;
+  x.font=stF(112,{i:true}); const lines=stWrap(x,'FRESH VINYL JUST LANDED',tw), tH=lines.length*112*.95, tot=tH+36+84; let y=L.iy+(L.ih-tot)/2;
+  lines.forEach((ln,i)=>stDraw(x,ln,cx,y+i*106.4+106.4*.875,stF(112,{i:true}),ST.INK,0)); y+=tH+36;
+  stBanner(x,tx0,y,tw,84,32,5,(count+' new record'+(count===1?'':'s')+' · '+dateTxt).toUpperCase(),42,{w:700,track:.04});
+  x.restore();
+  stDraw(x,'SWIPE TO SEE THEM ALL ›',540,1540+24+5.5,stT(30),ST.CREAM,6);
+  stDraw(x,'HUNKY DORY RECORDS · RALEIGH',540,1540+72+5.5,stT(30),ST.CREAM,6);
+  return stBlob(c); }
+
+/* one page of up to 10 records */
+async function stList(items,start,page,pages){ await stReady(); const c=stCanvas(), x=c.getContext('2d'); stBg(x);
+  stHead(x,270,84,780,36,5,12,'NEW IN THE BINS',50);
+  stDraw(x,('HUNKY DORY RECORDS · RALEIGH · '+page+' / '+pages),540,364+13+4.5,stT(26),ST.CREAM,5.2);
+  const rh=(1224-72)/10;
+  items.forEach((r,i)=>{ const Y=416+i*(rh+8); stChrome(x,60,Y,960,rh,18,[8,3]); const L=stLabel(x,65,Y+5,950,rh-10,13,4);
+    stPanel(x,L.ix,L.iy,112,L.ih,3,10); const kx=L.ix+18, ky=L.iy+(L.ih-76)/2; stKey(x,kx,ky,76,10,3,2,3);
+    stDraw(x,stPad(start+i),kx+38,ky+38+18.5,stF(46),ST.INK,0);
+    const tx0=L.ix+115+20, tw=L.iw-115-40, cx=tx0+tw/2, art=(r.artist||'').toUpperCase();
+    let s=44; x.font=stF(s,{i:true}); while(s>26&&x.measureText(art).width>tw){ s-=2; x.font=stF(s,{i:true}); }
+    const top=L.iy+(L.ih-(s*1.02+4+42))/2; stDraw(x,art,cx,top+s*1.02*.9-2,stF(s,{i:true}),ST.INK,0);
+    stBanner(x,cx-tw*.46,top+s*1.02+4,tw*.92,42,20,3,r.album||'',34,{w:700}); x.restore(); });
+  return stBlob(c); }
+/*ST-END*/
+
+/* ---------- the "Post to Instagram" sheets ---------- */
+const BCK='hd.brewcity', ARK='hd.arrivals';
+function postRevoke(p){ if(!p) return; (p.urls||[]).forEach(u=>{ try{ URL.revokeObjectURL(u); }catch(e){} }); p.urls=[]; }
+function postClose(){ postRevoke(S.post); S.post=null; render(); }
+function stShare(files){
+  if(!(navigator.canShare&&navigator.share&&navigator.canShare({files}))) return Promise.reject(new Error('noshare'));
+  return navigator.share({files}).then(()=>true).catch(e=>(e&&e.name==='AbortError')?false:Promise.reject(e));
+}
+function stSetUrls(p,blobs,names){ postRevoke(p); p.files=blobs.map((b,i)=>new File([b],names[i],{type:'image/jpeg'})); p.urls=blobs.map(b=>URL.createObjectURL(b)); }
+/* a beer just went on tap */
+function postBeer(key){
+  const k=kfind(kegs(),key); if(!k) return; const map=LS.get(BCK,{});
+  S.post={kind:'beer',key,busy:true,files:null,urls:[],city:k.city||map[(k.brewery||'').toLowerCase()]||'',style:k.style||'',abv:k.abv||''};
+  render(); postBuildBeer();
+}
+async function postBuildBeer(){
+  const p=S.post; if(!p) return; p.busy=true; const v=p.ver=(p.ver||0)+1; let b,k;
+  try{ k=kfind(kegs(),p.key); b=await stBeer({tap:k.tap,name:k.beer,style:p.style,abv:p.abv,brewery:k.brewery,city:p.city,price:k.price}); p.err=false; }catch(e){ p.err=true; }
+  if(p.ver!==v||S.post!==p) return;
+  if(b) stSetUrls(p,[b],['hd-new-on-tap-'+stPad(k.tap)+'.jpg']);
+  p.busy=false; const im=document.getElementById('pimg'); if(im&&b) im.src=p.urls[0]; else render();
+}
+function postSaveFields(p){
+  const L=kegs(), k=kfind(L,p.key); if(!k) return;
+  k.city=p.city; k.style=p.style; k.abv=p.abv; LS.set(KEGK,L);
+  if(p.city){ const m=LS.get(BCK,{}); m[(k.brewery||'').toLowerCase()]=p.city; LS.set(BCK,m); }
+}
+/* new records came in */
+function arrGet(){ return LS.get(ARK,{items:[]}); }
+function arrAdd(items){ const a=arrGet(), seen=new Set(a.items.map(i=>(i.artist+'|'+i.album).toLowerCase())); items.forEach(i=>{ const k=(i.artist+'|'+i.album).toLowerCase(); if(!seen.has(k)){ seen.add(k); a.items.push(i); } }); LS.set(ARK,a); return a; }
+function postRecs(){ S.post={kind:'recs',stage:'ask',files:null,urls:[]}; render(); }
+async function postMakeRecs(){
+  const p=S.post; if(!p) return; p.stage='busy'; render();
+  try{ const items=arrGet().items, pages=[]; for(let i=0;i<items.length;i+=10) pages.push(items.slice(i,i+10));
+    const blobs=[await stCover(items.length,new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}))], names=['hd-new-records-00-cover.jpg'];
+    for(let i=0;i<pages.length;i++){ blobs.push(await stList(pages[i],i*10+1,i+1,pages.length)); names.push('hd-new-records-'+stPad(i+1)+'.jpg'); }
+    stSetUrls(p,blobs,names); p.stage='ready';
+  }catch(e){ p.stage='err'; }
+  if(S.post===p) render();
+}
+function postSheetHTML(){
+  const p=S.post; if(!p) return '';
+  const wrap=(h,sub,body,foot)=>'<div class="kscrim" data-act="pclose"><div class="ksheet" role="dialog" aria-modal="true"><div><h2>'+h+'</h2><p class="hint" style="margin:6px 0 0">'+sub+'</p></div>'+body+'<div class="krow">'+foot+'</div></div></div>';
+  const no='<button class="btn ghost" data-act="pclose">Not now</button>', img=(u,h)=>'<img alt="" src="'+u+'" style="height:'+h+'px;width:auto;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.3)">';
+  const inp=(id,lab,v,ph,w)=>'<label style="flex:'+w+'">'+lab+'<input id="'+id+'" value="'+esc(v)+'" placeholder="'+ph+'" autocomplete="off"></label>';
+  if(p.kind==='beer'){
+    if(p.err) return wrap('Couldn’t make the picture','Nothing was posted.','', no);
+    if(p.busy||!p.urls.length) return wrap('Post to Instagram?','Making the picture…','<p class="hint">One moment.</p>','');
+    if(p.fallback) return wrap('Save the picture','Press and hold it, tap Save to Photos, then add it to your Instagram Story.','<div style="display:flex;justify-content:center">'+img(p.urls[0],520)+'</div>','<button class="btn go" data-act="pclose">Done</button>');
+    return wrap('Post to Instagram?','New on tap: '+esc(kfind(kegs(),p.key).beer),
+      '<div style="display:flex;gap:18px;align-items:flex-start">'+img(p.urls[0],400).replace('<img ','<img id="pimg" ')+'<div class="form" style="flex:1;gap:12px">'+
+        inp('pcity','Brewery city, state',p.city,'Charleston, SC',1)+'<div class="pair">'+inp('pstyle','Style',p.style,'IPA',1)+inp('pabv','ABV %',p.abv,'6.5',1)+'</div>'+
+        '<p class="hint" style="margin:0">Fill in what’s missing. It’s remembered for next time.</p></div></div>',
+      no+'<button class="btn go" data-act="pshare">Share to Instagram</button>');
+  }
+  const a=arrGet().items;
+  if(p.stage==='ask') return wrap('Post the new records?',a.length+' record'+(a.length===1?'':'s')+' on this week’s list.',
+    '<p class="hint" style="margin:0;color:var(--fg)">'+a.slice(-6).map(i=>esc(i.artist)).join(' · ')+(a.length>6?' · and '+(a.length-6)+' more':'')+'</p><p class="hint" style="margin:0">More boxes still to open? Tap Not yet and come back after. Stories get made 10 records at a time.</p>',
+    '<button class="btn ghost" data-act="pclose">Not yet</button><button class="btn go" data-act="pmake">Make the Stories</button>');
+  if(p.stage==='busy') return wrap('Making the Stories…','Just a moment.','<p class="hint">Drawing the pictures.</p>','');
+  if(p.stage==='err') return wrap('Couldn’t make the pictures','Nothing was posted.','',no);
+  const th='<div style="display:flex;gap:10px;flex-wrap:wrap">'+p.urls.map(u=>img(u,p.fallback?420:230)).join('')+'</div>';
+  if(p.fallback) return wrap('Save the pictures','Press and hold each one, tap Save to Photos. Then pick them in order in your Story.',th,'<button class="btn go" data-act="pclose">Done</button>');
+  return wrap(p.urls.length+' pictures ready','Share saves them all to Photos. Then in Instagram: new Story, tap the photo icon, Select, and tap them in order, cover first.',th,
+    '<button class="btn ghost" data-act="pclose">Close</button><button class="btn go" data-act="pshare">Save '+p.urls.length+' pictures</button><button class="btn ghost" data-act="pclear">Start a new list</button>');
+}
+document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id; if(!p||p.kind!=='beer'||!/^p(city|style|abv)$/.test(id)) return;
+  p.city=(document.getElementById('pcity')||{value:p.city}).value.trim(); p.style=(document.getElementById('pstyle')||{value:p.style}).value.trim(); p.abv=(document.getElementById('pabv')||{value:p.abv}).value.trim();
+  postSaveFields(p); p.busy=true; postBuildBeer(); });
+
 function render(){
   const v = {login:vLogin,home:vHome,opening:vOpening,trove:vTrove,tbrowse:vTBrowse,request:vRequest,addrec:vAddRec,addused:vUsed,recvlist:vRecvList,supplies:vSupplies,drops:vDrops,reqlist:vReqList,credit:vCredit,kegs:vKegs,rkeg:vRKeg,rstock:vRStock,rcans:vRCans,labels:vLabels,recv:vRecv,find:vFind,note:vNote,issue:vIssue,cash:vCash,drop:vDrop}[S.view]();
-  document.getElementById('app').innerHTML = v + (S.notePop&&S.note&&S.view==='home' ? notePopHTML() : '');
+  document.getElementById('app').innerHTML = v + (S.notePop&&S.note&&S.view==='home' ? notePopHTML() : '') + postSheetHTML();
   bindForms(); coverScan();
 }
 
@@ -1891,8 +2063,9 @@ document.addEventListener('click', async ev=>{
     o.lines.forEach(l=>{ const g=S.rscan[l.upc]||0; if(g<l.qty) short.push(tc(l.artist)+' - '+tc(l.title)+' ('+g+' of '+l.qty+')'); if(g>l.qty) over.push(tc(l.artist)+' - '+tc(l.title)+' (+'+(g-l.qty)+')'); });
     const extra=Object.keys(S.rbad).map(u=>u+' x'+S.rbad[u]);
     const got=o.lines.reduce((n,l)=>n+Math.min(S.rscan[l.upc]||0,l.qty),0), total=o.lines.reduce((n,l)=>n+l.qty,0);
+    const arrIn=o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>({artist:tc(l.artist),album:tc(l.title)}));
     submit('receive','Received a box: '+got+' of '+total+' scanned'+(short.length?', '+short.length+' short':'')+(extra.length?', '+extra.length+' not on order':''),
-      {orders:[...new Set(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>l.oid))],expected:total,scanned:got,short,over,extra,packing:S.rpack?S.rpack.split(',')[1]:'',noPacking:S.rnopack},true).then(ok=>{ if(ok){ const d=LS.get(RDONE,{}); o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); if(g) d[l.upc]=(d[l.upc]||0)+g; }); LS.set(RDONE,d); LS.set(RK(),null); S.rscan={}; S.rbad={}; S.rlast=null; S.rpack=null; S.rnopack=false; S.view='recv'; render(); toast('Box saved'); } });
+      {orders:[...new Set(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>l.oid))],expected:total,scanned:got,short,over,extra,packing:S.rpack?S.rpack.split(',')[1]:'',noPacking:S.rnopack},true).then(ok=>{ if(ok){ const d=LS.get(RDONE,{}); o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); if(g) d[l.upc]=(d[l.upc]||0)+g; }); LS.set(RDONE,d); LS.set(RK(),null); S.rscan={}; S.rbad={}; S.rlast=null; S.rpack=null; S.rnopack=false; S.view='recv'; render(); toast('Box saved'); if(arrIn.length){ arrAdd(arrIn); postRecs(); } } });
   }
   else if(a==='atype'){ S.atype=b.dataset.v; S.aprint=true; S.alisted={}; S.acond=null; render(); }
   else if(a==='kgtab'){ S.kv=b.dataset.v; render(); }
@@ -1905,14 +2078,22 @@ document.addEventListener('click', async ev=>{
   else if(a==='kchip'){ const e=document.getElementById('kpr'); if(e) e.value=b.dataset.v; }
   else if(a==='ksaveprice'){ const v=parseFloat(String((document.getElementById('kpr')||{}).value||'').replace(/[^0-9.]/g,'')); if(!(v>0)){ toast('Enter a price, like 6.50'); return; }
     const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n; k.price=v;
-    if(n){ k.status='tap'; k.tap=n; k.days=0; kegCommit(L,'On tap '+n+': '+k.beer+' ('+kfmt(v)+')',{beer:k.beer,brewery:k.brewery,tap:n,price:v,action:'place'}); }
+    if(n){ LS.set(KEGK,L); S.ks={t:'san',key:k.key,n}; render(); }
     else kegCommit(L,'Price: '+k.beer+' '+kfmt(v),{beer:k.beer,price:v,action:'price'}); }
+  else if(a==='pclose'){ if(ev.target===b||b.tagName==='BUTTON') postClose(); }
+  else if(a==='pmake'){ postMakeRecs(); }
+  else if(a==='pclear'){ LS.set(ARK,{items:[]}); postClose(); toast('List cleared'); }
+  else if(a==='parr'){ postRecs(); }
+  else if(a==='pshare'){ const p=S.post; if(!p||!p.files) return; if(p.busy){ toast('One moment\u2026'); return; }
+    if(p.kind==='beer'){ const g=id=>((document.getElementById(id)||{}).value||'').trim(), c=g('pcity'), st=g('pstyle'), ab=g('pabv');
+      if(c!==p.city||st!==p.style||ab!==p.abv){ p.city=c; p.style=st; p.abv=ab; postSaveFields(p); postBuildBeer(); toast('Updated. Tap Share again.'); return; } }
+    stShare(p.files).then(ok=>{ if(ok){ toast(p.kind==='beer'?'Shared':'Saved to Photos'); if(p.kind==='beer') postClose(); } }).catch(()=>{ p.fallback=true; render(); }); }
   else if(a==='kplace'){ S.ks={t:'putontap',key:b.dataset.key}; render(); }
   else if(a==='kdoplace'){ const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n;
     if(!k.price){ S.ks={t:'price',key:k.key,n}; render(); return; }
     S.ks={t:'san',key:k.key,n}; render(); }
   else if(a==='ksan'){ const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n;
-    k.status='tap'; k.tap=n; k.days=0; kegCommit(L,'On tap '+n+': '+k.beer+' ('+kfmt(k.price)+'). Star San run.',{beer:k.beer,brewery:k.brewery,tap:n,price:k.price,action:'place',starSan:true}); }
+    k.status='tap'; k.tap=n; k.days=0; kegCommit(L,'On tap '+n+': '+k.beer+' ('+kfmt(k.price)+'). Star San run.',{beer:k.beer,brewery:k.brewery,tap:n,price:k.price,action:'place',starSan:true}); postBeer(k.key); }
   else if(a==='kundo'){ const L=kegs(), k=kfind(L,b.dataset.key), free=k.lastTap&&!L.some(x=>x.status==='tap'&&x.tap===k.lastTap); if(free){ k.status='tap'; k.tap=k.lastTap; } else k.status='deck'; kegCommit(L,'Keg restored: '+k.beer,{beer:k.beer,action:'undo'}); }
   else if(a==='kup'||a==='kdown'){ const L=kegs(), d=L.filter(x=>x.status==='deck'), i=d.findIndex(x=>x.key===b.dataset.key), j=a==='kup'?i-1:i+1; if(i<0||j<0||j>=d.length) return;
     const ia=L.indexOf(d[i]), ib=L.indexOf(d[j]); [L[ia],L[ib]]=[L[ib],L[ia]]; LS.set(KEGK,L); render(); }
@@ -1971,6 +2152,7 @@ document.addEventListener('click', async ev=>{
   }
   else if(a==='rfmt'){ S.rfmt=b.dataset.v; document.querySelectorAll('.fmts button').forEach(x=>x.classList.toggle('on',x===b)); }
   else if(a==='fclear'){ S.fq=''; const e=document.getElementById('fq'); if(e){ e.value=''; e.focus(); } const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); b.style.display='none'; }
+  else if(a==='freqq'){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre={artist:(S.fq||'').trim(),album:''}; go('request'); }
   else if(a==='freq'){ const r=(S.fres||[])[+b.dataset.i]; if(r){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre={artist:r.a,album:r.t}; go('request'); } }
   else if(a==='radd'||a==='rdel'){
     S.rc={name:val('rname'),phone:val('rphone'),email:val('remail')}; S.rpre=null;
@@ -1995,11 +2177,11 @@ document.addEventListener('click', async ev=>{
   else if(a==='savecans'){ const sup=val('csup'), it=S.cs.items;
     submit('stockrecv',(S.cmode==='snacks'?'Snacks':'Cans')+' received from '+sup+': '+it.map(x=>x.prod+' ('+x.qty+' '+x.unit.toLowerCase()+')').join(', '),{supplier:sup,items:it,photo:S.iphoto?S.iphoto.split(',')[1]:''},true).then(ok=>{ if(ok){ const n=it.length; S.cs=null; S.csup=''; S.iphoto=null; S.view='home'; render(); toast(n+' item'+(n===1?'':'s')+' logged ✓'); } }); }
   else if(a==='kphoto'){ S.ksup=val('ksup'); document.getElementById('kphotoin').click(); }
-  else if(a==='kadd'){ const pr=parseFloat(val('kprice')); if(!(val('kbeer')&&val('kbrew')&&pr>0)) return; S.ksup=val('ksup'); (S.rk=S.rk||[]).push({beer:val('kbeer'),brewery:val('kbrew'),price:pr}); render(); }
+  else if(a==='kadd'){ const pr=parseFloat(val('kprice')); if(!(val('kbeer')&&val('kbrew')&&pr>0)) return; S.ksup=val('ksup'); (S.rk=S.rk||[]).push({beer:val('kbeer'),brewery:val('kbrew'),city:val('kcity'),price:pr}); if(val('kcity')){ const m=LS.get(BCK,{}); m[val('kbrew').toLowerCase()]=val('kcity'); LS.set(BCK,m); } render(); }
   else if(a==='krm'){ S.ksup=val('ksup'); S.rk.splice(+b.dataset.n,1); render(); }
   else if(a==='savekegrecv'){
     const L=kegs(), sup=val('ksup'), ks=S.rk||[];
-    ks.forEach(k=>L.push({key:k.beer+'|'+k.brewery,beer:k.beer,brewery:k.brewery,style:'',price:k.price,status:'deck',tap:null,days:0,lastTap:null,supplier:sup}));
+    ks.forEach(k=>L.push({key:k.beer+'|'+k.brewery,beer:k.beer,brewery:k.brewery,city:k.city||'',style:'',price:k.price,status:'deck',tap:null,days:0,lastTap:null,supplier:sup}));
     LS.set(KEGK,L);
     submit('kegrecv','Kegs received from '+sup+': '+ks.map(k=>k.beer+' ('+kfmt(k.price)+')').join(', '),{supplier:sup,kegs:ks,photo:S.iphoto?S.iphoto.split(',')[1]:'',noPhoto:!S.iphoto},true).then(ok=>{ if(ok){ const n=ks.length; S.rk=[]; S.iphoto=null; S.ksup=''; S.view='home'; render(); toast(n+' keg'+(n===1?'':'s')+' on deck \u2713'); } });
   }
