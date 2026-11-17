@@ -166,6 +166,7 @@ div.tile.done{cursor:default}
 .cov{flex:none;width:56px;height:56px;border-radius:8px;object-fit:cover;background:#E9E1D0}
 .cov.ph{display:flex;align-items:center;justify-content:center;font:700 17px var(--mono);color:var(--muted);letter-spacing:.04em}
 .trow .tx{flex:1;min-width:0}
+.pqall{margin:12px 0 4px}.pqall .btn{width:auto;min-height:48px;padding:0 18px}.pqall .btn[disabled]{opacity:.5}
 .pqb{flex:none;min-height:52px;padding:0 18px;border-radius:12px;border:2px solid var(--fg);background:#fff;color:var(--fg);font:700 18px var(--big,inherit);touch-action:manipulation;cursor:pointer;white-space:nowrap}.pqb.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
 .trow .pr{flex:none;font:500 28px var(--mono);color:var(--fg)}
 .trow b{display:block;font-size:25px}
@@ -910,13 +911,17 @@ function troveScan(code){
   }
   refreshTrove();
 }
-function tbrowseListHTML(){
+function tbrowseFiltered(){
   const q=(S.tbq||'').trim().toLowerCase().split(/\s+/).filter(Boolean), src=S.tseg==='back'?(C.DEMO_BACKFILL||[]):(S.troveList||[]);
-  const L=src.filter(i=>q.every(w=>(i.artist+' '+i.title+' '+i.location+' '+(i.genre||'')+' '+(i.code||'')).toLowerCase().includes(w)));
+  return src.filter(i=>q.every(w=>(i.artist+' '+i.title+' '+i.location+' '+(i.genre||'')+' '+(i.code||'')).toLowerCase().includes(w)));
+}
+function tbrowseListHTML(){
+  const q=(S.tbq||'').trim(), L=tbrowseFiltered();
   if(!L.length) return '<p class="hint" style="margin-top:20px">'+(S.tload?'Loading\u2026':'Nothing found.')+'</p>';
   const cnt={}; L.forEach(i=>cnt[i.location]=(cnt[i.location]||0)+1);
   const canDrag=S.tseg!=='back'&&!q.length;
-  let out='', loc=null;
+  const left=L.filter(i=>!pqCount(i)).length;
+  let out='<div class="pqall"><button class="btn ghost" data-act="tpqall"'+(left?'':' disabled')+'>'+(left?'Add all '+(q?'these ':'')+left+' to print queue':'\u2713 All in print queue')+'</button></div>', loc=null;
   L.forEach(i=>{
     if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span><span class="n">'+cnt[loc]+' records</span></div>'; }
     out+='<div class="trow ro" data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span>'+pqBtn(i)+'</div>';
@@ -1935,7 +1940,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r25';
+const BUILD='r26';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2188,6 +2193,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='ttest'){ beep('ok'); setTimeout(()=>beep('bad'),500); }
   else if(a==='tdismiss'){ S.tmsg=null; refreshTrove(); }
   else if(a==='oback'){ S.view=S.tstand?'tbrowse':'opening'; render(); }
+  else if(a==='tpqall'){ const L=tbrowseFiltered().filter(i=>!pqCount(i)); if(L.length){ L.forEach(i=>pqAdd(i)); S.pprinted=false; const l=document.getElementById('tblist'); if(l) l.innerHTML=tbrowseListHTML(); const tp=document.querySelector('.top'); if(tp){ const old=tp.querySelector('.pqchip'); if(old) old.remove(); tp.insertAdjacentHTML('beforeend',pqChip()); } toast(L.length+' added to the print queue'); } }
   else if(a==='tpq'){ const src=(S.troveList||[]).concat(LS.get('hd.used',[])); const it=src.find(i=>(b.dataset.code&&i.code===b.dataset.code)||(!b.dataset.code&&i.artist===b.dataset.a&&i.title===b.dataset.t)); if(it){ pqAdd(it); S.pprinted=false; const n=pqCount(it); b.textContent=pqBtnLbl(n); b.classList.add('on'); const tp=document.querySelector('.top'); if(tp){ const old=tp.querySelector('.pqchip'); if(old) old.remove(); tp.insertAdjacentHTML('beforeend',pqChip()); } toast('Added to print queue'); } }
   else if(a==='tfound'){ const k=b.dataset.k; S.tfound[k]=!S.tfound[k]; if(!S.tfound[k]) delete S.tfound[k]; LS.set(KT(),S.tfound); refreshTrove(); }
   else if(a==='tonly'){ S.tonly=!S.tonly; b.classList.toggle('on',S.tonly); refreshTrove(); }
