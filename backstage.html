@@ -697,6 +697,7 @@ keg:'<path d="M7 3h10l1 4v10l-1 4H7l-1-4V7z"/><path d="M6 8h12M6 16h12"/>',
 dropoff:'<path d="M4 14v5h16v-5"/><path d="M12 3v11M8 10l4 4 4-4"/>',
 request:'<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>',
 note:'<path d="M5 4h14v11l-5 5H5z"/><path d="M14 20v-5h5"/><path d="M8.5 9h7M8.5 12.5h4"/>',
+bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/>',
 issue:'<path d="M12 3l10 17H2z"/><path d="M12 10v4.5M12 17.5v.01"/>',
 sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
 moon:'<path d="M20 14.5A8.5 8.5 0 019.5 4 8.5 8.5 0 1020 14.5z"/>',
@@ -750,7 +751,7 @@ function vHome(){
     cat('Records',tile('go:addrecord','Add records','New, Trove or used','addrec')+tile('go:trove','Trove Inventory','See the list, or check the shelf','trove')+tile('go:labels','Print labels','Print the sticker sheet for new records','labels'))+
     cat('Beer/THC',tile('go:kegs','Beer menu','Kick a keg, change a price, put one on tap','beer')+tile('go:rstock','Receive stock','Kegs or cans, with the invoice photo','keg'))+
     cat('Customers',tile('go:dropoff','Customer drop&#8209;off','Log records a customer left'+(dr?' \u00b7 '+dr+' today':''),'dropoff')+tile('go:request','Customer request','Record what a customer is looking for','request')+tile('go:drops','Drop-off list','Offers and what happens next','list'))+
-    cat('Shop',tile('go:note','Note for next shift','Leave a heads-up for whoever opens','note')+tile('go:supplies','Supplies','Mark what is low or out','bag')+tile('go:issue','Report an issue','Flag a problem for the manager','issue'))+'</div>';
+    cat('Shop',tile('go:note','Note for next shift','Leave a heads-up for whoever opens','note')+tile('go:supplies','Supplies','Mark what is low or out','bag')+tile('go:issue','Report an issue','Flag a problem for the manager','issue')+tile('feat','Request a feature','Or report a bug in Backstage','bulb'))+'</div>';
 }
 function topHTML(t,act,right,nohome){ return '<div class="top"><button class="btn ghost" data-act="'+(act||'home')+'">\u2039 Back</button><h2>'+ic(TOPIC[t]||'')+'<span>'+t+'</span></h2>'+(right||'')+'</div>'; }
 
@@ -1837,7 +1838,7 @@ function postSheetHTML(){
 }
 function featHTML(){
   if(S.view==='login') return '';
-  const link='<button class="featlnk" data-act="feat">Request a feature or report a bug</button>';
+  const link=S.view==='home'?'':'<button class="featlnk" data-act="feat">Request a feature or report a bug</button>';
   if(!S.feat) return link;
   return link+'<div class="kscrim"><div class="ksheet" role="dialog" aria-modal="true"><div><h2>Request a feature or report a bug</h2><p class="hint" style="margin:6px 0 0">Tell Adam what would make Backstage better, or what broke. It goes straight to his email.</p></div>'+
     '<textarea id="ftxt" rows="5" placeholder="What should it do, or what went wrong?" style="font:inherit;font-size:22px;padding:14px;border-radius:14px;border:1px solid var(--line);background:#fff;width:100%;box-sizing:border-box">'+esc(S.feat.text||'')+'</textarea>'+
@@ -1850,7 +1851,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r10';
+const BUILD='r11';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
