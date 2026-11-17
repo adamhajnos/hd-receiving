@@ -157,6 +157,7 @@ div.tile.done{cursor:default}
 .tchip{min-height:70px;padding:0 22px;border-radius:14px;border:1px solid var(--line);background:none;font-weight:700;font-size:22px;white-space:nowrap}
 .tchip.on{background:var(--fg);color:var(--bg)}
 .tloc{position:sticky;top:-20px;z-index:3;display:flex;align-items:center;justify-content:space-between;margin:22px -8px 10px;padding:14px 18px;border-radius:12px;border-left:8px solid var(--warn);background:#FFF4D6;font:800 24px var(--display);letter-spacing:.04em;color:var(--fg);text-transform:uppercase;box-shadow:0 6px 12px rgba(20,17,13,.2)}.tloc .n{font:700 20px var(--mono);color:var(--warn-fg);letter-spacing:0}
+.tcust{margin:-4px 0 14px;padding:16px 18px;border-radius:14px;background:var(--accent);color:#fff;text-align:center;font:400 34px var(--big);text-transform:uppercase;letter-spacing:.01em}
 .trow{display:flex;align-items:center;gap:16px;width:100%;min-height:68px;padding:10px 16px;margin-bottom:8px;text-align:left;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
 .trow .box{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff}
 .trow.on{border-color:var(--ok);background:var(--ok-bg)}
@@ -320,7 +321,7 @@ div.tile.done{cursor:default}
 window.HD_CONFIG = {
   // Paste the Apps Script web app URL here after deploying (see README.md).
   // Leave empty to run in DEMO mode (data stays in this browser only).
-  API_URL: "",
+  API_URL: "https://script.google.com/macros/s/AKfycbzlu0sZz66b8t60AaQrIfXmo_UgzG6ZApjbYo3lHthgni2bigzNPYmaro-_uH-qaRrNTA/exec",
 
   // DEMO MODE ONLY: staff and PINs. In live mode, staff and PINs live in the "Staff"
   // tab of the Google Sheet and are never put in this public file.
@@ -401,7 +402,6 @@ window.HD_CONFIG = {
   SHOP_ADDRESS: "",
   SHOP_HOURS: "",
   // Discogs search-only app key (safe to embed; cannot access the Discogs account).
-  TEST_SKIP: true, // testing only: skips PIN login and the opening checklist (demo mode). Remove before real use.
   SHIFT_HOURS: 14,
 
   // DEMO MODE ONLY: sample kegs from the Tap Board preview (not the real taps). Live mode reads the Tap Board sheet.
@@ -1022,7 +1022,7 @@ const TERMS={
     'Requests we can’t fill are closed, and we’ll let you know.']}};
 function termsRow(k){ return '<div class="trow"><button class="btn ghost" data-act="terms" data-k="'+k+'">Read the terms</button><span id="tstat" class="tstat'+(S.tagree?' ok':'')+'">'+(S.tagree?'Agreed ✓':'Customer reads and agrees')+'</span></div>'; }
 function openTerms(k){ const T=TERMS[k], o=document.createElement('div'); o.className='kscrim tscrim';
-  o.innerHTML='<div class="ksheet tsheet" role="dialog" aria-modal="true"><h2>'+T.h+'</h2><p class="hint" style="margin:6px 0 10px">Hunky Dory Records, Raleigh</p><ol>'+T.l.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol><div class="row2"><button class="btn ghost" data-act="tclose">Close</button><button class="btn go" data-act="tagree">I have read and agree</button></div></div>';
+  o.innerHTML='<div class="ksheet tsheet" role="dialog" aria-modal="true"><div class="tcust">Turn the iPad to the customer</div><h2>'+T.h+'</h2><p class="hint" style="margin:6px 0 10px">Hunky Dory Records, Raleigh</p><ol>'+T.l.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol><div class="row2"><button class="btn ghost" data-act="tclose">Close</button><button class="btn go" data-act="tagree">I have read and agree</button></div></div>';
   document.getElementById('screen').appendChild(o); }
 function reqEmail(name,items){
   const first=String(name||'').trim().split(/\s+/)[0]||'there';
