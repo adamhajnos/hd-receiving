@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Backstage">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="robots" content="noindex,nofollow">
 <title>HD Backstage</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:ital,wght@0,700;0,800;1,800&family=Public+Sans:wght@400;500;600;700;800&family=Special+Elite&display=swap">
@@ -2310,7 +2313,13 @@ function fit(){
   const bez=mock?34:0, W=1194+2*bez, H=834+2*bez, m=mock?28:0;
   let s=Math.min((innerWidth-2*m)/W,(innerHeight-2*m)/H);
   if(mock) s=Math.min(s,1);
-  sz.style.width=W*s+'px'; sz.style.height=H*s+'px'; dev.style.transform='scale('+s+')';
+  const scr=document.getElementById('screen');
+  if(mock){ scr.style.width=''; scr.style.height=''; sz.style.width=W*s+'px'; sz.style.height=H*s+'px'; }
+  else { /* real tablet: fill the whole screen, whatever its shape */
+    scr.style.width=(innerWidth/s)+'px'; scr.style.height=(innerHeight/s)+'px';
+    sz.style.width=innerWidth+'px'; sz.style.height=innerHeight+'px'; }
+  dev.style.transform='scale('+s+')';
+  document.body.style.background = mock ? '' : 'var(--bg)';
   document.getElementById('rotate').style.display = (coarse && innerHeight>innerWidth) ? 'flex' : 'none';
 }
 function tick(){ const e=document.getElementById('clk'); if(e) e.textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); }
