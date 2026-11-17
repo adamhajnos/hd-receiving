@@ -205,7 +205,7 @@ div.tile.done{cursor:default}
 .tmsg.ok{border-color:var(--ok);background:var(--ok-bg)}.tmsg.dup{border-color:var(--warn-fg);background:var(--warn-bg)}
 .tmsg.bad{border-color:#ff5a4d;background:rgba(255,90,77,.2);animation:flash .5s 2}
 .tconf{display:flex;flex-direction:column;gap:8px;padding:18px 22px;border-radius:16px;border:2px solid var(--warn);background:#FFF4D6}.tconf b{font-size:28px}.tconf span{font-size:22px;opacity:.85}.tcb{display:flex;gap:14px;margin-top:8px}
-.stickybar>.btn{width:100%}.stickybar .btn{min-height:72px;font-size:25px}.stickybar{position:sticky;bottom:-28px;margin:16px -28px -28px;padding:14px 28px 28px;background:linear-gradient(transparent,var(--bg) 30%)}
+.stickybar>.btn{width:100%}.stickybar .btn{min-height:72px;font-size:25px}.stickybar{position:static;margin:24px 0 8px;padding:0}
 /* checklist */
 .steps{display:flex;flex-direction:column;gap:10px;max-width:720px}
 .step{display:flex;align-items:center;gap:16px;min-height:72px;padding:12px 18px;text-align:left;border-radius:16px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:20px;width:100%}
@@ -947,7 +947,8 @@ function vTrove(){
   const c=troveCounts(), top=topHTML('Trove check','oback','<span class="chip" id="tcount" style="margin-left:auto">'+c.f+' / '+c.n+'</span>')+bannerHTML();
   if(!S.tscan) return top+tstartHTML();
   return top+tpanelHTML()+
-    '<button class="tchip" style="margin-top:12px;align-self:flex-start" data-act="tshow">'+(S.tshow?'Hide the list':'Check off by hand')+'</button>'+
+    '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px"><button class="tchip" data-act="tshow">'+(S.tshow?'Hide the list':'Check off by hand')+'</button>'+
+    (S.trestart?'<span class="hint" style="margin:0">Clear all '+c.f+' checked and start over?</span><button class="tchip on" data-act="trestartyes">Yes, restart</button><button class="tchip" data-act="trestartno">Cancel</button>':'<button class="tchip" data-act="trestart">Restart check</button>')+'</div>'+
     (S.tshow?'<p class="hint" style="margin:10px 0 0">Tap any record to check it off by hand. Tap again to undo. Scanning still works too.</p>':'')+
     (S.tshow?'<div class="tbar" style="margin-top:12px"><input id="tq" placeholder="Search" autocomplete="off" value="'+esc(S.tq)+'"><button class="tchip '+(S.tonly?'on':'')+'" data-act="tonly">Not checked</button></div><div id="tlist">'+troveListHTML()+'</div>':'')+
     tfootHTML();
@@ -1940,7 +1941,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r26';
+const BUILD='r28';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2189,6 +2190,9 @@ document.addEventListener('click', async ev=>{
   else if(a==='tstart'){ S.tscan=true; S.tshow=true; S.tmsg=null; S.tconfirm=false; beep('ok'); render(); }
   else if(a==='dtoksave'){ const v=(document.getElementById('dtk')||{}).value; if(v&&v.trim().length>10){ LS.set('hd.discogs',v.trim()); Object.keys(COV).forEach(k=>{ if(!COV[k]) delete COV[k]; }); LS.set(COVKEY,COV); render(); toast('Saved. Covers will fill in as you scroll.'); if(S.view==='addused'&&S.u&&S.u.pick) uInfo(); } }
   else if(a==='tshow'){ S.tshow=!S.tshow; render(); }
+  else if(a==='trestart'){ S.trestart=true; render(); }
+  else if(a==='trestartno'){ S.trestart=false; render(); }
+  else if(a==='trestartyes'){ S.tfound={}; LS.set(KT(),{}); S.tbad={}; S.tmsg=null; S.tconfirm=false; S.trestart=false; render(); toast('Check restarted. Start scanning from the beginning.'); }
   else if(a==='tkeep'){ S.tconfirm=false; refreshTrove(); }
   else if(a==='ttest'){ beep('ok'); setTimeout(()=>beep('bad'),500); }
   else if(a==='tdismiss'){ S.tmsg=null; refreshTrove(); }
