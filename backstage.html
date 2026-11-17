@@ -234,8 +234,8 @@ div.tile.done{cursor:default}
 .lbl{width:4in;height:1in;box-sizing:border-box;padding:.07in .1in;display:flex;gap:.1in;background:#fff;color:#111;font-family:Inter,Helvetica,Arial,sans-serif;overflow:hidden}
 .lbl.blank{align-items:center;justify-content:center;color:#999;font-size:14px;border:1px dashed #ccc}
 .lbl .lt{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between}.lbl .lh{display:flex;justify-content:space-between;font-size:7pt;letter-spacing:.08em;font-weight:800}.lbl .lh span{font-weight:600;letter-spacing:0;text-transform:uppercase}
-.lbl .lh{align-items:center}.lbl .llogo{height:.33in;width:auto;display:block;flex:none}
-.lbl .la{font-size:13pt;font-weight:800;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lbl .ll{font-size:10.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lbl .ln{font-size:7.5pt;font-style:italic;color:#444;height:.13in;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl .llogo{height:.62in;width:auto;flex:none;align-self:center}.lbl .lh{justify-content:flex-start}.lbl .lh span{font-weight:700;font-size:7.5pt;letter-spacing:.06em;text-transform:uppercase}
+.lbl .la{font-size:13pt;font-weight:800;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lbl .ll{font-size:10pt;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.lbl .ln{font-size:7.5pt;font-style:italic;color:#444;height:.13in;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lbl .lr{flex:none;width:1.35in;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between}.lbl .lp{font-size:20pt;font-weight:800;line-height:1}.lbl .bars{width:1.3in;height:.36in;fill:#000;display:block}.lbl .lc{font-size:6.5pt;letter-spacing:.06em;align-self:center}
 #psheet{display:none}
 @media print{@page{size:letter;margin:0}html,body{background:#fff!important;height:auto!important}body>*:not(#psheet){display:none!important}#psheet{display:block!important}.ppage{width:8.5in;height:11in;box-sizing:border-box;padding:.5in .15625in 0;display:grid;grid-template-columns:4in 4in;column-gap:.1875in;grid-auto-rows:1in;break-after:page;page-break-after:always}.ppage:last-child{break-after:auto;page-break-after:auto}.lbl.blank{border:0}}
@@ -1504,7 +1504,7 @@ function pqAdd(r){ const q=pqGet(); q.push({id:Date.now()+'-'+Math.random().toSt
 function labelHTML(r){
   if(!r) return '<div class="lbl blank"></div>';
   const pr=(r.price===0||r.price)?'$'+Number(r.price).toLocaleString('en-US',{maximumFractionDigits:2}):'';
-  return '<div class="lbl"><div class="lt"><div class="lh"><img class="llogo" src="'+LOGOSRC+'" alt="Hunky Dory"><span>'+esc(r.genre||'')+'</span></div><div class="la">'+esc(r.artist)+'</div><div class="ll">'+esc(r.title)+'</div><div class="ln">'+esc(r.notes||'')+'</div></div>'+
+  return '<div class="lbl"><img class="llogo" src="'+LOGOSRC+'" alt="Hunky Dory"><div class="lt"><div class="lh"><span>'+esc(r.genre||'')+'</span></div><div class="la">'+esc(r.artist)+'</div><div class="ll">'+esc(r.title)+'</div><div class="ln">'+esc(r.notes||'')+'</div></div>'+
     '<div class="lr"><div class="lp">'+esc(pr)+'</div>'+(r.code?barSVG(r.code)+'<div class="lc">'+esc(r.code)+'</div>':'')+'</div></div>';
 }
 function pageHTML(slots){ return '<div class="ppage">'+slots.map(labelHTML).join('')+'</div>'; }
@@ -1862,7 +1862,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r13';
+const BUILD='r14';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
