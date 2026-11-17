@@ -39,6 +39,7 @@ body{background:#E8E0CF;color:var(--fg);font-family:var(--display);font-size:21p
 .bat{display:inline-block;width:25px;height:12px;border:1.5px solid var(--muted);border-radius:4px;position:relative;margin-left:6px;vertical-align:-2px}
 .bat::before{content:"";position:absolute;inset:1.5px;background:var(--fg);border-radius:1.5px}
 .bat::after{content:"";position:absolute;right:-4px;top:3px;width:2px;height:4px;background:var(--muted);border-radius:0 1px 1px 0}
+#busy{display:none;position:absolute;inset:0;z-index:90;background:rgba(20,17,13,.35);align-items:center;justify-content:center}.bcard{background:#fff;border-radius:22px;padding:30px 44px;display:flex;flex-direction:column;align-items:center;gap:16px;min-width:300px;box-shadow:0 12px 40px rgba(0,0,0,.3)}.bmsg{font-size:26px;font-weight:700}.spin{width:56px;height:56px;border-radius:50%;border:6px solid var(--line);border-top-color:var(--accent);animation:hdspin .8s linear infinite}.bbar{width:100%;height:8px;border-radius:4px;background:var(--line);overflow:hidden}.bbar i{display:block;height:100%;width:40%;background:var(--accent);border-radius:4px;animation:hdbar 1.1s ease-in-out infinite}@keyframes hdspin{to{transform:rotate(360deg)}}@keyframes hdbar{0%{margin-left:-40%}100%{margin-left:100%}}#scroll{bottom:36px}
 #rotate{display:none;position:fixed;inset:0;z-index:50;background:var(--bg);color:var(--fg);align-items:center;justify-content:center;text-align:center;font:800 26px var(--display);padding:40px}
 button{font:inherit;color:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
@@ -642,6 +643,14 @@ if(!S.who) S.view='login';
 
 /* ---------- data layer ---------- */
 async function api(action, payload){
+  if(action==='login'||action==='today'||action==='trove') return apiRaw(action,payload);
+  busyOn(action==='log'&&payload&&payload.task==='feature'?'Sending…':'Saving…');
+  try{ return await apiRaw(action,payload); } finally{ busyOff(); }
+}
+let _bt=null,_bn=0;
+function busyOn(msg){ _bn++; if(_bn>1) return; clearTimeout(_bt); _bt=setTimeout(()=>{ let o=document.getElementById('busy'); if(!o){ o=document.createElement('div'); o.id='busy'; document.getElementById('screen').appendChild(o); } o.innerHTML='<div class="bcard"><div class="spin"></div><div class="bmsg">'+msg+'</div><div class="bbar"><i></i></div></div>'; o.style.display='flex'; },150); }
+function busyOff(){ _bn=Math.max(0,_bn-1); if(_bn) return; clearTimeout(_bt); const o=document.getElementById('busy'); if(o) o.style.display='none'; }
+async function apiRaw(action, payload){
   if(DEMO){
     const log = LS.get('hd.demo',[]);
     if(action==='login'){
@@ -1838,7 +1847,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r4';
+const BUILD='r5';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
