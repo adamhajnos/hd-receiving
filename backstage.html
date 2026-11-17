@@ -1571,10 +1571,19 @@ function buildPdf(test){
   const out=new Uint8Array(len); let p=0; chunks.forEach(c=>{ out.set(c,p); p+=c.length; }); return out;
 }
 async function pdfOut(test){
-  loadLogoJpg(); const bytes=buildPdf(test), blob=new Blob([bytes],{type:'application/pdf'}), file=new File([blob],test?'alignment-test.pdf':'labels.pdf',{type:'application/pdf'});
-  try{ if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return true; } }catch(e){ if(e&&e.name==='AbortError') return false; }
-  window.open(URL.createObjectURL(blob),'_blank'); return true;
+  S.pdfMsg=''; S.pdfErr='';
+  try{
+    loadLogoJpg(); const bytes=buildPdf(test), blob=new Blob([bytes],{type:'application/pdf'});
+    if(S.pdfUrl) try{ URL.revokeObjectURL(S.pdfUrl); }catch(e){}
+    S.pdfUrl=URL.createObjectURL(blob); S.pdfName=test?'alignment-test.pdf':'labels.pdf';
+    const file=new File([blob],S.pdfName,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file]}); S.pdfMsg='shared'; return true; }catch(e){ if(e&&e.name==='AbortError'){ S.pdfMsg='cancelled'; return false; } S.pdfErr='Share sheet failed: '+(e&&e.message||e); }
+    } else S.pdfErr='This browser can\u2019t open the share sheet for files.';
+    return true;
+  }catch(e){ S.pdfErr='Couldn\u2019t make the PDF: '+(e&&e.message||e); return false; }
 }
+function pdfPanel(){ if(!S.pdfUrl&&!S.pdfErr) return ''; return '<div class="tmsg '+(S.pdfErr?'bad':'ok')+'" style="margin:10px 0"><b>'+(S.pdfErr?esc(S.pdfErr):'PDF ready')+'</b><span>If nothing opened, tap here to view it, then use Share \u2192 Print.</span>'+(S.pdfUrl?'<a class="btn go" href="'+esc(S.pdfUrl)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">Open the PDF</a>':'')+'</div>'; }
 function vLabels(){
   const q=pqGet(), start=Math.min(19,Math.max(0,LS.get(PS,0))), n=q.length, pages=sheetPages().length;
   const rows=q.map((r,i)=>'<div class="pqrow"><span class="tx"><b>'+esc(r.title||'(no title)')+'</b><span>'+esc(r.artist)+(r.genre?' · '+esc(r.genre):'')+'</span></span><span class="pr">'+esc(r.price===0||r.price?'$'+r.price:'')+'</span><button class="x" data-act="pqdel" data-i="'+i+'" aria-label="Remove">✕</button></div>').join('');
@@ -1586,7 +1595,7 @@ function vLabels(){
   '<div class="pqlist">'+(rows||'<p class="hint">Nothing waiting. Records you add with “Add to print queue” show up here. Search above to reprint any record.</p>')+'</div></div>'+
   '<div class="plright"><div class="plh"><b>Preview</b><span class="o">first label</span></div><div class="pprev">'+(n?labelHTML(q[0]):'<div class="lbl blank"><span>No labels yet</span></div>')+'</div>'+
   '<div class="plh" style="margin-top:14px"><b>Start on label</b><span class="o">Tap the first empty spot on your sheet</span></div><div class="pgrid">'+cells+'</div><p class="hint" style="margin:6px 0 0">Spots count across, then down: 1 is top left, 2 is top right, 19 and 20 are the bottom row.</p>'+
-  (start>0?'<div class="tmsg bad" style="margin:10px 0"><b>Starting on label '+(start+1)+', not label 1</b><span>That\u2019s why it may need 2 sheets. Using a fresh sheet?</span><button class="btn go" data-act="pstart" data-k="0">Start on label 1</button></div>':'')+'<button class="btn go" id="pprint" data-act="pprint" '+(n?'':'disabled')+'>'+(n?'Print '+n+' label'+(n===1?'':'s')+(pages>1?' ('+pages+' sheets)':''):'Nothing to print')+'</button>'+done+pcalHTML()+'<a class="reorder" href="https://www.amazon.com/Avery-Address-Printers-Permanent-Adhesive/dp/B00007M0G9" target="_blank" rel="noopener">Reorder labels on Amazon (Avery 8161, 500 labels) \u2197</a><details class="howto"><summary>How to load and print</summary><ol><li><b>Labels:</b> Avery 8161. 20 per sheet, 2 across by 10 down, each 1\u2033 \u00d7 4\u2033.</li><li><b>Load:</b> the side with the labels is the side that prints. Check the paper icon on the printer tray to see which way that side should face.</li><li><b>Test first:</b> print once on plain paper, then hold it behind a label sheet up to the light. The text should sit inside the labels.</li><li><b>Print settings:</b> Letter paper, 1 copy, actual size (100%), no headers or footers. Pick the \u201cLabels\u201d or \u201cMatte\u201d paper type if the printer offers it.</li><li><b>Inkjet care:</b> let the sheet dry a minute before peeling. Don\u2019t run a partly used sheet twice if it curls. Never reload a sheet that already jammed.</li><li><b>Partly used sheet:</b> tap the first empty spot above. Used spots are crossed out.</li><li><b>After printing:</b> tap Clear queue so the used spots move forward.</li></ol></details></div></div>';
+  (start>0?'<div class="tmsg bad" style="margin:10px 0"><b>Starting on label '+(start+1)+', not label 1</b><span>That\u2019s why it may need 2 sheets. Using a fresh sheet?</span><button class="btn go" data-act="pstart" data-k="0">Start on label 1</button></div>':'')+'<button class="btn go" id="pprint" data-act="pprint" '+(n?'':'disabled')+'>'+(n?'Print '+n+' label'+(n===1?'':'s')+(pages>1?' ('+pages+' sheets)':''):'Nothing to print')+'</button>'+done+pdfPanel()+pcalHTML()+'<a class="reorder" href="https://www.amazon.com/Avery-Address-Printers-Permanent-Adhesive/dp/B00007M0G9" target="_blank" rel="noopener">Reorder labels on Amazon (Avery 8161, 500 labels) \u2197</a><details class="howto"><summary>How to load and print</summary><ol><li><b>Labels:</b> Avery 8161. 20 per sheet, 2 across by 10 down, each 1\u2033 \u00d7 4\u2033.</li><li><b>Load:</b> the side with the labels is the side that prints. Check the paper icon on the printer tray to see which way that side should face.</li><li><b>Test first:</b> print once on plain paper, then hold it behind a label sheet up to the light. The text should sit inside the labels.</li><li><b>Print settings:</b> Letter paper, 1 copy, actual size (100%), no headers or footers. Pick the \u201cLabels\u201d or \u201cMatte\u201d paper type if the printer offers it.</li><li><b>Inkjet care:</b> let the sheet dry a minute before peeling. Don\u2019t run a partly used sheet twice if it curls. Never reload a sheet that already jammed.</li><li><b>Partly used sheet:</b> tap the first empty spot above. Used spots are crossed out.</li><li><b>After printing:</b> tap Clear queue so the used spots move forward.</li></ol></details></div></div>';
 }
 function pqResHTML(){
   const q=(S.pqs||'').trim().toLowerCase().split(/\s+/).filter(Boolean); if(!q.length) return '';
@@ -1924,7 +1933,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r22';
+const BUILD='r23';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2297,8 +2306,8 @@ document.addEventListener('click', async ev=>{
   else if(a==='pqdel'){ const q=pqGet(); q.splice(+b.dataset.i,1); LS.set(PQ,q); S.pprinted=false; render(); }
   else if(a==='pqadd'){ pqAdd({code:b.dataset.c,artist:b.dataset.a,title:b.dataset.t,price:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).price,genre:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).genre}); S.pqs=''; S.pprinted=false; render(); toast('Added to the queue'); }
   else if(a==='pstart'){ LS.set(PS,+b.dataset.k); S.pprinted=false; render(); }
-  else if(a==='pprint'){ const ok=await pdfOut(false); if(ok!==false){ S.pprinted=true; render(); } }
-  else if(a==='pptest'){ await pdfOut(true); }
+  else if(a==='pprint'){ toast('Making the PDF\u2026'); const ok=await pdfOut(false); if(ok!==false) S.pprinted=true; render(); }
+  else if(a==='pptest'){ toast('Making the test page\u2026'); await pdfOut(true); render(); const d=[...document.querySelectorAll('details.howto')].find(x=>/alignment/.test(x.textContent.slice(0,30))); if(d) d.open=true; }
   else if(a==='pcal'){ const c=pcal(), k=b.dataset.k, d=+b.dataset.d; c[k]=Math.round((c[k]+d)*100)/100; if(k==='s') c.s=Math.max(60,Math.min(120,Math.round(c.s))); LS.set('hd.pcal2',c); render(); const dt=document.querySelector('details.howto summary'); document.querySelectorAll('details.howto').forEach(x=>{ if(/alignment/.test(x.textContent.slice(0,30))) x.open=true; }); }
   else if(a==='pcalreset'){ LS.set('hd.pcal2',{s:100,x:0,y:0}); render(); }
   else if(a==='pqwipe'){ LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
