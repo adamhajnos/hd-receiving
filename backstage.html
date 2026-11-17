@@ -1162,8 +1162,8 @@ function vAddRec(){
   }
   const L=S.alast||{}, sel=(arr,cur,ph)=>(ph?'<option value="">'+ph+'</option>':'')+arr.map(x=>'<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>').join('');
   const fmt='<label>Format<select id="aformat">'+sel(['Vinyl','Tape','CD','45'],L.format)+'</select></label>';
-  let body='<div class="pair"><label>Artist<input id="aartist" autocomplete="off"></label><label>Album<input id="aalbum" autocomplete="off"></label></div>'+
-    '<div class="pair"><label>Genre<select id="agenre">'+sel(C.GENRES,L.genre,'Choose a genre')+'</select></label>'+fmt+'</div>';
+  let body=(t==='Trove'?'<div><label>Find the album</label><input id="tdq" class="pqs" placeholder="Scan the UPC, or type artist and album" autocomplete="off" autocapitalize="off" value="'+esc((S.td||{}).q||'')+'"><div id="tdlist">'+tdListHTML()+'</div></div>':'')+'<div class="pair"><label>Artist<input id="aartist" autocomplete="off" value="'+esc((S.td||{}).artist||'')+'"></label><label>Album<input id="aalbum" autocomplete="off" value="'+esc((S.td||{}).album||'')+'"></label></div>'+
+    '<div class="pair"><label>Genre<select id="agenre">'+sel(C.GENRES,(S.td&&S.td.genre)||L.genre,'Choose a genre')+'</select></label>'+fmt+'</div>';
   if(t==='Used'){
     const CO=['Mint','NM','VG+','VG','G'];
     body+='<div><label><span>Condition <span class="o">(optional)</span></span></label><div class="fmts" style="margin-top:7px">'+CO.map(x=>'<button data-act="acond" data-v="'+x+'" class="'+(S.acond===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
@@ -1209,6 +1209,30 @@ async function uSearch(q){
     S.u.res=out; S.u.err='';
   }catch(e){ if(my!==_uid) return; S.u.res=[]; S.u.err='Can’t reach Discogs. Check the wifi, or type it as Artist - Album.'; }
   S.u.busy=false; uRefreshList();
+}
+const tdFresh=()=>({q:'',res:null,busy:false,err:'',artist:'',album:'',genre:''});
+let _tdt=null,_tdid=0;
+function tdSearchSoon(){ clearTimeout(_tdt); const q=(S.td.q||'').trim(); _tdid++; if(q.length<3){ S.td.res=null; S.td.busy=false; S.td.err=''; tdRefreshList(); return; } S.td.busy=true; tdRefreshList(); _tdt=setTimeout(()=>tdSearch(q),300); }
+async function tdSearch(q){
+  const my=++_tdid, bar=/^\d{8,14}$/.test(q);
+  try{
+    const j=bar?await dget('database/search?type=release&per_page=6&barcode='+q):await dget('database/search?type=master&per_page=40&q='+encodeURIComponent(q));
+    if(my!==_tdid) return;
+    const seen={}, out=[];
+    (j.results||[]).forEach(x=>{ const n=usplit(x.title), r={mid:bar?(x.master_id||0):x.id,rid:bar?x.id:0,artist:n.artist,album:n.album,year:x.year||'',thumb:(x.cover_image&&!/spacer/.test(x.cover_image))?x.cover_image:(x.thumb||''),genre:ugenre(x.genre)}, k=ukey(r.artist,r.album); if(!n.artist||seen[k]) return; seen[k]=1; out.push(r); });
+    S.td.res=out; S.td.err='';
+  }catch(e){ if(my!==_tdid) return; S.td.res=[]; S.td.err='Can\u2019t reach Discogs. Check the wifi, or type the artist and album below.'; }
+  S.td.busy=false; tdRefreshList();
+}
+function tdRefreshList(){ const l=document.getElementById('tdlist'); if(l) l.innerHTML=tdListHTML(); }
+function tdListHTML(){
+  const T=S.td||tdFresh(), q=(T.q||'').trim();
+  if(q.length<3) return '<p class="hint">Pick the album from Discogs and the official name and genre fill in. Or type them below.</p>';
+  if(T.busy) return '<p class="hint">Searching Discogs\u2026</p>';
+  const res=T.res||[]; T.shown=res;
+  let out=res.length?'<div class="uh">'+(/^\d+$/.test(q)?'From Discogs':'Tap the right album')+'</div>'+res.map((r,i)=>uRow(r.artist,r.album,r.year,'','data-i="'+i+'"',r.thumb).replace('data-act="upick"','data-act="tdpick"')).join(''):'<p class="hint">No match on Discogs. Type the artist and album below.</p>';
+  if(T.err) out+='<p class="hint" style="color:var(--bad)">'+esc(T.err)+'</p>';
+  return out;
 }
 function uRefreshList(){ const l=document.getElementById('ulist'); if(l) l.innerHTML=uListHTML(); }
 function uStockText(i){ return i.vars.map(v=>v.name+' ×'+v.stock).join(' · '); }
@@ -1942,7 +1966,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r29';
+const BUILD='r30';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2049,6 +2073,7 @@ document.addEventListener('input',ev=>{
   if(ev.target&&ev.target.id==='crq'){ S.crq=ev.target.value; render(); const q=document.getElementById('crq'); if(q){ q.focus(); q.setSelectionRange(q.value.length,q.value.length); } return; }
   if(ev.target&&ev.target.id==='dq'){ S.dq=ev.target.value; render(); const q=document.getElementById('dq'); if(q){ q.focus(); q.setSelectionRange(q.value.length,q.value.length); } return; }
   if(ev.target&&ev.target.id==='uq'){ S.u.q=ev.target.value; uSearchSoon(); return; }
+  if(ev.target&&ev.target.id==='tdq'){ S.td.q=ev.target.value; tdSearchSoon(); return; }
   if(ev.target&&ev.target.id==='uprice'){ let v=ev.target.value.replace(/[^\d.]/g,''); const i=v.indexOf('.'); if(i>=0) v=v.slice(0,i+1)+v.slice(i+1).replace(/\./g,'').slice(0,2); if(v!==ev.target.value) ev.target.value=v; S.u.price=v; uCheck(); return; }
   if(ev.target&&ev.target.id==='ugenre'){ S.u.genre=ev.target.value; uCheck(); return; }
   if(ev.target&&ev.target.id==='unotes'){ S.u.notes=ev.target.value; return; }
@@ -2148,6 +2173,7 @@ function dragEnd(){
 document.addEventListener('pointerup',dragEnd); document.addEventListener('pointercancel',dragEnd);
 let _tb='', _tt=null;
 document.addEventListener('keydown',ev=>{
+  if(ev.key==='Enter'&&ev.target&&ev.target.id==='tdq'){ ev.preventDefault(); clearTimeout(_tdt); const q=(S.td.q||'').trim(); if(q.length>=3){ S.td.busy=true; tdRefreshList(); tdSearch(q); } return; }
   if(ev.key==='Enter'&&ev.target&&ev.target.id==='uq'){ ev.preventDefault(); clearTimeout(_utm); const q=(S.u.q||'').trim(); if(q.length>=3){ S.u.busy=true; uRefreshList(); uSearch(q); } return; }
   if(S.view==='trove' && S.tscan){
     const tg=ev.target&&ev.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') return;
@@ -2286,7 +2312,8 @@ document.addEventListener('click', async ev=>{
     submit('receive','Received a box: '+got+' of '+total+' scanned'+(short.length?', '+short.length+' short':'')+(extra.length?', '+extra.length+' not on order':''),
       {orders:[...new Set(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>l.oid))],expected:total,scanned:got,short,over,extra,packing:S.rpack?S.rpack.split(',')[1]:'',noPacking:S.rnopack},true).then(ok=>{ if(ok){ const d=LS.get(RDONE,{}); o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); if(g) d[l.upc]=(d[l.upc]||0)+g; }); LS.set(RDONE,d); LS.set(RK(),null); S.rhist=[]; S.rhold=[]; S.rscan={}; S.rbad={}; S.rlast=null; S.rpack=null; S.rnopack=false; S.view='recv'; render(); toast('Box saved'); if(arrIn.length){ arrAdd(arrIn); postRecs(); } } });
   }
-  else if(a==='atype'){ S.atype=b.dataset.v; S.aprint=true; S.alisted={}; S.acond=null; render(); }
+  else if(a==='tdpick'){ const r=(S.td.shown||[])[+b.dataset.i]; if(r){ S.td.artist=r.artist; S.td.album=r.album; S.td.genre=r.genre||''; S.td.q=''; S.td.res=null; S.td.picked=true; tdRefreshList(); const set=(id,v)=>{ const e=document.getElementById(id); if(e){ e.value=v; e.dispatchEvent(new Event('input',{bubbles:true})); } }; set('aartist',r.artist); set('aalbum',r.album); const q=document.getElementById('tdq'); if(q) q.value=''; if(r.genre) set('agenre',r.genre); else { try{ let g=''; if(r.mid){ const m=await dget('masters/'+r.mid); g=ugenre(m.genres); } else if(r.rid){ const x=await dget('releases/'+r.rid); g=ugenre(x.genres); } if(g){ S.td.genre=g; set('agenre',g); } }catch(e){} } toast('Filled in from Discogs'); const pe=document.getElementById('aprice'); if(pe) pe.focus(); } }
+  else if(a==='atype'){ S.td=tdFresh(); S.atype=b.dataset.v; S.aprint=true; S.alisted={}; S.acond=null; render(); }
   else if(a==='kgtab'){ S.kv=b.dataset.v; render(); }
   else if(a==='ktile'){ const n=+b.dataset.n, L=kegs(); S.ks={t:L.some(x=>x.status==='tap'&&x.tap===n)?'tap':'open',n}; render(); }
   else if(a==='kclose'){ if(ev.target===b||b.tagName==='BUTTON'){ S.ks=null; render(); } }
@@ -2325,8 +2352,8 @@ document.addEventListener('click', async ev=>{
   else if(a==='pcalreset'){ LS.set('hd.pcal2',{s:100,x:0,y:0}); render(); }
   else if(a==='pqwipe'){ LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
   else if(a==='pqclear'){ const n=pqGet().length, st=LS.get(PS,0); LS.set(PS,(st+n)%20); LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
-  else if(a==='addback'){ S.atype=null; render(); }
-  else if(a==='addtrove'){ S.atype='Trove'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); }
+  else if(a==='addback'){ S.td=tdFresh(); S.atype=null; render(); }
+  else if(a==='addtrove'){ S.td=tdFresh(); S.atype='Trove'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); }
   else if(a==='acond'){ S.acond=S.acond===b.dataset.v?null:b.dataset.v; document.querySelectorAll('[data-act=acond]').forEach(x=>x.classList.toggle('on',x.dataset.v===S.acond)); }
   else if(a==='aprintq'){ S.aprint=!S.aprint; b.classList.toggle('on',S.aprint); b.textContent=S.aprint?'Added to print queue':'Add to print queue'; }
   else if(a==='alisted'){ const k=b.dataset.v; S.alisted[k]=!S.alisted[k]; b.classList.toggle('on',!!S.alisted[k]); }
@@ -2372,7 +2399,7 @@ document.addEventListener('click', async ev=>{
       if(t==='Trove'){ const sc=(S.lastRes&&S.lastRes.code)||''; if(sc) d.code=sc; S.troveList=(S.troveList||[]).concat([{code:d.code,artist:d.artist,title:d.album,location:d.location,price,genre:d.genre,status:d.status,cover:''}]); }
       if(d.printLabel) pqAdd({code:d.code||'',artist:d.artist,title:d.album,genre:d.genre,price,notes:d.notes});
       if(t==='Used'){ const u=LS.get('hd.used',[]); u.push({code:d.code,artist:d.artist,title:d.album,genre:d.genre,format:d.format,price,condition:d.condition,notes:d.notes}); LS.set('hd.used',u); S.alast={genre:d.genre,format:d.format}; S.acond=null; S.aprint=true; S.view='addrec'; render(); const e=document.getElementById('aartist'); if(e) e.focus(); toast('Added \u2713 Next record'); }
-      else { S.atype=null; S.alisted={}; S.aprint=true; } });
+      else { S.atype=null; S.td=tdFresh(); S.alisted={}; S.aprint=true; } });
   }
   else if(a==='rfmt'){ S.rfmt=b.dataset.v; document.querySelectorAll('.fmts button').forEach(x=>x.classList.toggle('on',x===b)); }
   else if(a==='fclear'){ S.fq=''; fdSoon(); const e=document.getElementById('fq'); if(e){ e.value=''; e.focus(); } const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); b.style.display='none'; }
