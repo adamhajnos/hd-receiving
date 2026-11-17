@@ -1849,7 +1849,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r6';
+const BUILD='r7';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -1920,7 +1920,7 @@ function toast(m){ const t=document.createElement('div'); t.className='toast'; t
 async function submit(task, summary, data, stay, msg){
   S.busy=true; S.err=''; const sub=document.getElementById('sub'); if(sub) sub.disabled=true;
   try{
-    await api('log',{who:S.who,task,summary,data});
+    S.lastRes=await api('log',{who:S.who,task,summary,data});
     S.busy=false; S.confirm=false; await refreshFeed(); if(!stay) S.view='home'; render(); if(!stay) toast(msg||'Logged ✓'); return true;
   }catch(e){
     S.busy=false; if(/PIN/.test(e.message)){ logout(); return false; } S.err='Couldn’t save. Check the wifi and try again.';
@@ -2267,6 +2267,7 @@ document.addEventListener('click', async ev=>{
     if(t==='Used'){ d.condition=S.acond||''; const u=LS.get('hd.used',[]); d.code='UD-'+String(u.length+1).padStart(4,'0'); }
     if(t==='Trove'){ const mx=(S.troveList||[]).reduce((m,i)=>Math.max(m,parseInt(String(i.code||'').replace(/\D/g,''))||0),0); d.code='TT-'+String(mx+1).padStart(4,'0'); d.location=val('aloc'); d.status=d.location==='Backfill'?'Backfill':'Active'; d.listed=Object.keys(S.alisted).filter(k=>S.alisted[k]).join(', '); }
     submit('record','Added '+t+': '+d.artist+' - '+d.album+' ($'+price+')',d,t==='Used').then(ok=>{ if(!ok) return;
+      if(t==='Trove'){ const sc=(S.lastRes&&S.lastRes.code)||''; if(sc) d.code=sc; S.troveList=(S.troveList||[]).concat([{code:d.code,artist:d.artist,title:d.album,location:d.location,price,genre:d.genre,status:d.status,cover:''}]); }
       if(d.printLabel) pqAdd({code:d.code||'',artist:d.artist,title:d.album,genre:d.genre,price,notes:d.notes});
       if(t==='Used'){ const u=LS.get('hd.used',[]); u.push({code:d.code,artist:d.artist,title:d.album,genre:d.genre,format:d.format,price,condition:d.condition,notes:d.notes}); LS.set('hd.used',u); S.alast={genre:d.genre,format:d.format}; S.acond=null; S.aprint=true; S.view='addrec'; render(); const e=document.getElementById('aartist'); if(e) e.focus(); toast('Added \u2713 Next record'); }
       else { S.atype=null; S.alisted={}; S.aprint=true; } });
