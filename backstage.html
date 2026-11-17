@@ -204,7 +204,7 @@ div.tile.done{cursor:default}
 .tmsg b{font-size:30px}.tmsg span{font-size:24px;opacity:.85;flex:1;min-width:0}
 .tmsg.ok{border-color:var(--ok);background:var(--ok-bg)}.tmsg.dup{border-color:var(--warn-fg);background:var(--warn-bg)}
 .tmsg.bad{border-color:#ff5a4d;background:rgba(255,90,77,.2);animation:flash .5s 2}
-.tconf{display:flex;flex-direction:column;gap:8px;padding:18px 22px;border-radius:16px;border:2px solid var(--warn);background:#FFF4D6}.tconf b{font-size:28px}.tconf span{font-size:22px;opacity:.85}.tcb{display:flex;gap:14px;margin-top:8px}
+.tconf{display:flex;flex-direction:column;gap:8px;padding:18px 22px;border-radius:16px;border:2px solid var(--warn);background:#FFF4D6}.tconf b{font-size:28px}.tconf span{font-size:22px;opacity:.85}.tcb{display:flex;gap:14px;margin-top:8px}.tmiss{list-style:none;margin:0;padding:0;max-height:42vh;overflow:auto;background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,.15)}.tmiss li{padding:12px 16px;font-size:22px;border-bottom:1px solid rgba(0,0,0,.08);display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}.tmiss li:last-child{border:0}.tmiss b{font-weight:700}.tmiss em{margin-left:auto;font-style:normal;opacity:.6;font-size:19px}
 .stickybar>.btn{width:100%}.stickybar .btn{min-height:72px;font-size:25px}.stickybar{position:static;margin:24px 0 8px;padding:0}
 /* checklist */
 .steps{display:flex;flex-direction:column;gap:10px;max-width:720px}
@@ -893,9 +893,10 @@ function tstartHTML(){
     stp(3,'Scan every record, in shelf order','You\u2019ll hear a beep for each good scan. A loud buzz means a record is out of order.'+(first?' Start with <b>'+esc(first.artist)+' \u00b7 '+esc(first.title)+'</b> ('+esc(first.location||'')+').':''))+
     '</ol></div><button class="bigstart" data-act="tstart">Start scanning</button>';
 }
+function tmissHTML(){ const L=troveSorted().filter(i=>!S.tfound[tkey(i)]); return '<ul class="tmiss">'+L.map(i=>'<li><b>'+esc(i.artist)+'</b> \u00b7 '+esc(i.title||'')+'<em>'+esc(i.location||'No location')+(i.code?' \u00b7 '+esc(i.code):'')+'</em></li>').join('')+'</ul>'; }
 function tfootHTML(){
   const c=troveCounts();
-  if(S.tconfirm) return '<div class="stickybar" id="tfoot"><div class="tconf"><b>'+c.nf+' record'+(c.nf===1?'':'s')+' haven\u2019t been checked.</b><span>Finish anyway? They will be reported as not found.</span><div class="tcb"><button class="btn ghost" data-act="tkeep">Keep scanning</button><button class="btn warn" data-act="trovedone">Finish anyway</button></div></div></div>';
+  if(S.tconfirm) return '<div class="stickybar" id="tfoot"><div class="tconf"><b>'+c.nf+' record'+(c.nf===1?'':'s')+' haven\u2019t been checked.</b><span>Still missing, in shelf order:</span>'+tmissHTML()+'<span>Finish anyway? They will be reported as not found.</span><div class="tcb"><button class="btn ghost" data-act="tkeep">Keep scanning</button><button class="btn warn" data-act="trovedone">Finish anyway</button></div></div></div>';
   return '<div class="stickybar" id="tfoot"><button class="btn go" id="tdone" data-act="trovedone">'+(c.nf?'Finish check ('+c.nf+' not checked)':'Finish check')+'</button></div>';
 }
 function troveScan(code){
@@ -1941,7 +1942,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r28';
+const BUILD='r29';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2201,7 +2202,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='tpq'){ const src=(S.troveList||[]).concat(LS.get('hd.used',[])); const it=src.find(i=>(b.dataset.code&&i.code===b.dataset.code)||(!b.dataset.code&&i.artist===b.dataset.a&&i.title===b.dataset.t)); if(it){ pqAdd(it); S.pprinted=false; const n=pqCount(it); b.textContent=pqBtnLbl(n); b.classList.add('on'); const tp=document.querySelector('.top'); if(tp){ const old=tp.querySelector('.pqchip'); if(old) old.remove(); tp.insertAdjacentHTML('beforeend',pqChip()); } toast('Added to print queue'); } }
   else if(a==='tfound'){ const k=b.dataset.k; S.tfound[k]=!S.tfound[k]; if(!S.tfound[k]) delete S.tfound[k]; LS.set(KT(),S.tfound); refreshTrove(); }
   else if(a==='tonly'){ S.tonly=!S.tonly; b.classList.toggle('on',S.tonly); refreshTrove(); }
-  else if(a==='trovedone'&&!S.tconfirm&&troveCounts().nf>0){ S.tconfirm=true; refreshTrove(); }
+  else if(a==='trovedone'&&!S.tconfirm&&troveCounts().nf>0){ S.tconfirm=true; refreshTrove(); const f=document.getElementById('tfoot'); if(f) f.scrollIntoView({block:'center',behavior:'smooth'}); }
   else if(a==='trovedone'&&S.tstand){ const miss=S.troveList.filter(i=>!S.tfound[tkey(i)]); S.tmsg=null; S.view='tbrowse'; S.err=miss.length?'Check finished. Not found: '+miss.slice(0,5).map(i=>i.artist+' - '+i.title).join('; ')+(miss.length>5?' +'+(miss.length-5)+' more':''):''; render(); }
   else if(a==='trovedone'){
     const ti=steps_().findIndex(s=>s.trove), miss=S.troveList.filter(i=>!S.tfound[tkey(i)]);
