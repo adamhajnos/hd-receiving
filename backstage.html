@@ -1522,7 +1522,7 @@ function vLabels(){
   const cells=Array.from({length:20},(_,k)=>{ const cls=k<start?'used':(k-start<n&&k-start<20?'will':''); return '<button class="pcell '+cls+'" data-act="pstart" data-k="'+k+'">'+(k+1)+'</button>'; }).join('');
   const done=S.pprinted&&n ? '<div class="tmsg ok" style="margin-top:12px"><b>Sent to the printer</b><span>If they printed fine, clear the queue.</span><button class="btn go" data-act="pqclear">Clear queue and move the start spot</button></div>' : '';
   return topHTML('Print labels')+bannerHTML()+
-  '<div class="plwrap"><div class="plleft"><div class="plh"><b>Waiting to print</b><span class="chip">'+n+'</span></div>'+
+  '<div class="plwrap"><div class="plleft"><div class="plh"><b>Waiting to print</b><span class="chip">'+n+'</span>'+(n?'<button class="btn ghost" data-act="pqwipe" style="margin-left:auto;min-height:48px">Clear queue</button>':'')+'</div>'+
   '<input id="pqs" class="pqs" placeholder="Add a record to print. Search artist or title" autocomplete="off" value="'+esc(S.pqs||'')+'"><div id="pqres">'+pqResHTML()+'</div>'+
   '<div class="pqlist">'+(rows||'<p class="hint">Nothing waiting. Records you add with “Add to print queue” show up here. Search above to reprint any record.</p>')+'</div></div>'+
   '<div class="plright"><div class="plh"><b>Preview</b><span class="o">first label</span></div><div class="pprev">'+(n?labelHTML(q[0]):'<div class="lbl blank"><span>No labels yet</span></div>')+'</div>'+
@@ -2239,6 +2239,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='pqadd'){ pqAdd({code:b.dataset.c,artist:b.dataset.a,title:b.dataset.t,price:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).price,genre:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).genre}); S.pqs=''; S.pprinted=false; render(); toast('Added to the queue'); }
   else if(a==='pstart'){ LS.set(PS,+b.dataset.k); S.pprinted=false; render(); }
   else if(a==='pprint'){ doPrint(); }
+  else if(a==='pqwipe'){ LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
   else if(a==='pqclear'){ const n=pqGet().length, st=LS.get(PS,0); LS.set(PS,(st+n)%20); LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
   else if(a==='addback'){ S.atype=null; render(); }
   else if(a==='addtrove'){ S.atype='Trove'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); }
