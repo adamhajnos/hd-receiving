@@ -2307,24 +2307,29 @@ document.addEventListener('click', async ev=>{
 /* ---------- fixed iPad landscape canvas + mockup ---------- */
 function fit(){
   const coarse = matchMedia('(pointer:coarse)').matches;
+  /* iPad home-screen apps can report stale (portrait) sizes after launch or rotation, so trust the device orientation */
+  let vw=innerWidth, vh=innerHeight;
+  const portrait = (typeof window.orientation==='number') ? Math.abs(window.orientation)!==90 : vh>vw;
+  if(coarse && !portrait && vh>vw){ const t=vw; vw=vh; vh=t; }
   const mock = C.MOCKUP==='auto' ? !coarse : !!C.MOCKUP;
   const dev=document.getElementById('device'), sz=document.getElementById('sizer');
   dev.classList.toggle('mock',mock);
   const bez=mock?34:0, W=1194+2*bez, H=834+2*bez, m=mock?28:0;
-  let s=Math.min((innerWidth-2*m)/W,(innerHeight-2*m)/H);
+  let s=Math.min((vw-2*m)/W,(vh-2*m)/H);
   if(mock) s=Math.min(s,1);
   const scr=document.getElementById('screen');
   if(mock){ scr.style.width=''; scr.style.height=''; sz.style.width=W*s+'px'; sz.style.height=H*s+'px'; }
   else { /* real tablet: fill the whole screen, whatever its shape */
-    scr.style.width=(innerWidth/s)+'px'; scr.style.height=(innerHeight/s)+'px';
-    sz.style.width=innerWidth+'px'; sz.style.height=innerHeight+'px'; }
+    scr.style.width=(vw/s)+'px'; scr.style.height=(vh/s)+'px';
+    sz.style.width=vw+'px'; sz.style.height=vh+'px'; }
   dev.style.transform='scale('+s+')';
   document.body.style.background = mock ? '' : 'var(--bg)';
-  document.getElementById('rotate').style.display = (coarse && innerHeight>innerWidth) ? 'flex' : 'none';
+  document.getElementById('rotate').style.display = (coarse && portrait) ? 'flex' : 'none';
 }
 function tick(){ const e=document.getElementById('clk'); if(e) e.textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); }
-addEventListener('resize',fit); addEventListener('orientationchange',fit);
-fit(); tick(); setInterval(tick,30000);
+const fitSoon=()=>{ fit(); setTimeout(fit,150); setTimeout(fit,500); setTimeout(fit,1200); };
+addEventListener('resize',fit); addEventListener('orientationchange',fitSoon); addEventListener('pageshow',fitSoon); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) fitSoon(); });
+fitSoon(); tick(); setInterval(tick,30000);
 
 /* refresh feed while idle on home */
 setInterval(async()=>{ if(S.view==='home'&&S.who){ await refreshFeed(); if(S.view==='home') render(); } },60000);
