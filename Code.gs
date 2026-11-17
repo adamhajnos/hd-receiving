@@ -9,6 +9,11 @@
  * Customer names and phone numbers are never sent back to the tablet.
  */
 
+// The sheet this script works on. Leave blank when the script is bound to the sheet (Extensions > Apps Script).
+// If the script is a standalone project, paste the sheet's ID here (the long part of its URL).
+var SHEET_ID = '';
+function ss_() { return SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActive(); }
+
 var TABS = {
   Staff:    ['Name', 'PIN'],
   Trove:    ['Artist', 'Title', 'Location', 'Price', 'Cover URL'],
@@ -24,7 +29,7 @@ var TABS = {
 
 /** Run once from the editor to create the tabs. */
 function setup() {
-  var ss = SpreadsheetApp.getActive();
+  var ss = ss_();
   Object.keys(TABS).forEach(function (name) {
     var sh = ss.getSheetByName(name) || ss.insertSheet(name);
     if (sh.getLastRow() === 0) {
@@ -59,7 +64,7 @@ function authenticate_(pin) {
   var fails = Number(cache.get('fails') || 0);
   if (fails >= 8) throw new Error('Too many tries, wait a minute');
   var p = String(pin == null ? '' : pin).trim();
-  var sh = SpreadsheetApp.getActive().getSheetByName('Staff');
+  var sh = ss_().getSheetByName('Staff');
   if (!sh) throw new Error('Run setup() first');
   var rows = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 2).getDisplayValues() : [];
   for (var i = 0; i < rows.length; i++) {
@@ -71,7 +76,7 @@ function authenticate_(pin) {
 
 /** The running Trove list: one row per record in the "Trove" tab. */
 function troveItems_() {
-  var sh = sheet_(SpreadsheetApp.getActive(), 'Trove');
+  var sh = sheet_(ss_(), 'Trove');
   if (sh.getLastRow() < 2) return [];
   return sh.getRange(2, 1, sh.getLastRow() - 1, 5).getDisplayValues()
     .filter(function (r) { return r[0] || r[1]; })
@@ -85,7 +90,7 @@ function troveItems_() {
  * Clear a cell to retry it, or paste a better URL by hand.
  */
 function fillCovers() {
-  var sh = sheet_(SpreadsheetApp.getActive(), 'Trove');
+  var sh = sheet_(ss_(), 'Trove');
   var last = sh.getLastRow();
   if (last < 2) return;
   var rows = sh.getRange(2, 1, last - 1, 5).getValues();
@@ -128,7 +133,7 @@ function logEntry_(req, who) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
-    var ss = SpreadsheetApp.getActive();
+    var ss = ss_();
     var now = new Date();
     var tz = ss.getSpreadsheetTimeZone();
     var date = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
@@ -233,7 +238,7 @@ function saveIssuePhoto_(b64, now, tz) {
 
 /** The newest shift note from the last 36 hours, or null. */
 function latestNote_() {
-  var sh = sheet_(SpreadsheetApp.getActive(), 'Log');
+  var sh = sheet_(ss_(), 'Log');
   var last = sh.getLastRow();
   if (last < 2) return null;
   var from = Math.max(2, last - 199);
@@ -248,7 +253,7 @@ function latestNote_() {
 
 /** Today's log, summaries only. No amounts, names or contact info. */
 function todayEntries_() {
-  var ss = SpreadsheetApp.getActive();
+  var ss = ss_();
   var tz = ss.getSpreadsheetTimeZone();
   var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
   var sh = sheet_(ss, 'Log');
