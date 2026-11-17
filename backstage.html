@@ -1152,6 +1152,11 @@ function vRequest(){
 function msrpPrice(v){ const n=parseFloat(v); return isFinite(n)&&n>0 ? Math.ceil(n)+1 : null; }
 const bi=(i,h,d)=>'<span class="bi">'+ic(i)+'</span><span class="bt">'+h+'<small>'+d+'</small></span>';
 function vAddRec(){
+  if(S.adone){ const D=S.adone, q=pqCount({code:D.rec.code,artist:D.rec.artist,title:D.rec.title});
+    return topHTML('Record added')+bannerHTML()+'<div class="form tight" style="max-width:none"><div class="card" style="padding:16px"><b>'+esc(D.rec.artist)+' \u2013 '+esc(D.rec.title)+'</b><div class="hint" style="margin:4px 0 0">'+esc(D.type)+(D.rec.code?' \u00b7 '+esc(D.rec.code):'')+' \u00b7 saved \u2713</div></div>'+
+      '<button class="btn '+(q?'ghost':'go')+'" data-act="adpq" '+(q?'disabled':'')+'>'+(q?'Added to print queue \u2713':'Add to print queue')+'</button>'+
+      '<button class="btn ghost" data-act="adagain">Add another</button>'+
+      '<button class="btn ghost" data-act="adhome">Home</button></div>'; }
   const t=S.atype;
   if(!t){
     const c=(act,h,d,i)=>'<button class="btn ghost" data-act="'+act+'">'+bi(i,h,d)+'</button>';
@@ -1168,13 +1173,13 @@ function vAddRec(){
     const CO=['Mint','NM','VG+','VG','G'];
     body+='<div><label><span>Condition <span class="o">(optional)</span></span></label><div class="fmts" style="margin-top:7px">'+CO.map(x=>'<button data-act="acond" data-v="'+x+'" class="'+(S.acond===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
       '<div class="pair"><label>Price<span class="pre"><b>$</b><input id="aprice" inputmode="decimal" autocomplete="off"></span></label>'+
-      '<div><label>Barcode label</label><div class="fmts" style="margin-top:7px"><button data-act="aprintq" class="'+(S.aprint?'on':'')+'">'+(S.aprint?'Added to print queue':'Add to print queue')+'</button></div></div></div>';
+      '<div></div></div>';
   } else {
     const locs=['Backfill','Bar wall','Bar cubbies','Trove wall','Trove bin'];
     body+='<div class="pair"><label>Price<span class="pre"><b>$</b><input id="aprice" inputmode="decimal" autocomplete="off"></span></label>'+
       '<label>Shelf location<select id="aloc"><option value="">Choose a location</option>'+locs.map(x=>'<option>'+x+'</option>').join('')+'</select></label></div>'+
       '<div class="pair"><div><label>Also listed on</label><div class="fmts" style="margin-top:7px">'+['Discogs','eBay','Email'].map(x=>'<button data-act="alisted" data-v="'+x+'" class="'+(S.alisted[x]?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
-      '<div><label>Barcode label</label><p class="hint" style="margin:14px 0 0">Added to the print queue automatically.</p></div></div>';
+      '<div></div></div>';
   }
   body+='<label><span>Notes <span class="o">(optional'+(t==='Used'?', e.g. water damage on sleeve':', e.g. blue special original pressing')+')</span></span><input id="anotes" autocomplete="off"></label>'+
     '<div><button class="btn go" id="sub" data-act="saveaddrec" disabled>'+(t==='Used'?'Add record':'Add record')+'</button></div>';
@@ -1966,7 +1971,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r30';
+const BUILD='r31';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2204,7 +2209,7 @@ document.addEventListener('click', async ev=>{
     if(t==='rcans'||t==='rsnacks'){ S.cmode=t==='rsnacks'?'snacks':'cans'; S.cOther=false; S.cs=null; S.csup=''; S.iphoto=null; }
     if(t==='rkeg'){ S.kOther=false; S.ksize='1/6'; S.iphoto=null; S.rk=[]; S.ksup=''; S.rkBusy=false; S.rkDone=null; }
     if(t==='labels'){ S.pqs=''; S.pprinted=false; }
-    if(t==='addrecord'){ S.atype=null; S.alisted={}; S.aprint=true; S.acond=null; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',kegs:'kegs',rkeg:'rkeg',labels:'labels',note:'note',issue:'issue',find:'find',supplies:'supplies',drops:'drops',reqlist:'reqlist',credit:'credit',rstock:'rstock',rcans:'rcans',rsnacks:'rcans'}[t]); }
+    if(t==='addrecord'){ S.adone=null; S.atype=null; S.alisted={}; S.aprint=true; S.acond=null; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',kegs:'kegs',rkeg:'rkeg',labels:'labels',note:'note',issue:'issue',find:'find',supplies:'supplies',drops:'drops',reqlist:'reqlist',credit:'credit',rstock:'rstock',rcans:'rcans',rsnacks:'rcans'}[t]); }
   }
   else if(a==='go:trove'){}
   else if(a==='tseg'){ S.tseg=b.dataset.v; render(); }
@@ -2352,9 +2357,12 @@ document.addEventListener('click', async ev=>{
   else if(a==='pcalreset'){ LS.set('hd.pcal2',{s:100,x:0,y:0}); render(); }
   else if(a==='pqwipe'){ LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
   else if(a==='pqclear'){ const n=pqGet().length, st=LS.get(PS,0); LS.set(PS,(st+n)%20); LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
-  else if(a==='addback'){ S.td=tdFresh(); S.atype=null; render(); }
-  else if(a==='addtrove'){ S.td=tdFresh(); S.atype='Trove'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); }
+  else if(a==='addback'){ S.adone=null; S.td=tdFresh(); S.atype=null; render(); }
+  else if(a==='addtrove'){ S.adone=null; S.td=tdFresh(); S.atype='Trove'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); }
   else if(a==='acond'){ S.acond=S.acond===b.dataset.v?null:b.dataset.v; document.querySelectorAll('[data-act=acond]').forEach(x=>x.classList.toggle('on',x.dataset.v===S.acond)); }
+  else if(a==='adpq'){ const D=S.adone; if(D&&!pqCount({code:D.rec.code,artist:D.rec.artist,title:D.rec.title})){ pqAdd(D.rec); S.pprinted=false; } render(); toast('Added to the print queue'); }
+  else if(a==='adagain'){ const t=S.adone&&S.adone.type; S.adone=null; S.td=tdFresh(); S.atype=t; S.alisted={}; S.acond=null; render(); const e=document.getElementById(t==='Trove'?'tdq':'aartist'); if(e) e.focus(); }
+  else if(a==='adhome'){ S.adone=null; S.atype=null; S.td=tdFresh(); S.alisted={}; S.view='home'; render(); }
   else if(a==='aprintq'){ S.aprint=!S.aprint; b.classList.toggle('on',S.aprint); b.textContent=S.aprint?'Added to print queue':'Add to print queue'; }
   else if(a==='alisted'){ const k=b.dataset.v; S.alisted[k]=!S.alisted[k]; b.classList.toggle('on',!!S.alisted[k]); }
   else if(a==='agen'){ const e=document.getElementById('abar'); if(e){ e.value='HD'+String(Date.now()).slice(-9); e.dispatchEvent(new Event('input')); } }
@@ -2395,11 +2403,12 @@ document.addEventListener('click', async ev=>{
     d.printLabel = t==='Trove' ? true : S.aprint;
     if(t==='Used'){ d.condition=S.acond||''; const u=LS.get('hd.used',[]); d.code='UD-'+String(u.length+1).padStart(4,'0'); }
     if(t==='Trove'){ const mx=(S.troveList||[]).reduce((m,i)=>Math.max(m,parseInt(String(i.code||'').replace(/\D/g,''))||0),0); d.code='TT-'+String(mx+1).padStart(4,'0'); d.location=val('aloc'); d.status=d.location==='Backfill'?'Backfill':'Active'; d.listed=Object.keys(S.alisted).filter(k=>S.alisted[k]).join(', '); }
-    submit('record','Added '+t+': '+d.artist+' - '+d.album+' ($'+price+')',d,t==='Used').then(ok=>{ if(!ok) return;
+    submit('record','Added '+t+': '+d.artist+' - '+d.album+' ($'+price+')',d,true).then(ok=>{ if(!ok) return;
       if(t==='Trove'){ const sc=(S.lastRes&&S.lastRes.code)||''; if(sc) d.code=sc; S.troveList=(S.troveList||[]).concat([{code:d.code,artist:d.artist,title:d.album,location:d.location,price,genre:d.genre,status:d.status,cover:''}]); }
-      if(d.printLabel) pqAdd({code:d.code||'',artist:d.artist,title:d.album,genre:d.genre,price,notes:d.notes});
-      if(t==='Used'){ const u=LS.get('hd.used',[]); u.push({code:d.code,artist:d.artist,title:d.album,genre:d.genre,format:d.format,price,condition:d.condition,notes:d.notes}); LS.set('hd.used',u); S.alast={genre:d.genre,format:d.format}; S.acond=null; S.aprint=true; S.view='addrec'; render(); const e=document.getElementById('aartist'); if(e) e.focus(); toast('Added \u2713 Next record'); }
-      else { S.atype=null; S.td=tdFresh(); S.alisted={}; S.aprint=true; } });
+      S.adone={type:t,rec:{code:d.code||'',artist:d.artist,title:d.album,genre:d.genre,price,notes:d.notes}};
+      if(t==='Used'){ const u=LS.get('hd.used',[]); u.push({code:d.code,artist:d.artist,title:d.album,genre:d.genre,format:d.format,price,condition:d.condition,notes:d.notes}); LS.set('hd.used',u); S.alast={genre:d.genre,format:d.format}; S.acond=null; }
+      else { S.alisted={}; }
+      S.view='addrec'; render(); window.scrollTo(0,0); });
   }
   else if(a==='rfmt'){ S.rfmt=b.dataset.v; document.querySelectorAll('.fmts button').forEach(x=>x.classList.toggle('on',x===b)); }
   else if(a==='fclear'){ S.fq=''; fdSoon(); const e=document.getElementById('fq'); if(e){ e.value=''; e.focus(); } const l=document.getElementById('flist'); if(l) l.innerHTML=findHTML(); b.style.display='none'; }
