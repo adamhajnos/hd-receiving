@@ -166,6 +166,7 @@ div.tile.done{cursor:default}
 .cov{flex:none;width:56px;height:56px;border-radius:8px;object-fit:cover;background:#E9E1D0}
 .cov.ph{display:flex;align-items:center;justify-content:center;font:700 17px var(--mono);color:var(--muted);letter-spacing:.04em}
 .trow .tx{flex:1;min-width:0}
+.pqb{flex:none;min-height:52px;padding:0 18px;border-radius:12px;border:2px solid var(--fg);background:#fff;color:var(--fg);font:700 18px var(--big,inherit);touch-action:manipulation;cursor:pointer;white-space:nowrap}.pqb.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
 .trow .pr{flex:none;font:500 28px var(--mono);color:var(--fg)}
 .trow b{display:block;font-size:25px}
 .trow b+span{display:block;color:var(--muted);font-size:21px}
@@ -769,7 +770,7 @@ const tkey=i=>i.artist+'|'+i.title;
 const ORDKEY='hd.trove.order2';
 function setTrove(L){ const o=LS.get(ORDKEY,null); L=(L||[]).slice(); if(o&&o.length){ const ix={}; o.forEach((c,n)=>ix[c]=n); const big=1e6; L=L.map((it,n)=>[it,n]).sort((a,b)=>((ix[a[0].code]??big)-(ix[b[0].code]??big))||(a[1]-b[1])).map(x=>x[0]); } S.troveList=L; }
 const initials=i=>(String(i.artist||i.title||'?').replace(/^the\s+/i,'').trim().slice(0,2)).toUpperCase();
-const COVKEY='hd.covers';
+const COVKEY='hd.covers2';
 let COV=LS.get(COVKEY,{});
 const covKey=i=>(i.artist+'|'+i.title).toLowerCase();
 function covHTML(i){
@@ -789,17 +790,20 @@ async function covFetch(el){
     const aw=nz(a).filter(x=>x!=='the')[0]||'', tw=nz(t).filter(x=>x.length>2);
     let best=null, bs=0;
     (j.results||[]).forEach(x=>{ if(!nz(x.artistName).join(' ').includes(aw)) return; const cw=nz(x.collectionName); const sc=tw.length?tw.filter(w=>cw.includes(w)).length/tw.length:0; if(sc>bs){ bs=sc; best=x; } });
+    let fail=false;
     const hit=bs>=0.6?best:null;
     let url=hit?hit.artworkUrl100.replace('100x100bb','200x200bb'):'';
     const DT=LS.get('hd.discogs',null), DK=C.DISCOGS_KEY, DS=C.DISCOGS_SECRET;
     if(!url&&(DT||(DK&&DS))){ // Discogs: best coverage for obscure vinyl pressings
       try{
         await new Promise(r=>setTimeout(r,1100));
-        const d=await fetch('https://api.discogs.com/database/search?type=release&per_page=8&q='+encodeURIComponent((a+' '+t).trim())+(DT?'&token='+encodeURIComponent(DT):'&key='+encodeURIComponent(DK)+'&secret='+encodeURIComponent(DS))).then(r=>r.json());
+        const dr=await fetch('https://api.discogs.com/database/search?type=release&per_page=8&q='+encodeURIComponent((a+' '+t).trim())+(DT?'&token='+encodeURIComponent(DT):'&key='+encodeURIComponent(DK)+'&secret='+encodeURIComponent(DS)));
+        if(!dr.ok) throw new Error(dr.status);
+        const d=await dr.json();
         let bd=null, ds=-1;
         (d.results||[]).forEach(x=>{ const full=nz(x.title), img=x.cover_image||x.thumb||''; if(!img||/spacer\.gif/.test(img)) return; if(!full.join(' ').includes(aw)) return; const sc=tw.length?tw.filter(w=>full.includes(w)).length/tw.length:1; if(sc>ds){ ds=sc; bd=x; } });
         if(bd&&ds>=0.6) url=bd.cover_image||bd.thumb;
-      }catch(e){}
+      }catch(e){ fail=true; }
     }
     if(!url){ // last source: MusicBrainz + Cover Art Archive (free, better for obscure pressings)
       try{
@@ -808,8 +812,9 @@ async function covFetch(el){
         let mb=null, ms=0;
         (m['release-groups']||[]).forEach(x=>{ const an=nz((x['artist-credit']||[]).map(c=>c.name).join(' ')).join(' '); if(!an.includes(aw)) return; const cw=nz(x.title); const sc=tw.length?tw.filter(w=>cw.includes(w)).length/tw.length:0; if(sc>ms){ ms=sc; mb=x; } });
         if(mb&&ms>=0.6){ const u='https://coverartarchive.org/release-group/'+mb.id+'/front-250'; const h=await fetch(u,{method:'HEAD'}); if(h.ok) url=u; }
-      }catch(e){}
+      }catch(e){ fail=true; }
     }
+    if(!url&&fail){ _covStop=Date.now()+30000; return; } // lookup errored: try again later, don't remember as "no cover"
     COV[k]=url;
     LS.set(COVKEY,COV);
     if(COV[k]) document.querySelectorAll('.cov.ph').forEach(n=>{ if(n.dataset.k===k){ const im=document.createElement('img'); im.className='cov'; im.alt=''; im.src=COV[k]; im.dataset.ph=n.textContent; n.replaceWith(im); } });
@@ -909,13 +914,17 @@ function tbrowseListHTML(){
   let out='', loc=null;
   L.forEach(i=>{
     if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span><span class="n">'+cnt[loc]+' records</span></div>'; }
-    out+='<div class="trow ro" data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span></div>';
+    out+='<div class="trow ro" data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span>'+pqBtn(i)+'</div>';
   });
   return out;
 }
+function pqCount(i){ return pqGet().filter(r=>i.code?r.code===i.code:(r.artist===i.artist&&r.title===(i.title||i.album))).length; }
+function pqBtnLbl(n){ return n?'\u2713 Queued'+(n>1?' \u00d7'+n:''):'Print label'; }
+function pqBtn(i){ const n=pqCount(i); return '<button class="pqb'+(n?' on':'')+'" data-act="tpq" data-code="'+esc(i.code||'')+'" data-a="'+esc(i.artist)+'" data-t="'+esc(i.title)+'">'+pqBtnLbl(n)+'</button>'; }
+function pqChip(){ const n=pqGet().length; return n?'<button class="btn ghost pqchip" data-act="go:labels" style="margin-left:auto">Print queue ('+n+') \u203a</button>':''; }
 function vTBrowse(){
   const nf=(S.troveList||[]).length, nb=(C.DEMO_BACKFILL||[]).length, seg=(k,t)=>'<button class="tchip '+(S.tseg===k?'on':'')+'" data-act="tseg" data-v="'+k+'">'+t+'</button>';
-  return topHTML('Trove Inventory','home','',true)+bannerHTML()+
+  return topHTML('Trove Inventory','home',pqChip(),true)+bannerHTML()+
   '<div class="tact"><button class="btn go" data-act="tcheck">'+bi('scan','Run a Trove check','Scan every record on the floor to see what\u2019s missing')+'</button>'+
   '<button class="btn ghost" data-act="addtrove">'+bi('addrec','Add a Trove record','Log a new record and print its label')+'</button></div>'+
   ((LS.get('hd.discogs',null)||(C.DISCOGS_KEY&&C.DISCOGS_SECRET))?'':'<div class="dtok"><b>Get more album covers</b><span>Paste your Discogs token once. It stays on this iPad.</span><input id="dtk" placeholder="Discogs token" autocomplete="off"><button class="btn ghost" data-act="dtoksave">Save</button></div>')+
@@ -1851,7 +1860,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r11';
+const BUILD='r12';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2104,6 +2113,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='ttest'){ beep('ok'); setTimeout(()=>beep('bad'),500); }
   else if(a==='tdismiss'){ S.tmsg=null; refreshTrove(); }
   else if(a==='oback'){ S.view=S.tstand?'tbrowse':'opening'; render(); }
+  else if(a==='tpq'){ const src=(S.troveList||[]).concat(LS.get('hd.used',[])); const it=src.find(i=>(b.dataset.code&&i.code===b.dataset.code)||(!b.dataset.code&&i.artist===b.dataset.a&&i.title===b.dataset.t)); if(it){ pqAdd(it); S.pprinted=false; const n=pqCount(it); b.textContent=pqBtnLbl(n); b.classList.add('on'); const tp=document.querySelector('.top'); if(tp){ const old=tp.querySelector('.pqchip'); if(old) old.remove(); tp.insertAdjacentHTML('beforeend',pqChip()); } toast('Added to print queue'); } }
   else if(a==='tfound'){ const k=b.dataset.k; S.tfound[k]=!S.tfound[k]; if(!S.tfound[k]) delete S.tfound[k]; LS.set(KT(),S.tfound); refreshTrove(); }
   else if(a==='tonly'){ S.tonly=!S.tonly; b.classList.toggle('on',S.tonly); refreshTrove(); }
   else if(a==='trovedone'&&!S.tconfirm&&troveCounts().nf>0){ S.tconfirm=true; refreshTrove(); }
