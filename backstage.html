@@ -1512,7 +1512,7 @@ function labelHTML(r){
   return '<div class="lbl"><img class="llogo" src="'+LOGOSRC+'" alt="Hunky Dory"><div class="lt"><div class="lh"><span>'+esc(r.genre||'')+'</span></div><div class="la">'+esc(r.artist)+'</div><div class="ll">'+esc(r.title)+'</div><div class="ln">'+esc(r.notes||'')+'</div></div>'+
     '<div class="lr"><div class="lp">'+esc(pr)+'</div>'+(r.code?barSVG(r.code)+'<div class="lc">'+esc(r.code)+'</div>':'')+'</div></div>';
 }
-const pcal=()=>Object.assign({s:94,x:0,y:0},LS.get('hd.pcal',{}));
+const pcal=()=>Object.assign({s:100,x:0,y:0},LS.get('hd.pcal2',{}));
 function pageHTML(slots){ const c=pcal(); return '<div class="ppage" style="transform-origin:0 0;transform:translate('+c.x+'in,'+c.y+'in) scale('+(c.s/100)+')">'+slots.map(labelHTML).join('')+'</div>'; }
 function pcalHTML(){ const c=pcal(), b=(k,d,t)=>'<button class="btn ghost" data-act="pcal" data-k="'+k+'" data-d="'+d+'" style="min-height:52px;min-width:64px">'+t+'</button>', row=(l,k,v,st)=>'<div style="display:flex;align-items:center;gap:10px;margin:8px 0"><span style="flex:1;font-size:19px">'+l+'</span>'+b(k,-st,'\u2212')+'<b style="min-width:90px;text-align:center;font-size:20px">'+v+'</b>'+b(k,st,'+')+'</div>';
   return '<details class="howto" style="margin-top:14px"><summary>Printer alignment (if labels print too big or off the sticker)</summary><div style="padding-top:8px"><p class="hint" style="margin:0 0 6px">Print the test page on plain paper, hold it over a label sheet against a window, and adjust until the boxes sit on the labels.</p>'+
@@ -1522,6 +1522,58 @@ function sheetPages(){
   const q=pqGet(), start=Math.min(19,Math.max(0,LS.get(PS,0))); const slots=Array(start).fill(null).concat(q); const pages=[];
   for(let i=0;i<slots.length;i+=20){ const p=slots.slice(i,i+20); while(p.length<20) p.push(null); pages.push(p); }
   return pages;
+}
+
+/* ---------- true Letter-size PDF for printing (iPad prints PDFs at real size) ---------- */
+let _logo=null;
+function loadLogoJpg(){ if(_logo!==null) return; _logo=false; const im=new Image(); im.onload=()=>{ try{ const c=document.createElement('canvas'); c.width=252; c.height=Math.round(252*131.46/126); const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(im,0,0,c.width,c.height); const d=atob(c.toDataURL('image/jpeg',.92).split(',')[1]); const u=new Uint8Array(d.length); for(let i=0;i<d.length;i++) u[i]=d.charCodeAt(i); _logo={u,w:c.width,h:c.height}; }catch(e){ _logo=false; } }; im.src=LOGOSRC; }
+const _mc=document.createElement('canvas').getContext('2d');
+function tw(str,font,size){ _mc.font=font+' '+size+'px Helvetica, Arial, sans-serif'; return _mc.measureText(str).width; }
+const WA={'\u2019':'\x92','\u2018':'\x91','\u201c':'\x93','\u201d':'\x94','\u2013':'\x96','\u2014':'\x97','\u2026':'\x85','\u2022':'\x95'};
+function pe(t){ return String(t==null?'':t).replace(/[^\x00-\xff]/g,c=>WA[c]||'?').replace(/[\\()]/g,m=>'\\'+m).replace(/[\r\n]+/g,' '); }
+function fitTxt(t,font,size,maxW){ t=String(t||''); if(tw(t,font,size)<=maxW) return t; while(t.length>1&&tw(t+'\u2026',font,size)>maxW) t=t.slice(0,-1); return t.trim()+'\u2026'; }
+function wrap2(t,font,size,maxW){ t=String(t||''); if(tw(t,font,size)<=maxW) return [t]; const w=t.split(/\s+/); let l1=''; let i=0; for(;i<w.length;i++){ const n=l1?l1+' '+w[i]:w[i]; if(tw(n,font,size)>maxW) break; l1=n; } if(!l1){ return [fitTxt(t,font,size,maxW)]; } return [l1,fitTxt(w.slice(i).join(' '),font,size,maxW)]; }
+function pdfPageStream(slots,test,cal){
+  const f=n=>(Math.round(n*100)/100).toString(); let o='';
+  const sc=cal.s/100; o+='q '+f(sc)+' 0 0 '+f(sc)+' '+f(cal.x*72)+' '+f(792*(1-sc)-cal.y*72)+' cm\n';
+  const T=(x,y,font,size,str,Tc)=>{ o+='BT /'+font+' '+f(size)+' Tf '+(Tc?f(Tc)+' Tc ':'')+'1 0 0 1 '+f(x)+' '+f(y)+' Tm ('+pe(str)+') Tj ET\n'; };
+  slots.forEach((r,k)=>{ if(!r) return; const row=Math.floor(k/2), col=k%2, bx=(0.15625+col*4.1875)*72, top=792-(0.5+row)*72;
+    if(r.test){ o+='0.5 w '+f(bx)+' '+f(top-72)+' 288 72 re S\n'; const t=String(r.test), w=tw(t,'bold',16); T(bx+144-w/2,top-42,'F2',16,t); return; }
+    const iT=top-5.04, xe=bx+288-7.2, rl=xe-97.2, tx0=bx+7.2+42.79+7.2, maxW=rl-7.2-tx0;
+    if(_logo) o+='q 42.79 0 0 44.64 '+f(bx+7.2)+' '+f(top-58.32)+' cm /Im1 Do Q\n';
+    const genre=String(r.genre||'').toUpperCase(), tl=wrap2(r.title,'',10,maxW), hs=[9,13.65,tl.length*10.5,9], gap=(61.92-hs.reduce((a,b)=>a+b,0))/3; let y=iT; const tops=[]; hs.forEach(h=>{ tops.push(y); y-=h+gap; });
+    if(genre) T(tx0,tops[0]-7.5*.85,'F2',7.5,genre,.45);
+    T(tx0,tops[1]-13*.85,'F2',13,fitTxt(r.artist,'bold',13,maxW));
+    tl.forEach((ln,i)=>T(tx0,tops[2]-10*.85-i*10.5,'F1',10,ln));
+    if(r.notes) T(tx0,tops[3]-7.5*.85,'F3',7.5,fitTxt(r.notes,'italic',7.5,maxW));
+    const pr=(r.price===0||r.price)?'$'+Number(r.price).toLocaleString('en-US',{maximumFractionDigits:2}):'';
+    if(pr) T(xe-tw(pr,'bold',20),iT-20*.85,'F2',20,pr);
+    if(r.code){ const g=(53.72<61.92)?(61.92-20-25.92-7.8)/2:0, bt=iT-20-g, bits=code128(r.code), u=93.6/(bits.length+20), bxs=xe-93.6;
+      for(let i=0;i<bits.length;){ if(bits[i]==='1'){ let j=i; while(j<bits.length&&bits[j]==='1') j++; o+=f(bxs+(i+10)*u)+' '+f(bt-25.92)+' '+f((j-i)*u)+' 25.92 re\n'; i=j; } else i++; }
+      o+='f\n'; const ct=bt-25.92-g, cw=tw(r.code,'',6.5); T(rl+48.6-cw/2,ct-6.5*.85,'F1',6.5,r.code,.4); }
+  });
+  return o+'Q\n';
+}
+function buildPdf(test){
+  const cal=pcal(), pages=test?[Array.from({length:20},(_,i)=>({test:i+1}))]:sheetPages();
+  const enc=s=>{ const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i)&255; return u; };
+  const chunks=[], offs=[]; let len=0; const push=u=>{ chunks.push(u); len+=u.length; };
+  const obj=(n,body)=>{ offs[n]=len; push(enc(n+' 0 obj\n')); (typeof body==='string')?push(enc(body)):push(body); push(enc('\nendobj\n')); };
+  const np=pages.length, hasImg=!!_logo, imgN=7+2*np; push(enc('%PDF-1.4\n'));
+  const kids=pages.map((_,i)=>(7+2*i)+' 0 R').join(' ');
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>'); obj(2,'<< /Type /Pages /Kids ['+kids+'] /Count '+np+' >>');
+  obj(3,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'); obj(4,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'); obj(5,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>');
+  obj(6,'<< /Producer (HD Backstage) >>');
+  pages.forEach((sl,i)=>{ const st=pdfPageStream(sl,test,cal), cn=8+2*i; obj(7+2*i,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents '+cn+' 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >>'+(hasImg?' /XObject << /Im1 '+imgN+' 0 R >>':'')+' >> >>'); obj(cn,'<< /Length '+st.length+' >>\nstream\n'+st+'endstream'); });
+  if(hasImg){ offs[imgN]=len; push(enc(imgN+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+_logo.w+' /Height '+_logo.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+_logo.u.length+' >>\nstream\n')); push(_logo.u); push(enc('\nendstream\nendobj\n')); }
+  const total=(hasImg?imgN:imgN-1)+1, xr=len; let x='xref\n0 '+total+'\n0000000000 65535 f \n'; for(let n=1;n<total;n++){ x+=String(offs[n]||0).padStart(10,'0')+' 00000 n \n'; }
+  push(enc(x+'trailer\n<< /Size '+total+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF'));
+  const out=new Uint8Array(len); let p=0; chunks.forEach(c=>{ out.set(c,p); p+=c.length; }); return out;
+}
+async function pdfOut(test){
+  loadLogoJpg(); const bytes=buildPdf(test), blob=new Blob([bytes],{type:'application/pdf'}), file=new File([blob],test?'alignment-test.pdf':'labels.pdf',{type:'application/pdf'});
+  try{ if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return true; } }catch(e){ if(e&&e.name==='AbortError') return false; }
+  window.open(URL.createObjectURL(blob),'_blank'); return true;
 }
 function vLabels(){
   const q=pqGet(), start=Math.min(19,Math.max(0,LS.get(PS,0))), n=q.length, pages=sheetPages().length;
@@ -1872,7 +1924,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r20';
+const BUILD='r22';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2245,10 +2297,10 @@ document.addEventListener('click', async ev=>{
   else if(a==='pqdel'){ const q=pqGet(); q.splice(+b.dataset.i,1); LS.set(PQ,q); S.pprinted=false; render(); }
   else if(a==='pqadd'){ pqAdd({code:b.dataset.c,artist:b.dataset.a,title:b.dataset.t,price:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).price,genre:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).genre}); S.pqs=''; S.pprinted=false; render(); toast('Added to the queue'); }
   else if(a==='pstart'){ LS.set(PS,+b.dataset.k); S.pprinted=false; render(); }
-  else if(a==='pprint'){ doPrint(); }
-  else if(a==='pptest'){ doPrint(true); }
-  else if(a==='pcal'){ const c=pcal(), k=b.dataset.k, d=+b.dataset.d; c[k]=Math.round((c[k]+d)*100)/100; if(k==='s') c.s=Math.max(60,Math.min(120,Math.round(c.s))); LS.set('hd.pcal',c); render(); const dt=document.querySelector('details.howto summary'); document.querySelectorAll('details.howto').forEach(x=>{ if(/alignment/.test(x.textContent.slice(0,30))) x.open=true; }); }
-  else if(a==='pcalreset'){ LS.set('hd.pcal',{s:94,x:0,y:0}); render(); }
+  else if(a==='pprint'){ const ok=await pdfOut(false); if(ok!==false){ S.pprinted=true; render(); } }
+  else if(a==='pptest'){ await pdfOut(true); }
+  else if(a==='pcal'){ const c=pcal(), k=b.dataset.k, d=+b.dataset.d; c[k]=Math.round((c[k]+d)*100)/100; if(k==='s') c.s=Math.max(60,Math.min(120,Math.round(c.s))); LS.set('hd.pcal2',c); render(); const dt=document.querySelector('details.howto summary'); document.querySelectorAll('details.howto').forEach(x=>{ if(/alignment/.test(x.textContent.slice(0,30))) x.open=true; }); }
+  else if(a==='pcalreset'){ LS.set('hd.pcal2',{s:100,x:0,y:0}); render(); }
   else if(a==='pqwipe'){ LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
   else if(a==='pqclear'){ const n=pqGet().length, st=LS.get(PS,0); LS.set(PS,(st+n)%20); LS.set(PQ,[]); S.pprinted=false; render(); toast('Queue cleared'); }
   else if(a==='addback'){ S.atype=null; render(); }
@@ -2377,7 +2429,7 @@ setInterval(async()=>{ if(S.view==='home'&&S.who){ await refreshFeed(); if(S.vie
 
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) pauseCheck(); });
 setInterval(pauseCheck,30000);
-(async function(){ await pauseCheck(); if(C.TEST_SKIP&&DEMO&&!S.who){ S.who=((C.STAFF||[])[0]||{}).name||'Adam'; S.view='home'; } if(S.who){ await refreshFeed(); } render(); })();
+(async function(){ loadLogoJpg(); await pauseCheck(); if(C.TEST_SKIP&&DEMO&&!S.who){ S.who=((C.STAFF||[])[0]||{}).name||'Adam'; S.view='home'; } if(S.who){ await refreshFeed(); } render(); })();
 })();
 </script>
 </body>
