@@ -2324,7 +2324,7 @@ function fit(){
     sz.style.width=vw+'px'; sz.style.height=vh+'px'; }
   dev.style.transform='scale('+s+')';
   document.body.style.background = mock ? '' : 'var(--bg)';
-  document.getElementById('rotate').style.display = (coarse && portrait) ? 'flex' : 'none';
+  document.getElementById('rotate').style.display = 'none';
 }
 function tick(){ const e=document.getElementById('clk'); if(e) e.textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); }
 const fitSoon=()=>{ fit(); setTimeout(fit,150); setTimeout(fit,500); setTimeout(fit,1200); };
