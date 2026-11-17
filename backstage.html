@@ -1033,6 +1033,8 @@ function termsRow(k){ return '<div class="trow"><button class="btn ghost" data-a
 function openTerms(k){ const T=TERMS[k], o=document.createElement('div'); o.className='kscrim tscrim';
   o.innerHTML='<div class="ksheet tsheet" role="dialog" aria-modal="true"><div class="tcust">Turn the iPad to the customer</div><h2>'+T.h+'</h2><p class="hint" style="margin:6px 0 10px">Hunky Dory Records, Raleigh</p><ol>'+T.l.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol><div class="row2"><button class="btn ghost" data-act="tclose">Close</button><button class="btn go" data-act="tagree">I have read and agree</button></div></div>';
   document.getElementById('screen').appendChild(o); }
+const SMALLW=/^(a|an|the|and|or|of|in|on|to|for|at|by|with|vs)$/;
+function tcase(x){ x=String(x||'').trim(); if(!x||x!==x.toLowerCase()) return x; return x.split(/(\s+)/).map((w,i,a)=>{ if(/^\s+$/.test(w)||!w) return w; const first=i===0; return (!first&&SMALLW.test(w))?w:w.replace(/(^|[(\-\/"])([a-z])/g,(m,p,c)=>p+c.toUpperCase()); }).join(''); }
 function reqEmail(name,items){
   const first=String(name||'').trim().split(/\s+/)[0]||'there';
   const list=items.map(r=>'• '+r.artist+' – '+r.album+' ('+r.format+')').join('\n');
@@ -1847,7 +1849,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r5';
+const BUILD='r6';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2277,13 +2279,13 @@ document.addEventListener('click', async ev=>{
   else if(a==='freq'){ const r=(S.fres||[])[+b.dataset.i]; if(r){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre={artist:r.a,album:r.t}; go('request'); } }
   else if(a==='radd'||a==='rdel'){
     S.rc={name:val('rname'),phone:val('rphone'),email:val('remail')}; S.rpre=null;
-    if(a==='radd'){ S.ritems.push({artist:val('rartist'),album:val('ralbum'),format:S.rfmt,notes:val('rnotes')}); S.rfmt='Vinyl'; }
+    if(a==='radd'){ S.ritems.push({artist:tcase(val('rartist')),album:tcase(val('ralbum')),format:S.rfmt,notes:val('rnotes')}); S.rfmt='Vinyl'; }
     else S.ritems.splice(+b.dataset.i,1);
     render(); const e=document.getElementById('rartist'); if(e) e.focus();
   }
   else if(a==='saverequest'){
     const items=S.ritems.slice();
-    if(val('rartist')&&val('ralbum')) items.push({artist:val('rartist'),album:val('ralbum'),format:S.rfmt,notes:val('rnotes')});
+    if(val('rartist')&&val('ralbum')) items.push({artist:tcase(val('rartist')),album:tcase(val('ralbum')),format:S.rfmt,notes:val('rnotes')});
     const nm=val('rname'), ph=val('rphone'), em=val('remail').trim(), mail=em?Object.assign({to:em},reqEmail(val('rname'),items)):null;
     submit('request','Request: '+items.map(r=>r.artist+' - '+r.album).join('; ')+(mail?'. Confirmation emailed to '+em+'.':''),{name:val('rname'),phone:val('rphone'),email:em,items,autoEmail:mail},false,mail?'Logged ✓ Confirmation emailed to '+em:'Logged ✓').then(ok=>{ if(ok){ const RL=reqs(), nowI=new Date().toISOString(); items.forEach((r,i)=>RL.unshift({id:'q'+Date.now()+i,ts:nowI,sts:nowI,who:S.who,name:nm,phone:ph,email:em,artist:r.artist,album:r.album,format:r.format,notes:r.notes||'',status:'Requested',hist:[]})); rqSave(RL); S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } });
   }
