@@ -912,7 +912,7 @@ function troveScan(code){
 }
 function tbrowseListHTML(){
   const q=(S.tbq||'').trim().toLowerCase().split(/\s+/).filter(Boolean), src=S.tseg==='back'?(C.DEMO_BACKFILL||[]):(S.troveList||[]);
-  const L=src.filter(i=>q.every(w=>(i.artist+' '+i.title+' '+i.location+' '+(i.genre||'')).toLowerCase().includes(w)));
+  const L=src.filter(i=>q.every(w=>(i.artist+' '+i.title+' '+i.location+' '+(i.genre||'')+' '+(i.code||'')).toLowerCase().includes(w)));
   if(!L.length) return '<p class="hint" style="margin-top:20px">'+(S.tload?'Loading\u2026':'Nothing found.')+'</p>';
   const cnt={}; L.forEach(i=>cnt[i.location]=(cnt[i.location]||0)+1);
   const canDrag=S.tseg!=='back'&&!q.length;
@@ -933,7 +933,7 @@ function vTBrowse(){
   '<div class="tact"><button class="btn go" data-act="tcheck">'+bi('scan','Run a Trove check','Scan every record on the floor to see what\u2019s missing')+'</button>'+
   '<button class="btn ghost" data-act="addtrove">'+bi('addrec','Add a Trove record','Log a new record and print its label')+'</button></div>'+
   ((LS.get('hd.discogs',null)||(C.DISCOGS_KEY&&C.DISCOGS_SECRET))?'':'<div class="dtok"><b>Get more album covers</b><span>Paste your Discogs token once. It stays on this iPad.</span><input id="dtk" placeholder="Discogs token" autocomplete="off"><button class="btn ghost" data-act="dtoksave">Save</button></div>')+
-  '<div class="tbar"><input id="tbq" placeholder="Search artist, title, genre or shelf" autocomplete="off" value="'+esc(S.tbq||'')+'">'+seg('floor','On the floor ('+nf+')')+seg('back','Backfill ('+nb+')')+'</div>'+
+  '<div class="tbar"><input id="tbq" placeholder="Search or scan: artist, title, genre, shelf, barcode" autocomplete="off" value="'+esc(S.tbq||'')+'">'+seg('floor','On the floor ('+nf+')')+seg('back','Backfill ('+nb+')')+'</div>'+
   '<p class="hint" style="margin:10px 0 0">'+(S.tseg==='back'?'Backfill records. Not part of the shelf check.':'Drag \u2261 to reorder. The Trove check follows this order.')+'</p><div id="tblist">'+tbrowseListHTML()+'</div>';
 }
 function troveCounts(){ const n=S.troveList.length, f=S.troveList.filter(i=>S.tfound[tkey(i)]).length; return {n,f,nf:n-f}; }
@@ -1935,7 +1935,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r24';
+const BUILD='r25';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
