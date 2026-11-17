@@ -51,6 +51,7 @@ function doPost(e) {
     else if (req.action === 'trove') out = { ok: true, items: troveItems_() };
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
     else if (req.action === 'log') { var res = logEntry_(req, who) || {}; out = { ok: true, code: res.code || '' }; }
+    else if (req.action === 'trovedel') out = { ok: true, removed: deleteTrove_(req, who) };
     else throw new Error('Unknown action');
   } catch (err) {
     out = { ok: false, error: String(err.message || err) };
@@ -356,4 +357,30 @@ function syncAdamTrove() {
   sh.getRange(2, 1, out.length, 9).setValues(out);
   troveItems_();
   Logger.log('Kept ' + (out.length - added.length) + ', added ' + added.length + ', removed ' + removed.length + '. Removed: ' + removed.join('; '));
+}
+
+
+/** Deletes one Trove row by code (falls back to artist + title). A copy goes to the 'Trove Deleted' tab first. */
+function deleteTrove_(req, who) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var ss = ss_(), sh = sheet_(ss, 'Trove');
+    if (sh.getLastRow() < 2) return 0;
+    var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 9).getValues();
+    var code = String(req.code || '').trim(), at = String(req.artist || '').trim().toLowerCase(), ti = String(req.title || '').trim().toLowerCase();
+    var idx = -1;
+    for (var i = 0; i < rows.length; i++) {
+      if (code && String(rows[i][5]).trim() === code) { idx = i; break; }
+      if (!code && at && String(rows[i][0]).trim().toLowerCase() === at && String(rows[i][1]).trim().toLowerCase() === ti) { idx = i; break; }
+    }
+    if (idx < 0) return 0;
+    var bin = ss.getSheetByName('Trove Deleted') || ss.insertSheet('Trove Deleted');
+    if (bin.getLastRow() === 0) bin.getRange(1, 1, 1, 11).setValues([['Deleted at', 'Deleted by', 'Artist', 'Title', 'Location', 'Price', 'Cover URL', 'Code', 'Genre', 'Status', 'Listed']]).setFontWeight('bold');
+    bin.appendRow([new Date(), who].concat(rows[idx]));
+    sh.deleteRow(idx + 2);
+    return 1;
+  } finally {
+    lock.releaseLock();
+  }
 }

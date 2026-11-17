@@ -183,7 +183,7 @@ div.tile.done{cursor:default}
 .tact .btn small{font:400 18px var(--display);opacity:.72;letter-spacing:0}
 .trow.ro{cursor:default}.trow.ro .gpill{flex:none;font:700 17px var(--mono);padding:5px 12px;border-radius:999px;border:1.5px solid var(--fg);text-transform:uppercase}
 .trow.ro .grip{flex:none;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:32px;color:var(--muted);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;border:1px solid var(--line)}
-.trow.ro.drag{border-color:var(--warn-fg);background:var(--warn-bg);box-shadow:0 10px 24px rgba(20,17,13,.45);position:relative;z-index:4}
+.trow.ro{position:relative;overflow:hidden}.trow.ro>*:not(.tdelb){transition:transform .18s;transform:translateX(var(--dx,0px))}.trow.ro.sw>*:not(.tdelb){transform:translateX(-132px)}.trow.ro.swd>*{transition:none!important}.tdelb{position:absolute;right:0;top:0;bottom:0;width:132px;border:0;background:#c0392b;color:#fff;font:700 24px var(--sans,system-ui);display:none;cursor:pointer}.trow.ro.sw .tdelb,.trow.ro.swd .tdelb{display:block}.trow.ro.drag{border-color:var(--warn-fg);background:var(--warn-bg);box-shadow:0 10px 24px rgba(20,17,13,.45);position:relative;z-index:4}
 .guide{margin-top:14px;padding:24px 28px;border-radius:18px;border:1px solid var(--line);background:var(--panel)}
 .guide h3{margin:0 0 18px;font:800 32px var(--display)}
 .steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:20px}
@@ -662,6 +662,7 @@ async function apiRaw(action, payload){
       if(!m) throw new Error('Wrong PIN'); return {ok:true,name:m.name};
     }
     if(action==='trove') return {ok:true, items:C.DEMO_TROVE||[]};
+    if(action==='trovedel') return {ok:true};
     if(action==='log'){
       const dd=Object.assign({},payload.data); if(dd.photo) dd.photo='(photo)';
       log.push({ts:new Date().toISOString(), date:today(), who:S.who, task:payload.task, summary:payload.summary, data:dd});
@@ -925,7 +926,7 @@ function tbrowseListHTML(){
   let out='<div class="pqall"><button class="btn ghost" data-act="tpqall"'+(left?'':' disabled')+'>'+(left?'Add all '+(q?'these ':'')+left+' to print queue':'\u2713 All in print queue')+'</button></div>', loc=null;
   L.forEach(i=>{
     if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span><span class="n">'+cnt[loc]+' records</span></div>'; }
-    out+='<div class="trow ro" data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span>'+pqBtn(i)+'</div>';
+    out+='<div class="trow ro" data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span>'+pqBtn(i)+(i.code?'<button class="tdelb" data-act="tdel" data-code="'+esc(i.code)+'">Delete</button>':'')+'</div>';
   });
   return out;
 }
@@ -1971,7 +1972,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r31';
+const BUILD='r32';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2176,6 +2177,23 @@ function dragEnd(){
   LS.set(ORDKEY,codes); setTrove(S.troveList); const sc=document.getElementById('scroll'), st=sc?sc.scrollTop:0; render(); const s2=document.getElementById('scroll'); if(s2) s2.scrollTop=st;
 }
 document.addEventListener('pointerup',dragEnd); document.addEventListener('pointercancel',dragEnd);
+let _sw=null;
+document.addEventListener('pointerdown',ev=>{
+  const t=ev.target, row=t.closest&&t.closest('#tblist .trow.ro'); if(!row||t.closest('.grip,button')) return;
+  document.querySelectorAll('#tblist .trow.sw').forEach(x=>{ if(x!==row){ x.classList.remove('sw'); x.style.removeProperty('--dx'); } });
+  _sw={row,x:ev.clientX,y:ev.clientY,on:false,was:row.classList.contains('sw'),id:ev.pointerId};
+});
+document.addEventListener('pointermove',ev=>{
+  if(!_sw) return; const dx=ev.clientX-_sw.x, dy=ev.clientY-_sw.y;
+  if(!_sw.on){ if(Math.abs(dy)>14&&Math.abs(dy)>Math.abs(dx)){ _sw=null; return; } if(Math.abs(dx)<14) return; _sw.on=true; _sw.row.classList.add('swd'); }
+  const base=_sw.was?-132:0; _sw.row.style.setProperty('--dx',Math.max(-160,Math.min(0,base+dx))+'px');
+});
+function swEnd(){
+  if(!_sw) return; const {row,on,was}=_sw; _sw=null; if(!on) return;
+  const cur=parseFloat(row.style.getPropertyValue('--dx'))||0; row.classList.remove('swd'); row.style.removeProperty('--dx');
+  row.classList.toggle('sw',cur<-66); window._swAt=Date.now();
+}
+document.addEventListener('pointerup',swEnd); document.addEventListener('pointercancel',swEnd);
 let _tb='', _tt=null;
 document.addEventListener('keydown',ev=>{
   if(ev.key==='Enter'&&ev.target&&ev.target.id==='tdq'){ ev.preventDefault(); clearTimeout(_tdt); const q=(S.td.q||'').trim(); if(q.length>=3){ S.td.busy=true; tdRefreshList(); tdSearch(q); } return; }
@@ -2229,6 +2247,10 @@ document.addEventListener('click', async ev=>{
   else if(a==='ttest'){ beep('ok'); setTimeout(()=>beep('bad'),500); }
   else if(a==='tdismiss'){ S.tmsg=null; refreshTrove(); }
   else if(a==='oback'){ S.view=S.tstand?'tbrowse':'opening'; render(); }
+  else if(a==='tdel'){ const code=b.dataset.code, it=(S.troveList||[]).find(i=>i.code===code); if(!it) return;
+    try{ await api('trovedel',{code,artist:it.artist,title:it.title}); }catch(e){ if(/PIN/.test(e.message)){ logout(); return; } toast(/Unknown action/.test(e.message)?'The sheet script needs updating first':'Couldn\u2019t delete. Check the wifi and try again.'); return; }
+    S.troveList=S.troveList.filter(i=>i.code!==code); S.tfound&&delete S.tfound[tkey(it)]; LS.set(KT(),S.tfound||{}); LS.set(PQ,pqGet().filter(r=>r.code!==code));
+    const l=document.getElementById('tblist'); if(l) l.innerHTML=tbrowseListHTML(); toast('Deleted '+it.title); }
   else if(a==='tpqall'){ const L=tbrowseFiltered().filter(i=>!pqCount(i)); if(L.length){ L.forEach(i=>pqAdd(i)); S.pprinted=false; const l=document.getElementById('tblist'); if(l) l.innerHTML=tbrowseListHTML(); const tp=document.querySelector('.top'); if(tp){ const old=tp.querySelector('.pqchip'); if(old) old.remove(); tp.insertAdjacentHTML('beforeend',pqChip()); } toast(L.length+' added to the print queue'); } }
   else if(a==='tpq'){ const src=(S.troveList||[]).concat(LS.get('hd.used',[])); const it=src.find(i=>(b.dataset.code&&i.code===b.dataset.code)||(!b.dataset.code&&i.artist===b.dataset.a&&i.title===b.dataset.t)); if(it){ pqAdd(it); S.pprinted=false; const n=pqCount(it); b.textContent=pqBtnLbl(n); b.classList.add('on'); const tp=document.querySelector('.top'); if(tp){ const old=tp.querySelector('.pqchip'); if(old) old.remove(); tp.insertAdjacentHTML('beforeend',pqChip()); } toast('Added to print queue'); } }
   else if(a==='tfound'){ const k=b.dataset.k; S.tfound[k]=!S.tfound[k]; if(!S.tfound[k]) delete S.tfound[k]; LS.set(KT(),S.tfound); refreshTrove(); }
