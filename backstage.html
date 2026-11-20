@@ -1481,11 +1481,12 @@ function vRecv(){
     '<div style="display:flex;align-items:center;gap:18px"><button class="btn go" id="rfin" data-act="rfinish"'+(S.busy||held.length?' disabled':'')+'>Finish this box</button><span class="hint">Anything not scanned stays on the waiting list.</span></div></div>';
 }
 function scanUPC(raw){
-  const o=rOrder(); const u=nz(raw); if(!o||!u||rHeld().length) return;
+  const o=rOrder(); const an=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,''), pk=an(raw), u=nz(raw); if(!o||!(u||pk)||rHeld().length) return;
   const map=LS.get('hd.upcmap',{});
   S.rwarn=null;
   const ex=(S.rextra||[]).find(e=>e.upc===u); if(ex){ ex.qty=(ex.qty||1)+1; (S.rhist=S.rhist||[]).push({x:u}); S.rlast=null; rSave(); render(); focusScan(); return; }
-  let l=o.lines.find(x=>!x.nobar&&upcKeys(x.upc).includes(u));
+  let l=/[A-Za-z]/.test(String(raw))?o.lines.find(x=>x.prod&&an(x.prod)===pk):null;
+  if(!l) l=o.lines.find(x=>!x.nobar&&upcKeys(x.upc).includes(u));
   if(!l&&map[u]) l=o.lines.find(x=>x.upc===map[u]);
   if(l){ S.rscan[l.upc]=(S.rscan[l.upc]||0)+1; S.rlast=l.upc; S.rhold=rqOpenMatch(l).map(x=>x.id); (S.rhist=S.rhist||[]).push({u:l.upc}); }
   else if(o.lines.some(x=>x.nobar)){ S.rpend=u; render(); return; }
@@ -2027,7 +2028,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r52';
+const BUILD='r53';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
