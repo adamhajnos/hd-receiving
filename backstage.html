@@ -1558,10 +1558,12 @@ function vDrop(){
 
 /* ---------- print labels (Avery 8161, 1" x 4", 2 x 10) ---------- */
 const C128=["11011001100", "11001101100", "11001100110", "10010011000", "10010001100", "10001001100", "10011001000", "10011000100", "10001100100", "11001001000", "11001000100", "11000100100", "10110011100", "10011011100", "10011001110", "10111001100", "10011101100", "10011100110", "11001110010", "11001011100", "11001001110", "11011100100", "11001110100", "11101101110", "11101001100", "11100101100", "11100100110", "11101100100", "11100110100", "11100110010", "11011011000", "11011000110", "11000110110", "10100011000", "10001011000", "10001000110", "10110001000", "10001101000", "10001100010", "11010001000", "11000101000", "11000100010", "10110111000", "10110001110", "10001101110", "10111011000", "10111000110", "10001110110", "11101110110", "11010001110", "11000101110", "11011101000", "11011100010", "11011101110", "11101011000", "11101000110", "11100010110", "11101101000", "11101100010", "11100011010", "11101111010", "11001000010", "11110001010", "10100110000", "10100001100", "10010110000", "10010000110", "10000101100", "10000100110", "10110010000", "10110000100", "10011010000", "10011000010", "10000110100", "10000110010", "11000010010", "11001010000", "11110111010", "11000010100", "10001111010", "10100111100", "10010111100", "10010011110", "10111100100", "10011110100", "10011110010", "11110100100", "11110010100", "11110010010", "11011011110", "11011110110", "11110110110", "10101111000", "10100011110", "10001011110", "10111101000", "10111100010", "11110101000", "11110100010", "10111011110", "10111101110", "11101011110", "11110101110", "11010000100", "11010010000", "11010011100"];
-function code128(s){ // Code 128-B -> bit string of modules
-  s=String(s); let sum=104, bits=C128[104];
-  for(let i=0;i<s.length;i++){ const v=s.charCodeAt(i)-32; if(v<0||v>95) continue; bits+=C128[v]; sum+=v*(i+1); }
-  bits+=C128[sum%103]+'1100011101011'; return bits;
+function code128(s){ // Code 128: subset C for long digit runs (wider bars), else B
+  s=String(s); const sym=[];
+  if(/^\d{4,}$/.test(s)){ let i=0; if(s.length%2){ sym.push(104,s.charCodeAt(0)-32,99); i=1; } else sym.push(105); for(;i<s.length;i+=2) sym.push(parseInt(s.substr(i,2),10)); }
+  else { sym.push(104); for(let i=0;i<s.length;i++){ const v=s.charCodeAt(i)-32; if(v<0||v>95) continue; sym.push(v); } }
+  let sum=sym[0], bits=''; sym.forEach((v,i)=>{ bits+=C128[v]; if(i) sum+=v*i; });
+  return bits+C128[sum%103]+'1100011101011';
 }
 function barSVG(s){
   const b=code128(s); let x=0, out='';
@@ -2028,7 +2030,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r53';
+const BUILD='r54';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2057,7 +2059,7 @@ function raddHTML(){ const a=S.radd, g=a.genre||''; return '<div class="form tig
   '<div class="pair"><label>Artist<input id="raa" autocomplete="off" value="'+esc(a.artist)+'"></label><label>Album<input id="rat" autocomplete="off" value="'+esc(a.title)+'"></label></div>'+
   '<div class="pair"><label>Price ($)<input id="rap" inputmode="decimal" autocomplete="off" placeholder="e.g. 29" value="'+esc(a.price)+'"></label><label>Genre<select id="rag"><option value="">Choose a genre</option>'+(C.GENRES||[]).map(x=>'<option'+(x===g?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label></div>'+
   (S.err?'<p class="err">'+esc(S.err)+'</p>':'')+'<button class="btn go" data-act="radsave">Add to this box</button><button class="btn ghost" data-act="radcancel">Cancel</button></div>'; }
-function rLabelList(){ const o=rOrder(), out=[]; o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); for(let i=0;i<g;i++) out.push({code:l.prod,artist:tc(l.artist),title:tc(l.title),genre:genreOf(l),price:Math.ceil(Number(l.list)||0)+1,notes:''}); }); (S.rextra||[]).forEach(e=>{ for(let i=0;i<(e.qty||1);i++) out.push({code:e.upc,artist:e.artist,title:e.title,genre:e.genre,price:e.price,notes:''}); }); return out; }
+function rLabelList(){ const o=rOrder(), out=[]; o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); for(let i=0;i<g;i++) out.push({code:(nz(l.upc).length>=11?nz(l.upc):l.prod),artist:tc(l.artist),title:tc(l.title),genre:genreOf(l),price:Math.ceil(Number(l.list)||0)+1,notes:''}); }); (S.rextra||[]).forEach(e=>{ for(let i=0;i<(e.qty||1);i++) out.push({code:e.upc,artist:e.artist,title:e.title,genre:e.genre,price:e.price,notes:''}); }); return out; }
 function rSheetInfo(){ const add=rLabelList().length, have=pqGet().length, start=Math.min(19,Math.max(0,LS.get(PS,0))), total=start+have+add; return {add,have,sheets:Math.max(1,Math.ceil(total/20)),start}; }
 
 // Genre: remembered by artist, else Discogs (looked up by the record's barcode) mapped to the shop list, else Misc.
