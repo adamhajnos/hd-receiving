@@ -2024,7 +2024,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r50';
+const BUILD='r51';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2042,7 +2042,7 @@ function pausedHTML(){
 function render(){
   if(S.paused){ document.getElementById('app').innerHTML=pausedHTML(); const fs=document.getElementById('featslot'); if(fs) fs.innerHTML=''; return; }
   const v = {login:vLogin,home:vHome,opening:vOpening,trove:vTrove,tbrowse:vTBrowse,request:vRequest,addrec:vAddRec,addused:vUsed,recvlist:vRecvList,supplies:vSupplies,drops:vDrops,reqlist:vReqList,credit:vCredit,kegs:vKegs,rkeg:vRKeg,rstock:vRStock,rcans:vRCans,labels:vLabels,recv:vRecv,find:vFind,note:vNote,issue:vIssue,cash:vCash,drop:vDrop}[S.view]();
-  document.getElementById('app').innerHTML = v + (S.notePop&&S.note&&S.view==='home' ? notePopHTML() : '') + (S.rq&&S.view==='recv' ? rqPopHTML() : '') + postSheetHTML(); { const fs=document.getElementById('featslot'); if(fs) fs.innerHTML=featHTML(); }
+  document.getElementById('app').innerHTML = v + (S.notePop&&S.note&&S.view==='home' ? notePopHTML() : '') + (S.rq&&S.view==='recv' ? rqPopHTML() : '') + postSheetHTML(); { const fs=document.getElementById('featslot'); if(fs) fs.innerHTML=featHTML(); } if(S.view==='recv'&&!S.rq&&!S.rpend) setTimeout(focusScan,60);
   bindForms(); coverScan();
 }
 
