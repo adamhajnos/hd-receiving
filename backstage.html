@@ -1434,7 +1434,7 @@ function upcKeys(u){ const d=String(u||'').replace(/\D/g,''); if(!d) return []; 
 function rOrder(){ if(!DEMO){ const m={}, lines=[]; (S.exp||[]).forEach(l=>{ const k=l.upc; if(m[k]) m[k].qty+=l.qty; else { m[k]=Object.assign({},l,{oid:l.inv}); lines.push(m[k]); } }); return {id:'queue',lines}; }
   const d=LS.get(RDONE,{}), lines=[]; (C.DEMO_ORDERS||[]).forEach(o=>o.lines.forEach(l=>{ const left=l.qty-(d[l.upc]||0); if(left>0) lines.push(Object.assign({},l,{qty:left,oid:o.id})); })); return {id:'queue',lines}; }
 async function rLoad(){ try{ const j=await api('expected',{}); S.exp=j.lines||[]; if(j.map) LS.set('hd.upcmap',Object.assign(LS.get('hd.upcmap',{}),j.map)); return true; }catch(e){ toast('Couldn\u2019t load the expected list. Check the wifi and try again.'); return false; } }
-function rEnter(){ const sv=LS.get(RK(),{}); S.rhist=sv.hist||[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); }
+function rEnter(){ const sv=LS.get(RK(),{})||{}; S.rhist=sv.hist||[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); }
 function rSave(){ LS.set(RK(),{scan:S.rscan,bad:S.rbad,last:S.rlast,nopack:S.rnopack,hist:S.rhist||[]}); }
 function rStatus(l){ const g=S.rscan[l.upc]||0; return g===0?'':g<l.qty?'part':g===l.qty?'ok':'over'; }
 function vRecvList(){
@@ -2024,7 +2024,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r48';
+const BUILD='r49';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2420,7 +2420,7 @@ document.addEventListener('click', async ev=>{
     submit('dropstatus','Drop-off '+x.name+': '+v+(x.offer&&v!=='Done'?' ($'+x.offer+')':''),{id:x.id,status:v,offer:x.offer||''},true); }
   else if(a==='rlist'){ S.view='recvlist'; render(); }
   else if(a==='rrec'){ if(DEMO||await rLoad()){ S.rwarn=null; S.rhold=[]; rEnter(); focusScan(); } }
-  else if(a==='rpick'){ S.rorder=b.dataset.id; const sv=LS.get(RK(),{}); S.rhist=sv.hist||[]; S.rhold=[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); focusScan(); }
+  else if(a==='rpick'){ S.rorder=b.dataset.id; const sv=LS.get(RK(),{})||{}; S.rhist=sv.hist||[]; S.rhold=[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); focusScan(); }
   else if(a==='rplus'||a==='rminus'){ const u=b.dataset.u; S.rscan[u]=Math.max(0,(S.rscan[u]||0)+(a==='rplus'?1:-1)); if(a==='rplus'){ (S.rhist=S.rhist||[]).push({u}); S.rlast=u; const o=rOrder(), l=o&&o.lines.find(x=>x.upc===u); if(l) S.rhold=rqOpenMatch(l).map(x=>x.id); } rSave(); render(); focusScan(); }
   else if(a==='rassign'){ rDoAssign(S.rpend,b.dataset.u,false); }
   else if(a==='rnot'){ S.rbad[S.rpend]=(S.rbad[S.rpend]||0)+1; S.rwarn=S.rpend; S.rpend=null; S.rlook=false; S.rlast=null; rSave(); render(); focusScan(); }
