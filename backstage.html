@@ -1430,7 +1430,10 @@ const nz=x=>String(x||'').replace(/\D/g,'').replace(/^0+/,'');
 const RK=()=>'hd.recv.box';
 const RDONE='hd.recv.done';
 // One queue of every open line from every order. Staff never pick an order.
-function rOrder(){ const d=LS.get(RDONE,{}), lines=[]; (C.DEMO_ORDERS||[]).forEach(o=>o.lines.forEach(l=>{ const left=l.qty-(d[l.upc]||0); if(left>0) lines.push(Object.assign({},l,{qty:left,oid:o.id})); })); return {id:'queue',lines}; }
+function upcKeys(u){ const d=String(u||'').replace(/\D/g,''); if(!d) return []; const b=d.padStart(12,'0').slice(-12); let sum=0; for(let i=0;i<12;i++) sum+=(+b[i])*(i%2?3:1); return [nz(d), nz(b+((10-sum%10)%10))]; }
+function rOrder(){ if(!DEMO){ const m={}, lines=[]; (S.exp||[]).forEach(l=>{ const k=l.upc; if(m[k]) m[k].qty+=l.qty; else { m[k]=Object.assign({},l,{oid:l.inv}); lines.push(m[k]); } }); return {id:'queue',lines}; }
+  const d=LS.get(RDONE,{}), lines=[]; (C.DEMO_ORDERS||[]).forEach(o=>o.lines.forEach(l=>{ const left=l.qty-(d[l.upc]||0); if(left>0) lines.push(Object.assign({},l,{qty:left,oid:o.id})); })); return {id:'queue',lines}; }
+async function rLoad(){ try{ const j=await api('expected',{}); S.exp=j.lines||[]; if(j.map) LS.set('hd.upcmap',Object.assign(LS.get('hd.upcmap',{}),j.map)); return true; }catch(e){ toast('Couldn\u2019t load the expected list. Check the wifi and try again.'); return false; } }
 function rEnter(){ const sv=LS.get(RK(),{}); S.rhist=sv.hist||[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); }
 function rSave(){ LS.set(RK(),{scan:S.rscan,bad:S.rbad,last:S.rlast,nopack:S.rnopack,hist:S.rhist||[]}); }
 function rStatus(l){ const g=S.rscan[l.upc]||0; return g===0?'':g<l.qty?'part':g===l.qty?'ok':'over'; }
@@ -1441,7 +1444,6 @@ function vRecvList(){
 }
 function vRecv(){
   const o=rOrder();
-  if(!o.lines.length) return topHTML('Receive records')+bannerHTML()+'<p class="hint">Nothing is waiting to be received. Every open order has been checked in.</p>';
   if(!S.rpack&&!S.rnopack) return topHTML('Receive records')+bannerHTML()+'<p class="hint" style="margin:0 0 6px">Start with the packing list in the box.</p><div class="addpick">'+
     '<button class="btn go" data-act="rpackbtn">'+bi('photo','Take a photo of the packing list','Then scanning opens up')+'</button><input id="packin" type="file" accept="image/*" capture="environment" hidden>'+
     '<button class="btn ghost" data-act="rnopack">'+bi('issue','No packing list in the box','Adam and Bell get an email')+'</button></div>';
@@ -1451,7 +1453,7 @@ function vRecv(){
       '<span class="rprice">$'+msrpPrice(l.list)+'</span><span class="rcnt">'+g+' of '+l.qty+'</span>'+
       '<span class="rbs"><button class="rb" data-act="rminus" data-u="'+esc(l.upc)+'" aria-label="One less">−</button><button class="rb" data-act="rplus" data-u="'+esc(l.upc)+'" aria-label="One more">+</button></span></div>';
   }).join('');
-  const bad=Object.keys(S.rbad).map(u=>'<div class="rrow bad"><div><b>Not on any open order</b><span class="o"> barcode '+esc(u)+'</span></div><span></span><span class="rcnt">× '+S.rbad[u]+'</span><span class="rbs"><button class="rb" data-act="rbaddel" data-u="'+esc(u)+'" aria-label="Remove">−</button></span></div>').join('');
+  const bad=Object.keys(S.rbad).map(u=>'<div class="rrow bad"><div><b>Not on the expected list</b><span class="o"> barcode '+esc(u)+'</span></div><span></span><span class="rcnt">× '+S.rbad[u]+'</span><span class="rbs"><button class="rb" data-act="rbaddel" data-u="'+esc(u)+'" aria-label="Remove">−</button></span></div>').join('');
   const last = S.rlast ? (()=>{ const l=o.lines.find(x=>x.upc===S.rlast); return l?'<div class="rlast"><span>'+esc(tc(l.artist))+' · '+esc(tc(l.title))+'</span><b>Price $'+msrpPrice(l.list)+'</b><span class="o">MSRP $'+Number(l.list).toFixed(2)+'</span></div>':''; })() : '';
   const held=rHeld(), all=reqs(), lh=(S.rhist||[])[(S.rhist||[]).length-1];
   const lhl=lh&&lh.u?o.lines.find(x=>x.upc===lh.u):null, undoBtn=lh?'<button class="btn ghost rundo" data-act="rundo">Undo last scan: '+esc(lhl?tc(lhl.artist)+' \u00b7 '+tc(lhl.title):'unknown barcode '+(lh.b||''))+'</button>':'';
@@ -1463,27 +1465,51 @@ function vRecv(){
         '<ul class="rhl">'+gx.map(x=>'<li>'+esc(x.artist)+' \u00b7 '+esc(x.album)+'</li>').join('')+'</ul>'+
         (wait.length?'<div class="hint" style="flex-basis:100%">Also asked for, not here yet: '+wait.map(x=>esc(x.artist)+' \u00b7 '+esc(x.album)).join('; ')+'</div>':'')+
         (f.email?'<button class="btn go" data-act="rhold" data-ids="'+ids.join(',')+'">Email customer'+(gx.length>1?' about all '+gx.length:'')+'</button><span class="hint">Sends one standard email. You don\u2019t write anything.</span>':'<span class="hint">No email on file: '+esc(f.phone||'no phone')+'. Call or text them.</span>')+'</div>'; }).join('')+'<button class="btn go rnext" data-act="rnext">Scan next record</button><span class="hint">Tap to keep going. Anything you don\u2019t email stays on the Request list, marked Set aside, and shows up with the next match for that customer.</span></div>' : '';
+  const warn = S.rwarn ? '<div class="rrow bad" style="font-size:26px;padding:18px 22px;border-width:3px"><div><b>NOT ON THE EXPECTED LIST</b><span class="o"> Barcode '+esc(S.rwarn)+' isn\u2019t on any invoice. Set it aside for Forrest or Bell.</span></div></div>' : '';
+  const empty = !o.lines.length ? '<p class="hint">Nothing is expected right now. If you scan a record, you\u2019ll get a warning.</p>' : '';
   const total=o.lines.reduce((n,l)=>n+l.qty,0), got=o.lines.reduce((n,l)=>n+Math.min(S.rscan[l.upc]||0,l.qty),0);
-  const pend = S.rpend ? '<div class="rrow bad" style="flex-wrap:wrap;gap:10px"><div style="flex:1 0 100%"><b>New barcode '+esc(S.rpend)+'</b><span class="o"> Which record is this? (asked once, then remembered)</span></div>'+
-    o.lines.filter(l=>l.nobar).map(l=>'<button class="btn ghost" data-act="rassign" data-u="'+esc(l.upc)+'">'+esc(tc(l.artist))+' · '+esc(tc(l.title))+'</button>').join('')+
-    '<button class="btn ghost" data-act="rnot">Not on any order</button></div>' : '';
+  const pend = S.rpend ? '<div class="rrow bad" style="flex-wrap:wrap;gap:10px"><div style="flex:1 0 100%"><b>New barcode '+esc(S.rpend)+'</b><span class="o"> Which record is this? (asked once, then remembered for every iPad)</span></div>'+
+    (S.rlook?'<div class="hint" style="flex:1 0 100%">Looking it up\u2026</div>':'')+(DEMO?o.lines.filter(l=>l.nobar):(S.rcand||o.lines)).map(l=>'<button class="btn ghost" data-act="rassign" data-u="'+esc(l.upc)+'">'+esc(tc(l.artist))+' · '+esc(tc(l.title))+'</button>').join('')+
+    '<button class="btn ghost" data-act="rnot">Not on any invoice</button></div>' : '';
   const needPack = !S.rpack && !S.rnopack;
   const packRow='<div class="row2" style="flex-wrap:wrap"><button class="btn ghost" data-act="rpackbtn">'+(S.rpack?'Retake packing list photo':'Packing list photo')+'</button><input id="packin" type="file" accept="image/*" capture="environment" hidden>'+
     (S.rpack?'<img class="iimg" alt="" src="'+S.rpack+'" style="height:64px">':'<button class="fmt'+(S.rnopack?' on':'')+'" data-act="rnopack" style="min-height:56px;padding:0 20px;border-radius:14px;border:1px solid var(--line);background:'+(S.rnopack?'var(--fg)':'none')+';color:'+(S.rnopack?'var(--bg)':'inherit')+';font-weight:700">No packing list in the box</button>')+'</div>';
   return topHTML('Receive records','home','<span class="chip">'+got+' of '+total+' scanned</span>')+bannerHTML()+
-    '<div class="form" style="max-width:none;gap:14px">'+undoBtn+'<input id="rscan" inputmode="numeric" autocomplete="off" placeholder="Scan each record’s barcode here"'+(held.length?' disabled':'')+'>'+last+hold+
+    '<div class="form" style="max-width:none;gap:14px">'+undoBtn+'<input id="rscan" inputmode="numeric" autocomplete="off" placeholder="Scan each record’s barcode here"'+(held.length?' disabled':'')+'>'+warn+last+hold+empty+
     (S.rpend?pend:'<div class="rlist'+(o.lines.length>5?' two':'')+'">'+rows+bad+'</div>')+packRow+
     '<div style="display:flex;align-items:center;gap:18px"><button class="btn go" id="rfin" data-act="rfinish"'+(S.busy||held.length?' disabled':'')+'>Finish this box</button><span class="hint">Anything not scanned stays on the waiting list.</span></div></div>';
 }
 function scanUPC(raw){
   const o=rOrder(); const u=nz(raw); if(!o||!u||rHeld().length) return;
   const map=LS.get('hd.upcmap',{});
-  let l=o.lines.find(x=>!x.nobar&&nz(x.upc)===u);
+  S.rwarn=null;
+  let l=o.lines.find(x=>!x.nobar&&upcKeys(x.upc).includes(u));
   if(!l&&map[u]) l=o.lines.find(x=>x.upc===map[u]);
   if(l){ S.rscan[l.upc]=(S.rscan[l.upc]||0)+1; S.rlast=l.upc; S.rhold=rqOpenMatch(l).map(x=>x.id); (S.rhist=S.rhist||[]).push({u:l.upc}); }
   else if(o.lines.some(x=>x.nobar)){ S.rpend=u; render(); return; }
-  else { S.rbad[u]=(S.rbad[u]||0)+1; S.rlast=null; (S.rhist=S.rhist||[]).push({b:u}); }
+  else if(!DEMO&&o.lines.length){ S.rpend=u; S.rlook=true; S.rcand=null; render(); rLookup(u); return; }
+  else { S.rbad[u]=(S.rbad[u]||0)+1; S.rlast=null; S.rwarn=u; (S.rhist=S.rhist||[]).push({b:u}); }
   rSave(); render(); focusScan();
+}
+const rTok=x=>String(x||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>1&&!['the','and','of','lp','ost','soundtrack'].includes(w));
+function rSim(a,b){ const A=new Set(rTok(a)), B=new Set(rTok(b)); if(!A.size||!B.size) return 0; let n=0; A.forEach(w=>{ if(B.has(w)) n++; }); return n/Math.min(A.size,B.size); }
+// Unknown barcode: ask Discogs what it is, match against what's expected. Confident match is automatic and remembered; otherwise staff pick.
+async function rLookup(u){
+  const o=rOrder(); let found=[];
+  try{ const j=await dget('database/search?type=release&per_page=6&barcode='+u); found=(j.results||[]).map(x=>{ const n=usplit(x.title); return n.artist?n.artist+' '+n.album:x.title; }); }catch(e){}
+  if(S.rpend!==u) return;
+  const sc=o.lines.map(l=>({l,s:Math.max(0,...found.map(f=>rSim(l.artist+' '+l.title,f)))})).sort((a,b)=>b.s-a.s);
+  S.rcand=sc.map(x=>x.l); S.rlook=false;
+  if(sc.length&&sc[0].s>=0.75&&(sc.length<2||sc[0].s-sc[1].s>=0.2)){ rDoAssign(u,sc[0].l.upc,true); return; }
+  render(); focusScan();
+}
+function rDoAssign(scanned,upc,auto){
+  const m=LS.get('hd.upcmap',{}); m[scanned]=upc; LS.set('hd.upcmap',m);
+  S.rscan[upc]=(S.rscan[upc]||0)+1; S.rlast=upc; (S.rhist=S.rhist||[]).push({u:upc});
+  const o=rOrder(), l=o.lines.find(x=>x.upc===upc); if(l) S.rhold=rqOpenMatch(l).map(x=>x.id);
+  S.rpend=null; S.rlook=false; S.rcand=null; rSave(); render(); focusScan();
+  if(!DEMO) api('learnupc',{scanned,to:upc}).catch(()=>{});
+  if(auto&&l) toast('Matched: '+tc(l.artist)+' \u00b7 '+tc(l.title));
 }
 function focusScan(){ const e=document.getElementById('rscan'); if(e) e.focus(); }
 function iprevHTML(){
@@ -1763,6 +1789,7 @@ function supField(p,list,cur,oth){
 }
 function vRStock(){
   return topHTML('Receive stock')+bannerHTML()+'<p class="hint" style="margin:0 0 6px">What came in?</p><div class="addpick">'+
+    '<button class="btn ghost" data-act="rrec">'+bi('record','Records','Scan what\u2019s in the box. It checks against the invoices')+'</button>'+
     '<button class="btn ghost" data-act="go:rkeg">'+bi('keg','Kegs','Photo of the invoice, then they go on deck')+'</button>'+
     '<button class="btn ghost" data-act="go:rcans">'+bi('beer','Cans','Beer, THC, soda, water and more. Photo of the invoice first')+'</button>'+
     '<button class="btn ghost" data-act="go:rsnacks">'+bi('bag','Snacks','Chips, candy and more. Photo of the invoice first')+'</button>'+
@@ -1997,7 +2024,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r41';
+const BUILD='r43';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2361,10 +2388,11 @@ document.addEventListener('click', async ev=>{
     x.hist.push(x.status); x.status=v; x.sts=new Date().toISOString(); if(v==='Paid'&&x.pay==='Store credit'&&x.offer) crAdd(x.name,x.phone,parseFloat(x.offer)); dSave(L); render();
     submit('dropstatus','Drop-off '+x.name+': '+v+(x.offer&&v!=='Done'?' ($'+x.offer+')':''),{id:x.id,status:v,offer:x.offer||''},true); }
   else if(a==='rlist'){ S.view='recvlist'; render(); }
+  else if(a==='rrec'){ if(DEMO||await rLoad()){ S.rwarn=null; S.rhold=[]; rEnter(); focusScan(); } }
   else if(a==='rpick'){ S.rorder=b.dataset.id; const sv=LS.get(RK(),{}); S.rhist=sv.hist||[]; S.rhold=[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); focusScan(); }
   else if(a==='rplus'||a==='rminus'){ const u=b.dataset.u; S.rscan[u]=Math.max(0,(S.rscan[u]||0)+(a==='rplus'?1:-1)); if(a==='rplus'){ (S.rhist=S.rhist||[]).push({u}); S.rlast=u; const o=rOrder(), l=o&&o.lines.find(x=>x.upc===u); if(l) S.rhold=rqOpenMatch(l).map(x=>x.id); } rSave(); render(); focusScan(); }
-  else if(a==='rassign'){ const m=LS.get('hd.upcmap',{}); const u=b.dataset.u; m[S.rpend]=u; LS.set('hd.upcmap',m); S.rscan[u]=(S.rscan[u]||0)+1; S.rlast=u; S.rpend=null; rSave(); render(); focusScan(); }
-  else if(a==='rnot'){ S.rbad[S.rpend]=(S.rbad[S.rpend]||0)+1; S.rpend=null; S.rlast=null; rSave(); render(); focusScan(); }
+  else if(a==='rassign'){ rDoAssign(S.rpend,b.dataset.u,false); }
+  else if(a==='rnot'){ S.rbad[S.rpend]=(S.rbad[S.rpend]||0)+1; S.rwarn=S.rpend; S.rpend=null; S.rlook=false; S.rlast=null; rSave(); render(); focusScan(); }
   else if(a==='rbaddel'){ const u=b.dataset.u; S.rbad[u]=(S.rbad[u]||0)-1; if(S.rbad[u]<=0) delete S.rbad[u]; rSave(); render(); focusScan(); }
   else if(a==='rpackbtn'){ document.getElementById('packin').click(); }
   else if(a==='rnopack'){ S.rnopack=!S.rnopack; rSave(); render(); focusScan(); }
@@ -2375,7 +2403,7 @@ document.addEventListener('click', async ev=>{
     const got=o.lines.reduce((n,l)=>n+Math.min(S.rscan[l.upc]||0,l.qty),0), total=o.lines.reduce((n,l)=>n+l.qty,0);
     const arrIn=o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>({artist:tc(l.artist),album:tc(l.title)}));
     submit('receive','Received a box: '+got+' of '+total+' scanned'+(short.length?', '+short.length+' short':'')+(extra.length?', '+extra.length+' not on order':''),
-      {orders:[...new Set(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>l.oid))],expected:total,scanned:got,short,over,extra,packing:S.rpack?S.rpack.split(',')[1]:'',noPacking:S.rnopack},true).then(ok=>{ if(ok){ const d=LS.get(RDONE,{}); o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); if(g) d[l.upc]=(d[l.upc]||0)+g; }); LS.set(RDONE,d); LS.set(RK(),null); S.rhist=[]; S.rhold=[]; S.rscan={}; S.rbad={}; S.rlast=null; S.rpack=null; S.rnopack=false; S.view='recv'; render(); toast('Box saved'); if(arrIn.length){ arrAdd(arrIn); postRecs(); } } });
+      {order:[...new Set(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>l.oid))].join(', '),got:Object.fromEntries(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>[l.upc,Math.min(S.rscan[l.upc],l.qty)])),expected:total,scanned:got,short,over,extra,packing:S.rpack?S.rpack.split(',')[1]:'',noPacking:S.rnopack},true).then(async ok=>{ if(ok){ if(DEMO){ const d=LS.get(RDONE,{}); o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); if(g) d[l.upc]=(d[l.upc]||0)+g; }); LS.set(RDONE,d); } else await rLoad(); S.rwarn=null; LS.set(RK(),null); S.rhist=[]; S.rhold=[]; S.rscan={}; S.rbad={}; S.rlast=null; S.rpack=null; S.rnopack=false; S.view='recv'; render(); toast('Box saved'); if(arrIn.length){ arrAdd(arrIn); postRecs(); } } });
   }
   else if(a==='tdpick'){ const r=(S.td.shown||[])[+b.dataset.i]; if(r){ S.td.artist=r.artist; S.td.album=r.album; S.td.genre=r.genre||''; S.td.q=''; S.td.res=null; S.td.picked=true; tdRefreshList(); const set=(id,v)=>{ const e=document.getElementById(id); if(e){ e.value=v; e.dispatchEvent(new Event('input',{bubbles:true})); } }; set('aartist',r.artist); set('aalbum',r.album); const q=document.getElementById('tdq'); if(q) q.value=''; if(r.genre) set('agenre',r.genre); else { try{ let g=''; if(r.mid){ const m=await dget('masters/'+r.mid); g=ugenre(m.genres); } else if(r.rid){ const x=await dget('releases/'+r.rid); g=ugenre(x.genres); } if(g){ S.td.genre=g; set('agenre',g); } }catch(e){} } toast('Filled in from Discogs'); const pe=document.getElementById('aprice'); if(pe) pe.focus(); } }
   else if(a==='atype'){ S.td=tdFresh(); S.atype=b.dataset.v; S.aprint=true; S.alisted={}; S.acond=null; render(); }

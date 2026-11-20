@@ -23,6 +23,8 @@ var TABS = {
   Issues:   ['Timestamp', 'Who', 'Type', 'Details', 'Photo', 'Status'],
   Cash:     ['Timestamp', 'Who', 'Drawer count', 'Deposit', 'Note'],
   Records: ['Timestamp', 'Who', 'Type', 'Artist', 'Album', 'Genre', 'Format', 'Barcode', 'MSRP', 'Price', 'Status', 'Location', 'Listed on', 'Label queued', 'Notes'],
+  Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted'],
+  UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
   DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records']
 };
@@ -51,6 +53,8 @@ function doPost(e) {
     else if (req.action === 'trove') out = { ok: true, items: troveItems_() };
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
     else if (req.action === 'log') { var res = logEntry_(req, who) || {}; out = { ok: true, code: res.code || '' }; }
+    else if (req.action === 'expected') out = { ok: true, lines: expectedLines_(), map: upcMap_() };
+    else if (req.action === 'learnupc') out = { ok: true, saved: learnUpc_(req, who) };
     else if (req.action === 'scaninvoice') out = { ok: true, result: scanInvoice_(req) };
     else if (req.action === 'trovedel') out = { ok: true, removed: deleteTrove_(req, who) };
     else throw new Error('Unknown action');
@@ -226,6 +230,7 @@ function logEntry_(req, who) {
     } else if (task === 'request') {
       requestEntry_(d, who, now, tz);
     } else if (task === 'receive') {
+      applyReceived_(ss, d.got);
       var pack = d.packing ? saveIssuePhoto_(String(d.packing), now, tz) : (d.noPacking ? 'None in box' : '');
       sheet_(ss, 'Receiving').appendRow([now, who, clean_(d.order), Number(d.expected) || 0, Number(d.scanned) || 0,
         (d.short || []).map(clean_).join('; '), (d.over || []).map(clean_).join('; '), (d.extra || []).map(clean_).join('; '), pack]);
@@ -431,4 +436,112 @@ function deleteTrove_(req, who) {
   } finally {
     lock.releaseLock();
   }
+}
+
+
+/* ---------- Expected records (Raleigh = Alliance account 066847) ---------- */
+
+/** Open lines: everything invoiced and not yet scanned in. Oldest first. */
+function expectedLines_() {
+  var sh = ss_().getSheetByName('Expected');
+  if (!sh || sh.getLastRow() < 2) return [];
+  var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 11).getValues(), out = [];
+  rows.forEach(function (r) {
+    var left = Number(r[8]) - Number(r[9] || 0);
+    if (r[4] && left > 0) out.push({ inv: String(r[0]), date: dstr_(r[1]), po: String(r[2]), prod: String(r[3]), upc: String(r[4]),
+      artist: String(r[5]), title: String(r[6]), list: Number(r[7]), qty: left, media: 'LP' });
+  });
+  return out;
+}
+
+/** Add scanned counts ({upc: n}) to the oldest open lines for that UPC. Runs inside the log lock. */
+function applyReceived_(ss, got) {
+  if (!got || typeof got !== 'object') return;
+  var sh = ss.getSheetByName('Expected');
+  if (!sh || sh.getLastRow() < 2) return;
+  var rg = sh.getRange(2, 1, sh.getLastRow() - 1, 11), rows = rg.getValues(), changed = false;
+  Object.keys(got).forEach(function (u) {
+    var n = Math.floor(Number(got[u]) || 0);
+    for (var i = 0; i < rows.length && n > 0; i++) {
+      if (String(rows[i][4]) !== String(u)) continue;
+      var room = Number(rows[i][8]) - Number(rows[i][9] || 0);
+      if (room <= 0) continue;
+      var take = Math.min(room, n);
+      rows[i][9] = Number(rows[i][9] || 0) + take; n -= take; changed = true;
+    }
+  });
+  if (changed) rg.setValues(rows);
+}
+
+/** Add invoice lines. Each: {inv, date:'yyyy-mm-dd', po, prod, upc, artist, title, list, qty}. Skips lines already there. */
+function addExpected_(lines) {
+  var ss = ss_(), sh = sheet_(ss, 'Expected');
+  var have = {};
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, 4).getValues().forEach(function (r) { have[r[0] + '|' + r[3]] = 1; });
+  var rows = [];
+  sh.getRange('A:E').setNumberFormat('@'); // text, so leading zeros and dates survive
+  lines.forEach(function (l) {
+    if (have[l.inv + '|' + l.prod]) return;
+    rows.push([l.inv, l.date, l.po, l.prod, String(l.upc), l.artist, l.title, l.list, l.qty, Math.min(Number(l.got) || 0, l.qty), '']);
+  });
+  if (!rows.length) return 0;
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, 11).setValues(rows);
+  return rows.length;
+}
+
+/**
+ * Runs every morning. Any invoiced record still not scanned in after 14 days gets listed in one email
+ * to Forrest and Bell (Script Property OVERDUE_TO, comma separated). Each line is only reported once.
+ */
+function checkOverdue() {
+  var props = PropertiesService.getScriptProperties();
+  var to = props.getProperty('OVERDUE_TO') || props.getProperty('SHOP_EMAIL') || '';
+  var sh = ss_().getSheetByName('Expected');
+  if (!to || !sh || sh.getLastRow() < 2) return;
+  var rg = sh.getRange(2, 1, sh.getLastRow() - 1, 11), rows = rg.getValues();
+  var tz = ss_().getSpreadsheetTimeZone(), today = new Date(), todayStr = Utilities.formatDate(today, tz, 'yyyy-MM-dd');
+  var byInv = {}, hit = 0;
+  rows.forEach(function (r) {
+    var left = Number(r[8]) - Number(r[9] || 0);
+    if (left <= 0 || r[10]) return;
+    var d = new Date(dstr_(r[1]) + 'T12:00:00');
+    if (isNaN(d) || (today - d) / 864e5 <= 14) return;
+    (byInv[r[0]] = byInv[r[0]] || { date: dstr_(r[1]), lines: [] }).lines.push(r[5] + ' - ' + r[6] + (left > 1 ? ' (' + left + ' missing)' : ''));
+    r[10] = todayStr; hit++;
+  });
+  if (!hit) return;
+  var body = 'These records were on a Raleigh Alliance invoice (account 066847) but still have not been scanned in after 14 days.\n\n';
+  Object.keys(byInv).forEach(function (k) {
+    body += 'Invoice ' + k + ' (' + byInv[k].date + '):\n  ' + byInv[k].lines.join('\n  ') + '\n\n';
+  });
+  body += 'If a box is sitting somewhere, scan it in. If it never arrived, it is a claim with Alliance (claims must be made within 5 days of the invoice date, so call Katie Curtis now).\n';
+  MailApp.sendEmail(to, 'Hunky Dory Raleigh: ' + hit + ' record' + (hit === 1 ? '' : 's') + ' invoiced but not received', body, { name: 'Hunky Dory Records' });
+  rg.setValues(rows);
+}
+
+/** Run once from the editor: runs checkOverdue every morning around 8. */
+function installOverdueTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'checkOverdue') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('checkOverdue').timeBased().everyDays(1).atHour(8).create();
+}
+
+function dstr_(v) { return v instanceof Date ? Utilities.formatDate(v, 'UTC', 'yyyy-MM-dd') : String(v); }
+
+/** Barcodes staff matched by hand (or Discogs matched): scanned code -> the UPC on the invoice. Shared by every iPad. */
+function upcMap_() {
+  var sh = ss_().getSheetByName('UpcMap'), out = {};
+  if (sh && sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues().forEach(function (r) { if (r[0]) out[String(r[0])] = String(r[1]); });
+  return out;
+}
+function learnUpc_(req, who) {
+  var a = String(req.scanned || '').replace(/\D/g, '').replace(/^0+/, ''), b = String(req.to || '').replace(/\D/g, '');
+  if (!a || !b || a.length > 14 || b.length > 14) return false;
+  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    var sh = sheet_(ss_(), 'UpcMap');
+    sh.getRange('A:B').setNumberFormat('@');
+    if (upcMap_()[a]) return true;
+    sh.appendRow([a, b, clean_(who), new Date()]);
+  } finally { lock.releaseLock(); }
+  return true;
 }
