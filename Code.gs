@@ -231,7 +231,7 @@ function logEntry_(req, who) {
     } else if (task === 'request') {
       requestEntry_(d, who, now, tz);
     } else if (task === 'receive') {
-      sqQueue_(ss, d.got, now);
+      try { sqQueue_(ss, d.got, now); } catch (e) { /* Square problems must never block a receipt */ }
       applyReceived_(ss, d.got);
       var pack = d.packing ? saveIssuePhoto_(String(d.packing), now, tz) : (d.noPacking ? 'None in box' : '');
       sheet_(ss, 'Receiving').appendRow([now, who, clean_(d.order), Number(d.expected) || 0, Number(d.scanned) || 0,
@@ -570,7 +570,8 @@ function sqQueue_(ss, got, now) {
     rows.push([now, String(u), r[5], r[6], n, 'Pending', '', 'hd-recv-' + now.getTime() + '-' + u, Number(r[7]) || 0, String(r[3]), Number(r[11]) || '']);
   });
   if (!rows.length) return;
-  var sh = sheet_(ss, 'SquareSync');
+  var sh = ss.getSheetByName('SquareSync');
+  if (!sh) { sh = ss.insertSheet('SquareSync'); sh.getRange(1, 1, 1, TABS.SquareSync.length).setValues([TABS.SquareSync]).setFontWeight('bold'); sh.setFrozenRows(1); }
   sh.getRange('B:B').setNumberFormat('@'); sh.getRange('J:J').setNumberFormat('@');
   sh.getRange(sh.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
 }
