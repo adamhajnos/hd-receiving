@@ -2030,7 +2030,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r55';
+const BUILD='r56';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2064,7 +2064,8 @@ function rSheetInfo(){ const add=rLabelList().length, have=pqGet().length, start
 
 // Genre: remembered by artist, else Discogs (looked up by the record's barcode) mapped to the shop list, else Misc.
 const AG='hd.agenre';
-const genreOf=l=>(LS.get(AG,{})[unorm(l.artist)])||'Misc';
+const AGFIX={tameimpala:'Indie'}; // house overrides: win over what an iPad remembered
+const genreOf=l=>AGFIX[unorm(l.artist)]||(LS.get(AG,{})[unorm(l.artist)])||'Misc';
 function discogsGenre(x){ const st=(x.style||[]).join(' ').toLowerCase(); if(/punk|hardcore|hard rock|metal/.test(st)) return 'Hard Rock/Punk'; if(/indie/.test(st)) return 'Indie/Pop'; return ugenre(x.genre)||''; }
 async function rGenres(){
   const m=LS.get(AG,{}), need={};
