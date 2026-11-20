@@ -1768,7 +1768,27 @@ function vRStock(){
     '<button class="btn ghost" data-act="go:rsnacks">'+bi('bag','Snacks','Chips, candy and more. Photo of the invoice first')+'</button>'+
     '<button class="btn ghost" data-act="rlist">'+bi('photo','Records','Scan the box. Then make the Instagram Stories')+'</button></div>';
 }
+async function cansAuto(){
+  const mode=S.cmode==='snacks'?'snacks':'cans';
+  S.cbusy=true; S.err=''; render();
+  try{
+    const j = await Promise.race([api('scaninvoice',{image:S.iphoto,mode}), new Promise((_,rej)=>setTimeout(()=>rej(new Error('timed out')),30000))]);
+    const r=j.result, TY=mode==='snacks'?['Chips','Candy','Jerky','Other']:['Beer','THC','Soda','Water','Other'], UN=mode==='snacks'?['Cases','Boxes']:['Cases','Packs'];
+    if(!r||!Array.isArray(r.items)) throw new Error('bad');
+    const C2=S.cs||(S.cs={items:[],type:TY[0],unit:UN[0]});
+    const pick=(v,list)=>list.find(x=>x.toLowerCase()===String(v||'').toLowerCase())||list[list.length-1];
+    const its=r.items.filter(x=>x&&x.product&&x.qty>0);
+    if(!its.length) throw new Error('none');
+    its.forEach(x=>C2.items.push({prod:String(x.product),brand:String(x.brand||''),type:pick(x.type,TY),qty:Math.round(x.qty),unit:pick(x.unit,UN)}));
+    const sup=String(r.supplier||'').trim();
+    if(sup&&!S.csup){ S.csup=sup; S.cOther=false; }
+    S.cbusy=false; render();
+  }catch(e){
+    S.cbusy=false; S.err = e.message==='timed out' ? 'That took too long. Retake the photo, or add the items by hand below.' : e.message==='none' ? 'Couldn’t find any items on that invoice. Add them by hand below, or retake the photo.' : /not set up/.test(e.message) ? 'Invoice reading isn’t set up yet. Add the items by hand below.' : 'Couldn’t read that invoice ('+String(e.message||e).slice(0,80)+'). Add the items by hand below, or retake the photo.'; render();
+  }
+}
 function vRCans(){
+  if(S.cbusy) return topHTML(S.cmode==='snacks'?'Receive snacks':'Receive cans','home','',false)+bannerHTML()+'<div class="kbig" style="margin-top:20px;min-height:260px"><span><b>Reading the invoice\u2026</b><span>This takes a few seconds</span></span></div>';
   const SN=S.cmode==='snacks', TY=SN?['Chips','Candy','Jerky','Other']:['Beer','THC','Soda','Water','Other'], UN=SN?['Cases','Boxes']:['Cases','Packs'];
   const C2=S.cs||(S.cs={items:[],type:TY[0],unit:UN[0]}), L=C2.items;
   const sup=SN?['Costco','Sam\u2019s Club','Amazon']:['Hopfly','Artisan','DSSOLVR','Mad Mole','Sneaky Penguin','Proof','Advintage','Tryon','Flying Machine','Millennium','Casita','Vicious Fishes'];
@@ -1977,7 +1997,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r38';
+const BUILD='r39';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2120,7 +2140,7 @@ function shrink(file,max){
 }
 document.addEventListener('change',ev=>{ const t=ev.target; if(t&&(t.id==='csel'||t.id==='ksel')){ const c=t.id==='csel', o=t.value==='__o'; if(c){ S.cOther=o; S.csup=o?'':t.value; } else { S.kOther=o; S.ksup=o?'':t.value; } render(); } });
 document.addEventListener('change',async ev=>{
-  if(ev.target&&ev.target.id==='cphotoin'&&ev.target.files[0]){ S.csup=(document.getElementById('csup')||{}).value||S.csup; try{ S.iphoto=await shrink(ev.target.files[0],1600); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; } render(); return; }
+  if(ev.target&&ev.target.id==='cphotoin'&&ev.target.files[0]){ S.csup=(document.getElementById('csup')||{}).value||S.csup; try{ S.iphoto=await shrink(ev.target.files[0],1600); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; render(); return; } cansAuto(); return; }
   if(ev.target&&ev.target.id==='kphotoin'&&ev.target.files[0]){ try{ S.iphoto=await shrink(ev.target.files[0],1600); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; render(); return; } kegAuto(); return; }
   if(!ev.target||ev.target.id!=='iphotoin'||!ev.target.files[0]) return;
   try{ S.iphoto=await shrink(ev.target.files[0],1280); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; }

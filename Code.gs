@@ -78,6 +78,7 @@ function scanInvoice_(req) {
     'Include only kegs being delivered: lines with a product and a price that are NOT crossed out or struck through. Exclude lines starting "Empty" (returned kegs), key deposits, deposits, totals. cost is the PRICE column, not the deposit. size like "1/6 bbl". ' +
     'Product text looks like "Brewery-Beer Name 1/6 bbl" and may be cut off at the edge of the photo. If a name is cut off or abbreviated, use the matching entry from this known list (its exact beer and brewery spelling) when one clearly matches; otherwise give what is visible. Known beers (beer | brewery):\n' +
     String(req.known || '').slice(0, 4000);
+  if (req.mode === 'cans' || req.mode === 'snacks') prompt = itemsPrompt_(req.mode);
   var props = PropertiesService.getScriptProperties();
   var model = props.getProperty('GEMINI_MODEL') || 'gemini-2.5-flash';
   var res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
@@ -94,6 +95,16 @@ function scanInvoice_(req) {
   var m = txt.match(/\{[\s\S]*\}/);
   if (!m) throw new Error('Could not read the invoice');
   return JSON.parse(m[0]);
+}
+
+/** Prompt for drink (cans) or snack delivery invoices. Returns {supplier, invoice, items:[{product,brand,type,qty,unit}]}. */
+function itemsPrompt_(mode) {
+  var snacks = mode === 'snacks';
+  return 'This is a photo of a delivery invoice for ' + (snacks ? 'snacks (chips, candy, jerky and similar)' : 'drinks (beer cans, THC drinks, soda, water and similar)') + '. Return ONLY JSON: ' +
+    '{"supplier":string,"invoice":string,"items":[{"product":string,"brand":string,"type":' + (snacks ? '"Chips"|"Candy"|"Jerky"|"Other"' : '"Beer"|"THC"|"Soda"|"Water"|"Other"') + ',"qty":number,"unit":' + (snacks ? '"Cases"|"Boxes"' : '"Cases"|"Packs"') + '}]}. ' +
+    'One entry per product line being delivered. Skip lines that are crossed out or struck through, and skip deposits, fees, taxes, discounts, empties and totals. ' +
+    'qty is how many cases or packs were shipped (the quantity column, not the price). product is the product name without the pack size. brand is the maker or brewery when the line shows one, otherwise an empty string. ' +
+    'unit is "Cases" for case lines' + (snacks ? ' and "Boxes" for box lines.' : ' and "Packs" for 4-pack, 6-pack or similar lines.');
 }
 
 /** Returns the staff name for a PIN, or throws. Locks guessing after 8 misses in 5 minutes. */
