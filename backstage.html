@@ -1322,11 +1322,11 @@ function uNextCode(){ let n=LS.get(USEQ,3); sqItems().forEach(i=>i.vars.forEach(
 /* ---------- supplies ---------- */
 // Seeded from the shop's "General Store Restock" sheet (Raleigh tab). [name, state, count unit, reorder level, start count]
 // state: 0 = stocked, 1 = low, 2 = out. Items with a unit are counted; the rest are one-tap restock requests.
-const SUPK='hd.sup7';
+const SUPK='hd.sup8'; /* sup8 = fresh start Nov 20: nothing flagged, every count at 0 */
 const SUPCATS=['General','Register','Player','Bathroom','Bar','Cleaning','Records','Shipping'];
 const SUPDEF={
   General:[['Clear tape'],['Blue tape'],['Sticky notes',1],['Black markers'],['Pens'],['Chalk markers'],['Paper clips',2]],
-  Register:[['Checks'],['Cash'],['Change'],['Money sleeves'],['Drop-off sheets'],['Gift cards',1],['Business cards',2]],
+  Register:[['Checks'],['Cash'],['Change'],['Money sleeves'],['Drop-off sheets'],['Gift cards',1],['Business cards',0,'boxes',1,0]],
   Player:[['Needle'],['Gel']],
   Bathroom:[['Toilet paper',0,'rolls',4,12],['Dispenser paper towels',0,'rolls',2,6],['Room spray',2],['Dispenser soap']],
   Bar:[['Cups',2,'sleeves',5,0],['Clean rags'],['Paper towels',2,'rolls',2,0],['Wipes',2],['Acid solution'],['Soap',2]],
@@ -1334,7 +1334,7 @@ const SUPDEF={
   Records:[['Bags',1,'boxes',1,1],['Outer sleeves',1,'bags',1,1],['Inner sleeves',1,'bags',1,1],['XL sleeves',2,'bags',1,0],['Genre tabs',1],['Price gun labels']],
   Shipping:[['Packing tape',1],['Printer paper'],['Padding material',2],['Printer ink']]
 };
-function sups(){ let L=LS.get(SUPK,null); if(!L){ L=[]; SUPCATS.forEach(c=>SUPDEF[c].forEach(x=>{ L.push(x[2]?{n:x[0],k:c,t:'c',c:x[4],m:x[3],u:x[2]}:{n:x[0],k:c,t:'r',r:(x[1]||0)>0}); })); LS.set(SUPK,L); } return L; }
+function sups(){ let L=LS.get(SUPK,null); if(!L){ L=[]; SUPCATS.forEach(c=>SUPDEF[c].forEach(x=>{ L.push(x[2]?{n:x[0],k:c,t:'c',c:0,m:x[3],u:x[2]}:{n:x[0],k:c,t:'r',r:false}); })); LS.set(SUPK,L); } return L; }
 function supSave(L){ LS.set(SUPK,L); }
 const SUPOPT={'Cash':['1s','5s','10s','20s'],'Record cleaner ingredients':['Isopropyl alcohol','Dawn','Distilled water']};
 const supD=x=>SUPOPT[x.n]||null;
@@ -1997,7 +1997,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r39';
+const BUILD='r40';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
