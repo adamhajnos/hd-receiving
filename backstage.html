@@ -2024,7 +2024,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r47';
+const BUILD='r48';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2119,7 +2119,7 @@ function bindForms(){
 }
 
 /* ---------- actions ---------- */
-function toast(m){ const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=m; document.getElementById('screen').appendChild(t); setTimeout(()=>t.remove(),2200); }
+function toast(m,ms){ const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=m; document.getElementById('screen').appendChild(t); setTimeout(()=>t.remove(),ms||2200); }
 async function submit(task, summary, data, stay, msg){
   S.busy=true; S.err=''; const sub=document.getElementById('sub'); if(sub) sub.disabled=true;
   try{
@@ -2301,11 +2301,11 @@ document.addEventListener('keydown',ev=>{
   else if(ev.key==='Backspace'){ S.entry=S.entry.slice(0,-1); render(); }
 });
 // Never fail silently: show any unexpected error on screen so a dead tap can be diagnosed.
-window.addEventListener('error',ev=>{ try{ toast('Error: '+String(ev.message||ev.error).slice(0,120)); }catch(e){} });
-window.addEventListener('unhandledrejection',ev=>{ try{ const r=ev.reason; toast('Error: '+String((r&&r.message)||r).slice(0,120)); }catch(e){} });
+window.addEventListener('error',ev=>{ try{ const e=ev.error; toast('Error: '+String(ev.message||(e&&e.message)||ev.type)+' @'+String(ev.filename||'').split('/').pop()+':'+ev.lineno+':'+ev.colno+(e&&e.stack?' '+String(e.stack).split('\n')[0]:''),9000); }catch(x){} },true);
+window.addEventListener('unhandledrejection',ev=>{ try{ const r=ev.reason; toast('Rejected: '+(r===null?'null':r===undefined?'undefined':String((r&&r.message)||r))+(r&&r.stack?' '+String(r.stack).split('\n')[0]:'')+' [last tap: '+(window.__lastAct||'?')+']',9000); }catch(x){} });
 document.addEventListener('click', async ev=>{
   const b=ev.target.closest('[data-act]'); if(!b) return;
-  const a=b.dataset.act;
+  const a=b.dataset.act; window.__lastAct=a;
   if(a==='key'){ if(S.entry.length<4){ S.entry+=b.dataset.k; S.err=''; render(); if(S.entry.length===4) tryLogin(); } }
   else if(a==='back'){ S.entry=S.entry.slice(0,-1); render(); }
   else if(a==='clear'){ S.entry=''; S.err=''; render(); }
