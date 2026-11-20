@@ -1476,7 +1476,7 @@ function vRecv(){
     (S.rpack?'<img class="iimg" alt="" src="'+S.rpack+'" style="height:64px">':'<button class="fmt'+(S.rnopack?' on':'')+'" data-act="rnopack" style="min-height:56px;padding:0 20px;border-radius:14px;border:1px solid var(--line);background:'+(S.rnopack?'var(--fg)':'none')+';color:'+(S.rnopack?'var(--bg)':'inherit')+';font-weight:700">No packing list in the box</button>')+'</div>';
   return topHTML('Receive records','home','<span class="chip">'+got+' of '+total+' scanned</span>')+bannerHTML()+
     '<div class="form" style="max-width:none;gap:14px">'+undoBtn+'<input id="rscan" inputmode="numeric" autocomplete="off" placeholder="Scan each record’s barcode here"'+(held.length?' disabled':'')+'>'+warn+last+hold+empty+
-    (S.rpend?pend:'<div class="rlist'+(o.lines.length>5?' two':'')+'">'+rows+bad+'</div>')+packRow+
+    (S.rpend?pend:'<div class="rlist">'+rows+bad+'</div>')+packRow+
     '<div style="display:flex;align-items:center;gap:18px"><button class="btn go" id="rfin" data-act="rfinish"'+(S.busy||held.length?' disabled':'')+'>Finish this box</button><span class="hint">Anything not scanned stays on the waiting list.</span></div></div>';
 }
 function scanUPC(raw){
@@ -2024,7 +2024,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r43';
+const BUILD='r44';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
