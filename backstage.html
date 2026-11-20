@@ -1766,7 +1766,7 @@ function vRStock(){
     '<button class="btn ghost" data-act="go:rkeg">'+bi('keg','Kegs','Photo of the invoice, then they go on deck')+'</button>'+
     '<button class="btn ghost" data-act="go:rcans">'+bi('beer','Cans','Beer, THC, soda, water and more. Photo of the invoice first')+'</button>'+
     '<button class="btn ghost" data-act="go:rsnacks">'+bi('bag','Snacks','Chips, candy and more. Photo of the invoice first')+'</button>'+
-    '<button class="btn ghost" data-act="rlist">'+bi('photo','Records','Scan the box. Then make the Instagram Stories')+'</button></div>';
+    '<button class="btn ghost" data-act="go:rother">'+bi('bag','Other','Merch, hats, stickers and more. Photo of the invoice or packing slip first')+'</button></div>';
 }
 async function cansAuto(){
   const mode=S.cmode==='snacks'?'snacks':'cans';
@@ -1788,17 +1788,17 @@ async function cansAuto(){
   }
 }
 function vRCans(){
-  if(S.cbusy) return topHTML(S.cmode==='snacks'?'Receive snacks':'Receive cans','home','',false)+bannerHTML()+'<div class="kbig" style="margin-top:20px;min-height:260px"><span><b>Reading the invoice\u2026</b><span>This takes a few seconds</span></span></div>';
-  const SN=S.cmode==='snacks', TY=SN?['Chips','Candy','Jerky','Other']:['Beer','THC','Soda','Water','Other'], UN=SN?['Cases','Boxes']:['Cases','Packs'];
+  if(S.cbusy) return topHTML(S.cmode==='other'?'Receive other':S.cmode==='snacks'?'Receive snacks':'Receive cans','home','',false)+bannerHTML()+'<div class="kbig" style="margin-top:20px;min-height:260px"><span><b>Reading the invoice\u2026</b><span>This takes a few seconds</span></span></div>';
+  const SN=S.cmode==='snacks', OT=S.cmode==='other', TY=OT?['Merch','Hats','Stickers','Shirts','Other']:SN?['Chips','Candy','Jerky','Other']:['Beer','THC','Soda','Water','Other'], UN=OT?['Boxes','Pieces']:SN?['Cases','Boxes']:['Cases','Packs'];
   const C2=S.cs||(S.cs={items:[],type:TY[0],unit:UN[0]}), L=C2.items;
-  const sup=SN?['Costco','Sam\u2019s Club','Amazon']:['Hopfly','Artisan','DSSOLVR','Mad Mole','Sneaky Penguin','Proof','Advintage','Tryon','Flying Machine','Millennium','Casita','Vicious Fishes'];
+  const sup=OT?[]:SN?['Costco','Sam\u2019s Club','Amazon']:['Hopfly','Artisan','DSSOLVR','Mad Mole','Sneaky Penguin','Proof','Advintage','Tryon','Flying Machine','Millennium','Casita','Vicious Fishes'];
   const big=S.iphoto
     ? '<div class="kdone"><img class="iimg" alt="" src="'+S.iphoto+'"><div><b>Invoice photo ✓</b><div><button class="btn ghost" data-act="cphoto" style="margin-top:8px">Retake</button></div></div></div>'
     : '<button class="kbig" data-act="cphoto"><span class="kcam">○</span><span><b>Take a photo of the invoice</b><span>Do this first</span></span></button>';
-  return topHTML(SN?'Receive snacks':'Receive cans','go:rstock')+bannerHTML()+big+'<input id="cphotoin" type="file" accept="image/*" capture="environment" hidden>'+
-  '<div class="form" style="margin-top:18px">'+supField('c',sup,S.csup,S.cOther)+
+  return topHTML(OT?'Receive other':SN?'Receive snacks':'Receive cans','go:rstock')+bannerHTML()+big+'<input id="cphotoin" type="file" accept="image/*" capture="environment" hidden>'+
+  '<div class="form" style="margin-top:18px">'+supField('c',sup,S.csup,S.cOther||OT)+
   L.map((x,i)=>'<div class="kcard" style="margin:0"><span class="kx" style="flex:1"><b>'+esc(x.prod)+'</b><span>'+esc(x.brand||'')+(x.brand?' · ':'')+esc(x.type)+'</span></span><span class="kp">'+x.qty+' '+esc(x.unit.toLowerCase())+'</span><button class="btn ghost" data-act="crm" data-n="'+i+'">Remove</button></div>').join('')+
-  '<div class="pair"><label>Product<input id="cprod" autocomplete="off" placeholder="'+(SN?'Name of the snack':'Name of the drink')+'"></label><label>Brand<input id="cbrand" autocomplete="off"></label></div>'+
+  '<div class="pair"><label>Product<input id="cprod" autocomplete="off" placeholder="'+(OT?'Name of the item':SN?'Name of the snack':'Name of the drink')+'"></label><label>Brand<input id="cbrand" autocomplete="off"></label></div>'+
   '<div class="pair"><div><label>Type</label><div class="fmts" style="margin-top:7px">'+TY.map(x=>'<button data-act="ctype" data-v="'+x+'" class="'+(C2.type===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
   '<div><label>How many?</label><div style="display:flex;gap:10px;margin-top:7px;align-items:center"><input id="cqty" inputmode="numeric" autocomplete="off" style="width:90px" placeholder="0"><div class="fmts" style="display:flex;gap:8px;flex-wrap:nowrap">'+UN.map(x=>'<button data-act="cunit" data-v="'+x+'" class="'+(C2.unit===x?'on':'')+'">'+x+'</button>').join('')+'</div></div></div></div>'+
   '<div><button class="btn ghost" id="cadd" data-act="cadd" disabled>Add item</button></div>'+
@@ -1997,7 +1997,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r40';
+const BUILD='r41';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2140,7 +2140,7 @@ function shrink(file,max){
 }
 document.addEventListener('change',ev=>{ const t=ev.target; if(t&&(t.id==='csel'||t.id==='ksel')){ const c=t.id==='csel', o=t.value==='__o'; if(c){ S.cOther=o; S.csup=o?'':t.value; } else { S.kOther=o; S.ksup=o?'':t.value; } render(); } });
 document.addEventListener('change',async ev=>{
-  if(ev.target&&ev.target.id==='cphotoin'&&ev.target.files[0]){ S.csup=(document.getElementById('csup')||{}).value||S.csup; try{ S.iphoto=await shrink(ev.target.files[0],1600); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; render(); return; } cansAuto(); return; }
+  if(ev.target&&ev.target.id==='cphotoin'&&ev.target.files[0]){ S.csup=(document.getElementById('csup')||{}).value||S.csup; try{ S.iphoto=await shrink(ev.target.files[0],1600); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; render(); return; } if(S.cmode==='other'){ render(); return; } cansAuto(); return; }
   if(ev.target&&ev.target.id==='kphotoin'&&ev.target.files[0]){ try{ S.iphoto=await shrink(ev.target.files[0],1600); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; render(); return; } kegAuto(); return; }
   if(!ev.target||ev.target.id!=='iphotoin'||!ev.target.files[0]) return;
   try{ S.iphoto=await shrink(ev.target.files[0],1280); }catch(e){ S.err='Couldn\u2019t read that photo. Try again.'; }
@@ -2261,10 +2261,10 @@ document.addEventListener('click', async ev=>{
     if(t==='kegs'){ S.kv='taps'; S.ks=null; }
     if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqq=''; }
     if(t==='credit'){ S.crq=''; S.crsel=null; }
-    if(t==='rcans'||t==='rsnacks'){ S.cmode=t==='rsnacks'?'snacks':'cans'; S.cOther=false; S.cs=null; S.csup=''; S.iphoto=null; }
+    if(t==='rcans'||t==='rsnacks'||t==='rother'){ S.cmode=t==='rsnacks'?'snacks':t==='rother'?'other':'cans'; S.cOther=false; S.cs=null; S.csup=''; S.iphoto=null; }
     if(t==='rkeg'){ S.kOther=false; S.ksize='1/6'; S.iphoto=null; S.rk=[]; S.ksup=''; S.rkBusy=false; S.rkDone=null; }
     if(t==='labels'){ S.pqs=''; S.pprinted=false; }
-    if(t==='addrecord'){ S.adone=null; S.atype=null; S.alisted={}; S.aprint=true; S.acond=null; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',kegs:'kegs',rkeg:'rkeg',labels:'labels',note:'note',issue:'issue',find:'find',supplies:'supplies',drops:'drops',reqlist:'reqlist',credit:'credit',rstock:'rstock',rcans:'rcans',rsnacks:'rcans'}[t]); }
+    if(t==='addrecord'){ S.adone=null; S.atype=null; S.alisted={}; S.aprint=true; S.acond=null; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',kegs:'kegs',rkeg:'rkeg',labels:'labels',note:'note',issue:'issue',find:'find',supplies:'supplies',drops:'drops',reqlist:'reqlist',credit:'credit',rstock:'rstock',rcans:'rcans',rsnacks:'rcans',rother:'rcans'}[t]); }
   }
   else if(a==='go:trove'){}
   else if(a==='tseg'){ S.tseg=b.dataset.v; render(); }
@@ -2497,7 +2497,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='cadd'){ const q=parseInt(val('cqty'),10); if(!(val('cprod')&&q>0)) return; S.csup=val('csup'); S.cs.items.push({prod:val('cprod'),brand:val('cbrand'),type:S.cs.type,qty:q,unit:S.cs.unit}); render(); }
   else if(a==='crm'){ S.csup=val('csup'); S.cs.items.splice(+b.dataset.n,1); render(); }
   else if(a==='savecans'){ const sup=val('csup'), it=S.cs.items;
-    submit('stockrecv',(S.cmode==='snacks'?'Snacks':'Cans')+' received from '+sup+': '+it.map(x=>x.prod+' ('+x.qty+' '+x.unit.toLowerCase()+')').join(', '),{supplier:sup,items:it,photo:S.iphoto?S.iphoto.split(',')[1]:''},true).then(ok=>{ if(ok){ const n=it.length; S.cs=null; S.csup=''; S.iphoto=null; S.view='home'; render(); toast(n+' item'+(n===1?'':'s')+' logged ✓'); } }); }
+    submit('stockrecv',(S.cmode==='other'?'Other stock':S.cmode==='snacks'?'Snacks':'Cans')+' received from '+sup+': '+it.map(x=>x.prod+' ('+x.qty+' '+x.unit.toLowerCase()+')').join(', '),{supplier:sup,items:it,photo:S.iphoto?S.iphoto.split(',')[1]:''},true).then(ok=>{ if(ok){ const n=it.length; S.cs=null; S.csup=''; S.iphoto=null; S.view='home'; render(); toast(n+' item'+(n===1?'':'s')+' logged ✓'); } }); }
   else if(a==='kphoto'){ S.ksup=val('ksup'); document.getElementById('kphotoin').click(); }
   else if(a==='kadd'){ const pr=parseFloat(val('kprice')); if(!(val('kbeer')&&val('kbrew')&&pr>0)) return; S.ksup=val('ksup'); (S.rk=S.rk||[]).push({beer:val('kbeer'),brewery:val('kbrew'),city:val('kcity'),price:pr}); if(val('kcity')){ const m=LS.get(BCK,{}); m[val('kbrew').toLowerCase()]=val('kcity'); LS.set(BCK,m); } render(); }
   else if(a==='krm'){ S.ksup=val('ksup'); S.rk.splice(+b.dataset.n,1); render(); }
