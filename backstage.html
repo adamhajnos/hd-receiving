@@ -1723,7 +1723,7 @@ async function kegAuto(){
     S.rkBusy=false; S.rkDone={id,kegs:out,supplier:r.supplier,invoice:r.invoice}; render();
     api('log',{who:S.who,task:'kegrecv',summary:'Kegs received from '+(r.supplier||'invoice')+': '+out.map(k=>k.beer+(k.price?' ('+kfmt(k.price)+')':'')).join(', '),data:{supplier:r.supplier,invoice:r.invoice,kegs:out,photo:S.iphoto.split(',')[1],auto:true}}).then(refreshFeed).catch(()=>{});
   }catch(e){
-    S.rkBusy=false; S.err = e.message==='nosample' ? 'Invoice reading isn’t available here. Add the kegs by hand below.' : /not set up/.test(e.message) ? 'Invoice reading isn’t set up yet. Add the kegs by hand below.' : 'Couldn’t read that invoice. Add the kegs by hand below, or retake the photo.'; render();
+    S.rkBusy=false; S.err = e.message==='nosample' ? 'Invoice reading isn’t available here. Add the kegs by hand below.' : /not set up/.test(e.message) ? 'Invoice reading isn’t set up yet. Add the kegs by hand below.' : 'Couldn’t read that invoice ('+String(e.message||e).slice(0,80)+'). Add the kegs by hand below, or retake the photo.'; render();
   }
 }
 function keqHTML(cost){
@@ -1977,7 +1977,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r36';
+const BUILD='r37';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
