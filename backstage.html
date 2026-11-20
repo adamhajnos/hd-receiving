@@ -1696,10 +1696,15 @@ const POUR={div:20,plus:1,step:0.5}; /* from the Keg Tracker: sixtel / 20 + $1, 
 const SIZE={'1/6':1,'1/4':1.5,'1/2':3};
 function pourPrice(cost,size){ const f=SIZE[String(size||'1/6').replace(/\s*bbl.*/i,'').trim()]; if(!f||!(cost>0)) return null; const raw=cost/(POUR.div*f)+POUR.plus; return Math.floor(raw/POUR.step+0.5+1e-9)*POUR.step; }
 async function kegScan(){
+  const known = kegs().map(k=>k.beer+' | '+k.brewery).join('\n');
+  /* On the iPad: the shop's Apps Script reads the photo. Inside a Claude artifact preview: the built-in reader. */
+  if(!DEMO){
+    const j = await api('scaninvoice',{image:S.iphoto,known});
+    const r = j.result; if(!r||!Array.isArray(r.kegs)) throw new Error('bad'); return r;
+  }
   const sm = window.claude&&window.claude.use ? await window.claude.use('sample') : null;
   if(!sm) throw new Error('nosample');
   const blob = await (await fetch(S.iphoto)).blob();
-  const known = kegs().map(k=>k.beer+' | '+k.brewery).join('\n');
   const prompt='This is a photo of a beer distributor delivery invoice. Return ONLY JSON: {"supplier":string,"invoice":string,"kegs":[{"brewery":string,"beer":string,"size":string,"cost":number}]}. '+
    'Include only kegs being delivered: lines with a product and a price that are NOT crossed out or struck through. Exclude lines starting "Empty" (returned kegs), key deposits, deposits, totals. cost is the PRICE column, not the deposit. size like "1/6 bbl". '+
    'Product text looks like "Brewery-Beer Name 1/6 bbl" and may be cut off at the edge of the photo. If a name is cut off or abbreviated, use the matching entry from this known list (its exact beer and brewery spelling) when one clearly matches; otherwise give what is visible. Known beers (beer | brewery):\n'+known;
@@ -1718,7 +1723,7 @@ async function kegAuto(){
     S.rkBusy=false; S.rkDone={id,kegs:out,supplier:r.supplier,invoice:r.invoice}; render();
     api('log',{who:S.who,task:'kegrecv',summary:'Kegs received from '+(r.supplier||'invoice')+': '+out.map(k=>k.beer+(k.price?' ('+kfmt(k.price)+')':'')).join(', '),data:{supplier:r.supplier,invoice:r.invoice,kegs:out,photo:S.iphoto.split(',')[1],auto:true}}).then(refreshFeed).catch(()=>{});
   }catch(e){
-    S.rkBusy=false; S.err = e.message==='nosample' ? '' : 'Couldn’t read that invoice. Add the kegs by hand below, or retake the photo.'; render();
+    S.rkBusy=false; S.err = e.message==='nosample' ? 'Invoice reading isn’t available here. Add the kegs by hand below.' : /not set up/.test(e.message) ? 'Invoice reading isn’t set up yet. Add the kegs by hand below.' : 'Couldn’t read that invoice. Add the kegs by hand below, or retake the photo.'; render();
   }
 }
 function keqHTML(cost){
@@ -1972,7 +1977,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r35';
+const BUILD='r36';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{

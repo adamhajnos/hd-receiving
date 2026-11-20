@@ -51,12 +51,49 @@ function doPost(e) {
     else if (req.action === 'trove') out = { ok: true, items: troveItems_() };
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
     else if (req.action === 'log') { var res = logEntry_(req, who) || {}; out = { ok: true, code: res.code || '' }; }
+    else if (req.action === 'scaninvoice') out = { ok: true, result: scanInvoice_(req) };
     else if (req.action === 'trovedel') out = { ok: true, removed: deleteTrove_(req, who) };
     else throw new Error('Unknown action');
   } catch (err) {
     out = { ok: false, error: String(err.message || err) };
   }
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Reads a keg invoice photo with the Google Gemini API (free tier) and returns {supplier, invoice, kegs:[{brewery,beer,size,cost}]}.
+ * Script Property needed (Project Settings > Script properties): GEMINI_KEY (optional GEMINI_MODEL, default gemini-2.5-flash).
+ * Only a signed-in staff PIN reaches this. Capped at 40 scans a day.
+ */
+function scanInvoice_(req) {
+  var key = PropertiesService.getScriptProperties().getProperty('GEMINI_KEY');
+  if (!key) throw new Error('Invoice reading is not set up yet');
+  var img = String(req.image || '').replace(/^data:image\/\w+;base64,/, '');
+  if (!img || img.length > 6000000) throw new Error('Photo missing or too large');
+  var cache = CacheService.getScriptCache(), day = 'scans' + Utilities.formatDate(new Date(), 'America/New_York', 'yyyyMMdd');
+  var n = Number(cache.get(day) || 0);
+  if (n >= 40) throw new Error('Too many invoice scans today');
+  cache.put(day, String(n + 1), 86400);
+  var prompt = 'This is a photo of a beer distributor delivery invoice. Return ONLY JSON: {"supplier":string,"invoice":string,"kegs":[{"brewery":string,"beer":string,"size":string,"cost":number}]}. ' +
+    'Include only kegs being delivered: lines with a product and a price that are NOT crossed out or struck through. Exclude lines starting "Empty" (returned kegs), key deposits, deposits, totals. cost is the PRICE column, not the deposit. size like "1/6 bbl". ' +
+    'Product text looks like "Brewery-Beer Name 1/6 bbl" and may be cut off at the edge of the photo. If a name is cut off or abbreviated, use the matching entry from this known list (its exact beer and brewery spelling) when one clearly matches; otherwise give what is visible. Known beers (beer | brewery):\n' +
+    String(req.known || '').slice(0, 4000);
+  var props = PropertiesService.getScriptProperties();
+  var model = props.getProperty('GEMINI_MODEL') || 'gemini-2.5-flash';
+  var res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { 'x-goog-api-key': key },
+    payload: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: 'image/jpeg', data: img } }] }],
+      generationConfig: { responseMimeType: 'application/json', temperature: 0 }
+    })
+  });
+  if (res.getResponseCode() !== 200) throw new Error('Reader error ' + res.getResponseCode());
+  var cand = (JSON.parse(res.getContentText()).candidates || [])[0] || {};
+  var txt = ((cand.content || {}).parts || []).map(function (c) { return c.text || ''; }).join('');
+  var m = txt.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error('Could not read the invoice');
+  return JSON.parse(m[0]);
 }
 
 /** Returns the staff name for a PIN, or throws. Locks guessing after 8 misses in 5 minutes. */
