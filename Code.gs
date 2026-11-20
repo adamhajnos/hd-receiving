@@ -26,7 +26,8 @@ var TABS = {
   Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted'],
   UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
-  DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records']
+  DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records'],
+  SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #']
 };
 
 /** Run once from the editor to create the tabs. */
@@ -230,6 +231,7 @@ function logEntry_(req, who) {
     } else if (task === 'request') {
       requestEntry_(d, who, now, tz);
     } else if (task === 'receive') {
+      sqQueue_(ss, d.got, now);
       applyReceived_(ss, d.got);
       var pack = d.packing ? saveIssuePhoto_(String(d.packing), now, tz) : (d.noPacking ? 'None in box' : '');
       sheet_(ss, 'Receiving').appendRow([now, who, clean_(d.order), Number(d.expected) || 0, Number(d.scanned) || 0,
@@ -248,6 +250,7 @@ function logEntry_(req, who) {
   } finally {
     lock.releaseLock();
   }
+  if (task === 'receive') { try { squareSync(); } catch (e) { /* stays queued in SquareSync; the hourly retry picks it up */ } }
   if (d.autoEmail) sendAutoEmail_(d.autoEmail, task, who);
   return result;
 }
@@ -544,4 +547,93 @@ function learnUpc_(req, who) {
     sh.appendRow([a, b, clean_(who), new Date()]);
   } finally { lock.releaseLock(); }
   return true;
+}
+
+
+/* ---------- Square sync: received records go straight into the Square catalog + stock ----------
+ * Script Property needed: SQUARE_TOKEN (Square developer dashboard > your app > Production access token;
+ * needs ITEMS_READ, ITEMS_WRITE, INVENTORY_READ, INVENTORY_WRITE). Until it is set, receipts just wait in the SquareSync tab.
+ * Each scanned UPC: exists in Square -> add stock (un-archives it first if needed); new -> create the item, then add stock.
+ * Safe to re-run: every stock change carries a fixed idempotency key, so a retry can never double-count.
+ */
+var SQ = { loc: 'L7WFX5VKQEQ29', cat: 'MC5G6VGYDMHIDS3QHHTIDZ76', tax: 'UIFR5UKZEUSS566Z644HZN6D', ver: '2025-10-16' };
+
+/** Queue one row per scanned UPC (called inside the log lock, before applyReceived_ changes the counts). */
+function sqQueue_(ss, got, now) {
+  if (!got || typeof got !== 'object') return;
+  var ex = ss.getSheetByName('Expected'), info = {};
+  if (ex && ex.getLastRow() > 1) ex.getRange(2, 1, ex.getLastRow() - 1, 8).getValues().forEach(function (r) { if (r[4] && !info[String(r[4])]) info[String(r[4])] = r; });
+  var rows = [];
+  Object.keys(got).forEach(function (u) {
+    var n = Math.floor(Number(got[u]) || 0), r = info[String(u)];
+    if (n < 1 || !r) return;
+    rows.push([now, String(u), r[5], r[6], n, 'Pending', '', 'hd-recv-' + now.getTime() + '-' + u, Number(r[7]) || 0, String(r[3])]);
+  });
+  if (!rows.length) return;
+  var sh = sheet_(ss, 'SquareSync');
+  sh.getRange('B:B').setNumberFormat('@'); sh.getRange('J:J').setNumberFormat('@');
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+function sq_(method, path, body) {
+  var tok = PropertiesService.getScriptProperties().getProperty('SQUARE_TOKEN');
+  if (!tok) throw new Error('SQUARE_TOKEN not set');
+  var r = UrlFetchApp.fetch('https://connect.squareup.com' + path, { method: method, contentType: 'application/json', muteHttpExceptions: true,
+    headers: { Authorization: 'Bearer ' + tok, 'Square-Version': SQ.ver }, payload: body ? JSON.stringify(body) : undefined });
+  var j = JSON.parse(r.getContentText() || '{}');
+  if (r.getResponseCode() >= 300) throw new Error((j.errors || []).map(function (e) { return e.detail || e.code; }).join('; ') || ('HTTP ' + r.getResponseCode()));
+  return j;
+}
+
+/** Push every Pending/Error row to Square. Runs after each receipt and hourly (installSquareTrigger). */
+function squareSync() {
+  if (!PropertiesService.getScriptProperties().getProperty('SQUARE_TOKEN')) return;
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var sh = ss_().getSheetByName('SquareSync');
+    if (!sh || sh.getLastRow() < 2) return;
+    var rg = sh.getRange(2, 1, sh.getLastRow() - 1, 10), rows = rg.getValues();
+    var todo = rows.filter(function (r) { return r[5] !== 'Done'; });
+    if (!todo.length) return;
+    var upcs = todo.map(function (r) { return String(r[1]); }).filter(function (u, i, a) { return a.indexOf(u) === i; });
+    var found = {}, items = {};
+    for (var i = 0; i < upcs.length; i += 50) {
+      var res = sq_('post', '/v2/catalog/search', { object_types: ['ITEM_VARIATION'], include_related_objects: true,
+        query: { set_query: { attribute_name: 'upc', attribute_values: upcs.slice(i, i + 50) } } });
+      (res.objects || []).forEach(function (o) { found[o.item_variation_data.upc] = o; });
+      (res.related_objects || []).forEach(function (o) { if (o.type === 'ITEM') items[o.id] = o; });
+    }
+    rows.forEach(function (r) {
+      if (r[5] === 'Done') return;
+      try {
+        var u = String(r[1]), v = found[u];
+        if (!v) { v = sqCreate_(r); found[u] = v; r[6] = 'Created new item'; }
+        else {
+          var it = items[v.item_variation_data.item_id];
+          if (it && it.item_data.is_archived) { it.item_data.is_archived = false; sq_('post', '/v2/catalog/object', { idempotency_key: r[7] + '-un', object: it }); r[6] = 'Restored archived item'; }
+          else r[6] = 'Added stock';
+        }
+        sq_('post', '/v2/inventory/changes/batch-create', { idempotency_key: r[7], changes: [{ type: 'ADJUSTMENT', adjustment: {
+          catalog_object_id: v.id, from_state: 'NONE', to_state: 'IN_STOCK', location_id: SQ.loc, quantity: String(r[4]), occurred_at: new Date().toISOString() } }] });
+        r[5] = 'Done';
+      } catch (err) { r[5] = 'Error'; r[6] = String(err.message || err).slice(0, 200); }
+    });
+    rg.setValues(rows);
+  } finally { lock.releaseLock(); }
+}
+
+/** New catalog item in the house style: "Artist: Title", SKU = product #, price = MSRP rounded up + $1, New Records, taxed, Raleigh only. */
+function sqCreate_(r) {
+  var price = Math.round((Math.ceil(Number(r[8])) + 1) * 100);
+  if (!(price > 100)) throw new Error('No MSRP on the invoice line, so no price. Add the item in Square by hand.');
+  var res = sq_('post', '/v2/catalog/object', { idempotency_key: r[7] + '-new', object: { type: 'ITEM', id: '#i', present_at_all_locations: false, present_at_location_ids: [SQ.loc],
+    item_data: { name: String(r[2]) + ': ' + String(r[3]), tax_ids: [SQ.tax], categories: [{ id: SQ.cat }], variations: [{ type: 'ITEM_VARIATION', id: '#v', present_at_all_locations: false,
+      present_at_location_ids: [SQ.loc], item_variation_data: { item_id: '#i', name: '', sku: String(r[9]), upc: String(r[1]), pricing_type: 'FIXED_PRICING',
+        price_money: { amount: price, currency: 'USD' }, track_inventory: true } }] } } });
+  return res.catalog_object.item_data.variations[0];
+}
+
+function installSquareTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'squareSync') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('squareSync').timeBased().everyHours(1).create();
 }
