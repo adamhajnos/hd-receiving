@@ -23,11 +23,11 @@ var TABS = {
   Issues:   ['Timestamp', 'Who', 'Type', 'Details', 'Photo', 'Status'],
   Cash:     ['Timestamp', 'Who', 'Drawer count', 'Deposit', 'Note'],
   Records: ['Timestamp', 'Who', 'Type', 'Artist', 'Album', 'Genre', 'Format', 'Barcode', 'MSRP', 'Price', 'Status', 'Location', 'Listed on', 'Label queued', 'Notes'],
-  Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted'],
+  Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted', 'Unit cost'],
   UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
   DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records'],
-  SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #']
+  SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #', 'Unit cost']
 };
 
 /** Run once from the editor to create the tabs. */
@@ -476,7 +476,7 @@ function applyReceived_(ss, got) {
   if (changed) rg.setValues(rows);
 }
 
-/** Add invoice lines. Each: {inv, date:'yyyy-mm-dd', po, prod, upc, artist, title, list, qty}. Skips lines already there. */
+/** Add invoice lines. Each: {inv, date:'yyyy-mm-dd', po, prod, upc, artist, title, list, qty, cost (invoice unit cost)}. Skips lines already there. */
 function addExpected_(lines) {
   var ss = ss_(), sh = sheet_(ss, 'Expected');
   var have = {};
@@ -485,10 +485,10 @@ function addExpected_(lines) {
   sh.getRange('A:E').setNumberFormat('@'); // text, so leading zeros and dates survive
   lines.forEach(function (l) {
     if (have[l.inv + '|' + l.prod]) return;
-    rows.push([l.inv, l.date, l.po, l.prod, String(l.upc), l.artist, l.title, l.list, l.qty, Math.min(Number(l.got) || 0, l.qty), '']);
+    rows.push([l.inv, l.date, l.po, l.prod, String(l.upc), l.artist, l.title, l.list, l.qty, Math.min(Number(l.got) || 0, l.qty), '', Number(l.cost) || '']);
   });
   if (!rows.length) return 0;
-  sh.getRange(sh.getLastRow() + 1, 1, rows.length, 11).setValues(rows);
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, 12).setValues(rows);
   return rows.length;
 }
 
@@ -556,18 +556,18 @@ function learnUpc_(req, who) {
  * Each scanned UPC: exists in Square -> add stock (un-archives it first if needed); new -> create the item, then add stock.
  * Safe to re-run: every stock change carries a fixed idempotency key, so a retry can never double-count.
  */
-var SQ = { loc: 'L7WFX5VKQEQ29', cat: 'MC5G6VGYDMHIDS3QHHTIDZ76', tax: 'UIFR5UKZEUSS566Z644HZN6D', ver: '2025-10-16' };
+var SQ = { loc: 'L7WFX5VKQEQ29', cat: 'MC5G6VGYDMHIDS3QHHTIDZ76', tax: 'UIFR5UKZEUSS566Z644HZN6D', vendor: 'ZJSCSOCI6C2JMLMX', ver: '2025-10-16' };
 
 /** Queue one row per scanned UPC (called inside the log lock, before applyReceived_ changes the counts). */
 function sqQueue_(ss, got, now) {
   if (!got || typeof got !== 'object') return;
   var ex = ss.getSheetByName('Expected'), info = {};
-  if (ex && ex.getLastRow() > 1) ex.getRange(2, 1, ex.getLastRow() - 1, 8).getValues().forEach(function (r) { if (r[4] && !info[String(r[4])]) info[String(r[4])] = r; });
+  if (ex && ex.getLastRow() > 1) ex.getRange(2, 1, ex.getLastRow() - 1, 12).getValues().forEach(function (r) { if (r[4] && !info[String(r[4])]) info[String(r[4])] = r; });
   var rows = [];
   Object.keys(got).forEach(function (u) {
     var n = Math.floor(Number(got[u]) || 0), r = info[String(u)];
     if (n < 1 || !r) return;
-    rows.push([now, String(u), r[5], r[6], n, 'Pending', '', 'hd-recv-' + now.getTime() + '-' + u, Number(r[7]) || 0, String(r[3])]);
+    rows.push([now, String(u), r[5], r[6], n, 'Pending', '', 'hd-recv-' + now.getTime() + '-' + u, Number(r[7]) || 0, String(r[3]), Number(r[11]) || '']);
   });
   if (!rows.length) return;
   var sh = sheet_(ss, 'SquareSync');
@@ -592,7 +592,7 @@ function squareSync() {
   try {
     var sh = ss_().getSheetByName('SquareSync');
     if (!sh || sh.getLastRow() < 2) return;
-    var rg = sh.getRange(2, 1, sh.getLastRow() - 1, 10), rows = rg.getValues();
+    var rg = sh.getRange(2, 1, sh.getLastRow() - 1, 11), rows = rg.getValues();
     var todo = rows.filter(function (r) { return r[5] !== 'Done'; });
     if (!todo.length) return;
     var upcs = todo.map(function (r) { return String(r[1]); }).filter(function (u, i, a) { return a.indexOf(u) === i; });
@@ -607,7 +607,7 @@ function squareSync() {
       if (r[5] === 'Done') return;
       try {
         var u = String(r[1]), v = found[u];
-        if (!v) { v = sqCreate_(r); found[u] = v; r[6] = 'Created new item'; }
+        if (!v) { v = sqCreate_(r); found[u] = v; r[6] = v.noCost ? 'Created new item, NO COST (none on invoice line): add it in Square' : 'Created new item with cost'; }
         else {
           var it = items[v.item_variation_data.item_id];
           if (it && it.item_data.is_archived) { it.item_data.is_archived = false; sq_('post', '/v2/catalog/object', { idempotency_key: r[7] + '-un', object: it }); r[6] = 'Restored archived item'; }
@@ -630,10 +630,26 @@ function sqCreate_(r) {
     item_data: { name: String(r[2]) + ': ' + String(r[3]), tax_ids: [SQ.tax], categories: [{ id: SQ.cat }], variations: [{ type: 'ITEM_VARIATION', id: '#v', present_at_all_locations: false,
       present_at_location_ids: [SQ.loc], item_variation_data: { item_id: '#i', name: '', sku: String(r[9]), upc: String(r[1]), pricing_type: 'FIXED_PRICING',
         price_money: { amount: price, currency: 'USD' }, track_inventory: true } }] } } });
-  return res.catalog_object.item_data.variations[0];
+  var v = res.catalog_object.item_data.variations[0];
+  if (Number(r[10]) > 0) sq_('post', '/v2/catalog/object', { idempotency_key: r[7] + '-cost', object: { type: 'ITEM_VARIATION_VENDOR_INFO', id: '#c',
+    present_at_all_locations: false, present_at_location_ids: [SQ.loc], item_variation_vendor_info_data: { ordinal: 1,
+      price_money: { amount: Math.round(Number(r[10]) * 100), currency: 'USD' }, item_variation_id: v.id, vendor_id: SQ.vendor } } });
+  else v.noCost = true;
+  return v;
 }
 
 function installSquareTrigger() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'squareSync') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('squareSync').timeBased().everyHours(1).create();
+}
+
+/** One-time: fill Unit cost on the 4 lines already in Expected. Run once from the editor. */
+function backfillCosts() {
+  var cost = { 'DEDO383C1.1': 19.83, 'PKFL872027.1': 24.47, 'ISCB002333701.1': 26.41, 'MERNB002349201.1': 24.55 };
+  var sh = sheet_(ss_(), 'Expected');
+  sh.getRange(1, 12).setValue('Unit cost').setFontWeight('bold');
+  if (sh.getLastRow() < 2) return;
+  var rg = sh.getRange(2, 1, sh.getLastRow() - 1, 12), rows = rg.getValues();
+  rows.forEach(function (r) { if (!r[11] && cost[String(r[3])]) r[11] = cost[String(r[3])]; });
+  rg.setValues(rows);
 }
