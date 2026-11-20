@@ -2024,7 +2024,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r46';
+const BUILD='r47';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2300,6 +2300,9 @@ document.addEventListener('keydown',ev=>{
   if(/^\d$/.test(ev.key) && S.entry.length<4){ S.entry+=ev.key; S.err=''; render(); if(S.entry.length===4) tryLogin(); }
   else if(ev.key==='Backspace'){ S.entry=S.entry.slice(0,-1); render(); }
 });
+// Never fail silently: show any unexpected error on screen so a dead tap can be diagnosed.
+window.addEventListener('error',ev=>{ try{ toast('Error: '+String(ev.message||ev.error).slice(0,120)); }catch(e){} });
+window.addEventListener('unhandledrejection',ev=>{ try{ const r=ev.reason; toast('Error: '+String((r&&r.message)||r).slice(0,120)); }catch(e){} });
 document.addEventListener('click', async ev=>{
   const b=ev.target.closest('[data-act]'); if(!b) return;
   const a=b.dataset.act;
