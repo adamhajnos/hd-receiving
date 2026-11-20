@@ -232,6 +232,7 @@ function logEntry_(req, who) {
       requestEntry_(d, who, now, tz);
     } else if (task === 'receive') {
       try { sqQueue_(ss, d.got, now); } catch (e) { /* Square problems must never block a receipt */ }
+      try { sqQueueExtras_(ss, d.extras, now); } catch (e) { /* same: never block a receipt */ }
       applyReceived_(ss, d.got);
       var pack = d.packing ? saveIssuePhoto_(String(d.packing), now, tz) : (d.noPacking ? 'None in box' : '');
       sheet_(ss, 'Receiving').appendRow([now, who, clean_(d.order), Number(d.expected) || 0, Number(d.scanned) || 0,
@@ -568,6 +569,23 @@ function sqQueue_(ss, got, now) {
     var n = Math.floor(Number(got[u]) || 0), r = info[String(u)];
     if (n < 1 || !r) return;
     rows.push([now, String(u), r[5], r[6], n, 'Pending', '', 'hd-recv-' + now.getTime() + '-' + u, Number(r[7]) || 0, String(r[3]), Number(r[11]) || '']);
+  });
+  if (!rows.length) return;
+  var sh = ss.getSheetByName('SquareSync');
+  if (!sh) { sh = ss.insertSheet('SquareSync'); sh.getRange(1, 1, 1, TABS.SquareSync.length).setValues([TABS.SquareSync]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  sh.getRange('B:B').setNumberFormat('@'); sh.getRange('J:J').setNumberFormat('@');
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+/** Records scanned that were on no invoice (staff added artist/title/price): queue them for Square like any other receipt. SKU = the barcode. */
+function sqQueueExtras_(ss, extras, now) {
+  if (!extras || !extras.length) return;
+  var rows = [];
+  extras.forEach(function (e) {
+    var u = String(e.upc || '').replace(/\D/g, ''), n = Math.floor(Number(e.qty) || 1), price = Math.round(Number(e.price) || 0);
+    if (!u || price < 1) return;
+    // The sync prices as ceil(MSRP)+1, so store price-1 to land on exactly the price staff typed.
+    rows.push([now, u, clean_(e.artist), clean_(e.title), n, 'Pending', '', 'hd-recv-' + now.getTime() + '-x-' + u, price - 1, u, '']);
   });
   if (!rows.length) return;
   var sh = ss.getSheetByName('SquareSync');
