@@ -251,6 +251,7 @@ function logEntry_(req, who) {
   } finally {
     lock.releaseLock();
   }
+  if (clean_(d.type) === 'Trove') { try { troveSquareSync_(false); } catch (e) { /* the TroveSync tab shows what is pending; re-run troveSquareRun */ } }
   if (task === 'receive') { try { squareSync(); } catch (e) { /* stays queued in SquareSync; the hourly retry picks it up */ } }
   if (d.autoEmail) sendAutoEmail_(d.autoEmail, task, who);
   return result;
@@ -655,6 +656,63 @@ function sqCreate_(r) {
       price_money: { amount: Math.round(Number(r[10]) * 100), currency: 'USD' }, item_variation_id: v.id, vendor_id: SQ.vendor } } });
   else v.noCost = true;
   return v;
+}
+
+/* ---------- Trove -> Square ----------
+ * Every Trove record (Trove tab) becomes its own Square item: name "Artist: Title", SKU = its TT code, price = the Trove price, stock 1, category Treasure Trove.
+ * Step 1: run troveSquarePreview() - lists what it WOULD create in the "TroveSync" tab (status Planned). Nothing is sent to Square.
+ * Step 2: after approval, run troveSquareRun() - creates the Planned rows (safe to re-run; skips codes already in Square; picks up where it stopped).
+ * New Trove records added in the app sync automatically. Sold records are skipped.
+ */
+var TS = { cat: 'RFY4M6FBLOC2W3ZJKAIN5AK7', head: ['Code', 'Artist', 'Title', 'Price', 'Trove status', 'Sync status', 'Square item', 'Note'] };
+
+function troveSquarePreview() { troveSquareSync_(true); }
+function troveSquareRun() { troveSquareSync_(false); }
+
+function troveSquareSync_(preview) {
+  if (!preview && !PropertiesService.getScriptProperties().getProperty('SQUARE_TOKEN')) throw new Error('SQUARE_TOKEN not set');
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var ss = ss_(), tr = ss.getSheetByName('Trove');
+    if (!tr || tr.getLastRow() < 2) return;
+    var tab = ss.getSheetByName('TroveSync');
+    if (!tab) { tab = ss.insertSheet('TroveSync'); tab.getRange(1, 1, 1, TS.head.length).setValues([TS.head]).setFontWeight('bold'); tab.setFrozenRows(1); }
+    tab.getRange('A:A').setNumberFormat('@');
+    var have = {};
+    if (tab.getLastRow() > 1) tab.getRange(2, 1, tab.getLastRow() - 1, 1).getValues().forEach(function (r) { have[String(r[0])] = true; });
+    var add = [];
+    tr.getRange(2, 1, tr.getLastRow() - 1, 9).getValues().forEach(function (r) {
+      var code = String(r[5] || '').trim();
+      if (!code || !(r[0] || r[1]) || have[code]) return;
+      var st = String(r[7] || 'Active'), price = Number(r[3]) || 0, sold = /sold/i.test(st);
+      add.push([code, String(r[0]), String(r[1]), price || '', st, sold ? 'Skipped' : (price > 0 ? 'Planned' : 'Skipped'), '', sold ? 'Sold' : (price > 0 ? '' : 'No price')]);
+    });
+    if (add.length) tab.getRange(tab.getLastRow() + 1, 1, add.length, TS.head.length).setValues(add);
+    if (preview) return;
+    var rg = tab.getRange(2, 1, tab.getLastRow() - 1, TS.head.length), rows = rg.getValues(), t0 = Date.now();
+    var todo = rows.filter(function (r) { return r[5] === 'Planned' || r[5] === 'Error'; });
+    var found = {}, codes = todo.map(function (r) { return String(r[0]); });
+    for (var i = 0; i < codes.length; i += 50) {
+      var res = sq_('post', '/v2/catalog/search', { object_types: ['ITEM_VARIATION'], query: { set_query: { attribute_name: 'sku', attribute_values: codes.slice(i, i + 50) } } });
+      (res.objects || []).forEach(function (o) { found[o.item_variation_data.sku] = o; });
+    }
+    todo.forEach(function (r) {
+      if (Date.now() - t0 > 5 * 60 * 1000) return; // out of time: re-run to continue
+      var code = String(r[0]);
+      try {
+        if (found[code]) { r[5] = 'Done'; r[6] = found[code].item_variation_data.item_id; r[7] = 'Already in Square'; return; }
+        var res = sq_('post', '/v2/catalog/object', { idempotency_key: 'hd-trove-' + code, object: { type: 'ITEM', id: '#i', present_at_all_locations: false, present_at_location_ids: [SQ.loc],
+          item_data: { name: String(r[1]) + ': ' + String(r[2]), tax_ids: [SQ.tax], categories: [{ id: TS.cat }], variations: [{ type: 'ITEM_VARIATION', id: '#v', present_at_all_locations: false,
+            present_at_location_ids: [SQ.loc], item_variation_data: { item_id: '#i', name: '', sku: code, pricing_type: 'FIXED_PRICING',
+              price_money: { amount: Math.round(Number(r[3]) * 100), currency: 'USD' }, track_inventory: true } }] } } });
+        var v = res.catalog_object.item_data.variations[0];
+        sq_('post', '/v2/inventory/changes/batch-create', { idempotency_key: 'hd-trove-' + code + '-stock', changes: [{ type: 'ADJUSTMENT', adjustment: {
+          catalog_object_id: v.id, from_state: 'NONE', to_state: 'IN_STOCK', location_id: SQ.loc, quantity: '1', occurred_at: new Date().toISOString() } }] });
+        r[5] = 'Done'; r[6] = res.catalog_object.id; r[7] = '';
+      } catch (err) { r[5] = 'Error'; r[7] = String(err.message || err).slice(0, 200); }
+    });
+    rg.setValues(rows);
+  } finally { lock.releaseLock(); }
 }
 
 function installSquareTrigger() {
