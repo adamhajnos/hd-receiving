@@ -1073,17 +1073,9 @@ function reqEmail(name,items){
 }
 
 /* ---------- customer request list ---------- */
-const REQK='hd.reqs';
+const REQK='hd.reqs2'; /* reqs2 = fresh start Nov 21: demo requests removed, list starts empty */
 
-function reqs(){ let L=LS.get(REQK,null); if(!L){ const t=n=>new Date(Date.now()-n*36e5).toISOString();
-  const m=(id,ts,sts,name,phone,email,artist,album,format,status,hist)=>({id,ts:t(ts),sts:t(sts),who:'Adam',name,phone,email,artist,album,format,notes:'',status,hist:hist||[]});
-  L=[m('q1',6,6,'Alex Moreno','(919) 555-0140','','Khruangbin','Mordechai','Vinyl','Requested'),
-     m('q2',90,70,'Rae Collins','(984) 555-0119','rae@example.com','Sade','Love Deluxe','Vinyl','Requested',[]),
-     m('q3',200,180,'Theo Park','(919) 555-0188','','Radiohead','OK Computer','Vinyl','Ordered',['Requested']),
-     m('q4',300,250,'Jules Baker','(984) 555-0162','jules@example.com','Mac DeMarco','Salad Days','Cassette','Out of stock',['Requested','Ordered']),
-     m('q5',150,5,'Nina Alvarez','(919) 555-0107','','Fleetwood Mac','Rumours','Vinyl','In shop',['Requested','Ordered']),
-     m('q6',260,40,'Owen Reid','(919) 555-0133','owen@example.com','Tame Impala','Currents','Vinyl','Contacted',['Requested','Ordered','In shop']),
-     m('q7',500,300,'Grace Kim','(984) 555-0146','','Stevie Wonder','Innervisions','Vinyl','Picked up',['Requested','Ordered','In shop','Contacted'])]; LS.set(REQK,L); } return L; }
+function reqs(){ let L=LS.get(REQK,null); if(!L){ L=[]; LS.set(REQK,L); } return L; }
 function rqSave(L){ LS.set(REQK,L); }
 const RQLATE={'Requested':2,'Ordered':10,'Out of stock':14,'In shop':1,'Contacted':7};
 function rqExp(x){ return x.status==='Contacted'&&x.holdUntil&&Date.now()>new Date(x.holdUntil).getTime(); }
@@ -1328,7 +1320,7 @@ function uNextCode(){ let n=LS.get(USEQ,3); sqItems().forEach(i=>i.vars.forEach(
 /* ---------- supplies ---------- */
 // Seeded from the shop's "General Store Restock" sheet (Raleigh tab). [name, state, count unit, reorder level, start count]
 // state: 0 = stocked, 1 = low, 2 = out. Items with a unit are counted; the rest are one-tap restock requests.
-const SUPK='hd.sup8'; /* sup8 = fresh start Nov 20: nothing flagged, every count at 0 */
+const SUPK='hd.sup9'; /* sup9 = fresh start Nov 21: nothing flagged, every count at 0 */
 const SUPCATS=['General','Register','Player','Bathroom','Bar','Cleaning','Records','Shipping'];
 const SUPDEF={
   General:[['Clear tape'],['Blue tape'],['Sticky notes',1],['Black markers'],['Pens'],['Chalk markers'],['Paper clips',2]],
