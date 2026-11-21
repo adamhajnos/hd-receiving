@@ -2031,14 +2031,14 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r56';
+const BUILD='r57';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
     const ac=new AbortController(), t=setTimeout(()=>ac.abort(),4000);
     const r=await fetch('status.json?t='+Date.now(),{cache:'no-store',signal:ac.signal}); clearTimeout(t);
     if(!r.ok) return;
-    const j=await r.json(); if(j.v&&j.v!==BUILD&&!/[?&]v=/.test(location.search)){ location.replace(location.pathname+'?v='+encodeURIComponent(j.v)); return; } const p=!!j.paused, m=String(j.message||'');
+    const j=await r.json(); const cur=(location.search.match(/[?&]v=([^&]+)/)||[])[1]; if(j.v&&j.v!==BUILD&&decodeURIComponent(cur||'')!==j.v){ location.replace(location.pathname+'?v='+encodeURIComponent(j.v)); return; } const p=!!j.paused, m=String(j.message||'');
     LS.set('hd.paused',p); LS.set('hd.pmsg',m);
     if(p!==S.paused||m!==S.pmsg){ S.paused=p; S.pmsg=m; render(); }
   }catch(e){}
