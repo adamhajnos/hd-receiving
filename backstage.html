@@ -2399,12 +2399,12 @@ document.addEventListener('click', async ev=>{
     submit('cash','Cash count logged',{drawer:val('drawer'),deposit:val('deposit'),note:val('note')});
   }
   else if(a==='scnt'){ const L=sups(), x=L[+b.dataset.i], was=supLow(x); x.c=Math.max(0,x.c+(+b.dataset.d)); supSave(L); render();
-    if(!was&&supLow(x)){ submit('supplies','Low: '+x.n+' ('+x.c+' '+(x.u||'left')+'). Low stock alert emailed to Adam and Bell.',{item:x.n,count:x.c,reorderAt:x.m},true); } }
+    if(!was&&supLow(x)){ submit('supplies','Low: '+x.n+' ('+x.c+' '+(x.u||'left')+'). Included in the evening supplies email.',{item:x.n,count:x.c,reorderAt:x.m},true); } }
   else if(a==='sden'){ const v=b.dataset.v, A=S.sden.sel, k=A.indexOf(v); if(k<0) A.push(v); else A.splice(k,1); const O=SUPOPT[sups()[S.sden.i].n]; A.sort((x,y)=>O.indexOf(x)-O.indexOf(y)); render(); }
   else if(a==='sdcancel'){ S.sden=null; render(); }
-  else if(a==='sdsend'){ const L=sups(), x=L[S.sden.i]; x.r=true; x.need=S.sden.sel.slice(); S.sden=null; supSave(L); render(); submit('supplies','Restock requested: '+x.n+' ('+x.need.join(', ')+'). Emailed to Adam and Bell.',{item:x.n,request:true,need:x.need},true); }
+  else if(a==='sdsend'){ const L=sups(), x=L[S.sden.i]; x.r=true; x.need=S.sden.sel.slice(); S.sden=null; supSave(L); render(); submit('supplies','Restock requested: '+x.n+' ('+x.need.join(', ')+'). Included in the evening supplies email.',{item:x.n,request:true,need:x.need},true); }
   else if(a==='sreq'){ const L=sups(), x=L[+b.dataset.i]; if(supD(x)&&!x.r){ S.sden={i:+b.dataset.i,sel:[]}; render(); return; } x.r=!x.r; if(!x.r) x.need=null; supSave(L); render();
-    if(x.r) submit('supplies','Restock requested: '+x.n+'. Emailed to Adam and Bell.',{item:x.n,request:true},true); }
+    if(x.r) submit('supplies','Restock requested: '+x.n+'. Included in the evening supplies email.',{item:x.n,request:true},true); else submit('supplies','Restock cancelled: '+x.n,{item:x.n,cancelled:true},true); }
   else if(a==='smin'){ const L=sups(), x=L[+b.dataset.i]; x.m=Math.max(0,x.m+(+b.dataset.d)); supSave(L); render(); }
   else if(a==='scat'){ S.scat=b.dataset.v; render(); }
   else if(a==='sadd'){ const e=document.getElementById('snew'), n=(e&&e.value||'').trim(); if(!n) return; const L=sups(); if(L.some(x=>x.n.toLowerCase()===n.toLowerCase())){ toast('Already on the list'); return; } const nm=n.charAt(0).toUpperCase()+n.slice(1), k=(document.getElementById('snewc')||{}).value||'General'; L.push(b.dataset.t==='c'?{n:nm,k,t:'c',c:0,m:1,u:''}:{n:nm,k,t:'r',r:false}); supSave(L); render(); }

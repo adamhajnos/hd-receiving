@@ -530,6 +530,48 @@ function installOverdueTrigger() {
   ScriptApp.newTrigger('checkOverdue').timeBased().everyDays(1).atHour(8).create();
 }
 
+/**
+ * End-of-day supplies email. Reads today's "supplies" lines from the Log (restock requests and low-count alerts),
+ * keeps the latest state per item (a cancelled request drops off), and sends ONE email only if something is open.
+ * Recipients: Script Property SUPPLY_TO (comma separated), else OVERDUE_TO, else SHOP_EMAIL.
+ */
+function sendSupplyDigest() {
+  var props = PropertiesService.getScriptProperties();
+  var to = props.getProperty('SUPPLY_TO') || props.getProperty('OVERDUE_TO') || props.getProperty('SHOP_EMAIL') || '';
+  if (!to) return;
+  var ss = ss_(), tz = ss.getSpreadsheetTimeZone();
+  var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  var sh = sheet_(ss, 'Log'), last = sh.getLastRow();
+  if (last < 2) return;
+  var from = Math.max(2, last - 499);
+  var rows = sh.getRange(from, 1, last - from + 1, 6).getValues();
+  var items = {}, order = [];
+  rows.forEach(function (r) {
+    var rd = r[1] instanceof Date ? Utilities.formatDate(r[1], tz, 'yyyy-MM-dd') : String(r[1]);
+    if (rd !== today || r[3] !== 'supplies') return;
+    var d = {};
+    try { d = JSON.parse(r[5] || '{}'); } catch (e) { return; }
+    var name = clean_(d.item);
+    if (!name) return;
+    if (order.indexOf(name) < 0) order.push(name);
+    if (d.cancelled) { items[name] = null; return; }
+    items[name] = d.request
+      ? 'restock requested' + (d.need && d.need.length ? ' (' + d.need.join(', ') + ')' : '')
+      : 'running low (' + d.count + ' left, reorder at ' + d.reorderAt + ')';
+  });
+  var lines = order.filter(function (n) { return items[n]; }).map(function (n) { return '- ' + n + ': ' + items[n]; });
+  if (!lines.length) return;
+  var body = 'Supplies flagged at Hunky Dory Raleigh today:\n\n' + lines.join('\n') +
+    '\n\nThe full list is under Supplies in HD Backstage (To reorder tab).';
+  MailApp.sendEmail(to, 'Hunky Dory Raleigh: supplies to reorder (' + lines.length + ')', body, { name: 'Hunky Dory Records' });
+}
+
+/** Run once from the editor: sends the supplies email every evening around 9. */
+function installSupplyDigestTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'sendSupplyDigest') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('sendSupplyDigest').timeBased().everyDays(1).atHour(21).create();
+}
+
 function dstr_(v) { return v instanceof Date ? Utilities.formatDate(v, 'UTC', 'yyyy-MM-dd') : String(v); }
 
 /** Barcodes staff matched by hand (or Discogs matched): scanned code -> the UPC on the invoice. Shared by every iPad. */
