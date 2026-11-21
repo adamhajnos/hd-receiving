@@ -568,8 +568,15 @@ function sendSupplyDigest() {
 
 /** Run once from the editor: sends the supplies email every evening around 9. */
 function installSupplyDigestTrigger() {
+  setSupplyRecipients();
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'sendSupplyDigest') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('sendSupplyDigest').timeBased().everyDays(1).atHour(21).create();
+}
+
+/** Who gets the evening supplies email (also run by installSupplyDigestTrigger). */
+function setSupplyRecipients() {
+  PropertiesService.getScriptProperties().setProperty('SUPPLY_TO', 'forrest@hunkydoryvinyl.com,hunkydoryraleigh@gmail.com');
+  Logger.log(PropertiesService.getScriptProperties().getProperty('SUPPLY_TO'));
 }
 
 function dstr_(v) { return v instanceof Date ? Utilities.formatDate(v, 'UTC', 'yyyy-MM-dd') : String(v); }
