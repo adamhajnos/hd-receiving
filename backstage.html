@@ -218,7 +218,18 @@ div.tile.done{cursor:default}
 .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;max-width:720px}
 .bar i{display:block;height:100%;background:var(--ok);transition:width .2s}
 .toast{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ok);color:#fff;font-weight:800;padding:16px 28px;border-radius:14px;z-index:10}
-@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+.tload{display:flex;align-items:center;gap:18px;margin:14px 0;padding:22px 24px;border-radius:16px;border:2px solid var(--accent);background:var(--panel);font:700 28px var(--display,inherit)}
+.tload.slim{padding:14px 20px;font-size:21px;margin:10px 0}
+.tload .spin{flex:none;width:44px;height:44px;border-radius:50%;border:6px solid var(--line);border-top-color:var(--accent);animation:tspin .8s linear infinite}
+.tload.slim .spin{width:28px;height:28px;border-width:4px}
+.tload span.sub{display:block;font:400 19px var(--body,inherit);opacity:.75;margin-top:2px}
+@keyframes tspin{to{transform:rotate(360deg)}}
+@keyframes tpulse{0%,100%{opacity:1}50%{opacity:.45}}
+.tload b{animation:tpulse 1.4s ease-in-out infinite}
+.trow.ro.drag{z-index:6;background:#fff;border-color:var(--accent);box-shadow:0 14px 30px rgba(20,17,13,.35);transform-origin:center}
+.trow.ro.drag .grip{cursor:grabbing;background:var(--accent);color:#fff}
+.trow.ro.flip{will-change:transform}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}.tload .spin,.tload b{animation-duration:2s}}
 .radded{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:12px;background:rgba(20,17,13,.06);font-size:18px}.radded .btn{min-height:40px;padding:0 16px;font-size:15px}
 .plwrap{display:grid;grid-template-columns:1fr 430px;gap:22px;align-items:start}.plleft,.plright{min-width:0}
 .plh{display:flex;align-items:center;gap:12px;margin:0 0 8px}.plh b{font-size:24px}.plh .o{color:var(--muted);font-size:17px}
@@ -860,7 +871,7 @@ function troveListHTML(){
   const q=S.tq.trim().toLowerCase();
   let L=S.troveList.filter(i=>!q||(i.artist+' '+i.title+' '+i.location).toLowerCase().includes(q));
   if(S.tonly) L=L.filter(i=>!S.tfound[tkey(i)]);
-  if(!L.length) return '<p class="hint" style="margin-top:20px">'+(S.tload?'Loading\u2026':'Nothing here.')+'</p>';
+  if(!L.length) return S.tload?'<div class="tload"><span class="spin"></span><div><b>Loading the Trove\u2026</b><span class="sub">Pulling the latest list. One moment.</span></div></div>':'<p class="hint" style="margin-top:20px">Nothing here.</p>';
   let out='', loc=null;
   L.forEach(i=>{
     if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span></div>'; }
@@ -925,11 +936,11 @@ function tbrowseFiltered(){
 }
 function tbrowseListHTML(){
   const q=(S.tbq||'').trim(), L=tbrowseFiltered();
-  if(!L.length) return '<p class="hint" style="margin-top:20px">'+(S.tload?'Loading\u2026':'Nothing found.')+'</p>';
+  if(!L.length) return S.tload?'<div class="tload"><span class="spin"></span><div><b>Loading the Trove\u2026</b><span class="sub">Pulling the latest list. One moment.</span></div></div>':'<p class="hint" style="margin-top:20px">Nothing found.</p>';
   const cnt={}; L.forEach(i=>cnt[i.location]=(cnt[i.location]||0)+1);
   const canDrag=S.tseg!=='back'&&!q.length;
   const left=L.filter(i=>!pqCount(i)).length;
-  let out='<div class="pqall"><button class="btn ghost" data-act="tpqall"'+(left?'':' disabled')+'>'+(left?'Add all '+(q?'these ':'')+left+' to print queue':'\u2713 All in print queue')+'</button></div>', loc=null;
+  let out=(S.tload?'<div class="tload slim"><span class="spin"></span><b>Updating the list\u2026</b></div>':'')+'<div class="pqall"><button class="btn ghost" data-act="tpqall"'+(left?'':' disabled')+'>'+(left?'Add all '+(q?'these ':'')+left+' to print queue':'\u2713 All in print queue')+'</button></div>', loc=null;
   L.forEach(i=>{
     if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span><span class="n">'+cnt[loc]+' records</span></div>'; }
     out+='<div class="trow ro" data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span>'+pqBtn(i)+(i.code?'<button class="tmore" data-act="tsw" aria-label="More">\u22ef</button>':'')+(i.code?'<button class="tdelb" data-act="tdel" data-code="'+esc(i.code)+'">Delete</button>':'')+'</div>';
@@ -2031,7 +2042,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r57';
+const BUILD='r58';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2252,21 +2263,38 @@ document.addEventListener('pointerup',kdEnd); document.addEventListener('pointer
 let _drag=null;
 document.addEventListener('pointerdown',ev=>{
   const g=ev.target.closest&&ev.target.closest('.trow.ro .grip'); if(!g) return;
-  ev.preventDefault(); const row=g.closest('.trow'); g.setPointerCapture(ev.pointerId); row.classList.add('drag'); _drag={row,g};
+  ev.preventDefault(); const row=g.closest('.trow'); g.setPointerCapture(ev.pointerId);
+  const r=row.getBoundingClientRect(); row.style.transition='transform .16s ease, box-shadow .16s ease'; row.classList.add('drag'); row.style.transform='scale(1.02)';
+  _drag={row,g,off:ev.clientY-r.top,y:ev.clientY};
 });
+function dragFollow(){
+  if(!_drag) return; const {row,off,y}=_drag; row.style.transition='none';
+  row.style.transform='none'; const nat=row.getBoundingClientRect().top;
+  row.style.transform='translateY('+(y-off-nat)+'px) scale(1.02)';
+}
 document.addEventListener('pointermove',ev=>{
-  if(!_drag) return; const {row}=_drag, y=ev.clientY, sc=document.getElementById('scroll'), r=sc.getBoundingClientRect();
+  if(!_drag) return; const {row}=_drag, y=ev.clientY, sc=document.getElementById('scroll'), r=sc.getBoundingClientRect(); _drag.y=y;
   if(y<r.top+110) sc.scrollTop-=14; else if(y>r.bottom-90) sc.scrollTop+=14;
   const sibs=[...row.parentNode.querySelectorAll('.trow.ro')].filter(x=>x!==row&&x.dataset.loc===row.dataset.loc);
-  if(!sibs.length) return;
-  const target=sibs.find(x=>{ const b=x.getBoundingClientRect(); return y<b.top+b.height/2; });
-  if(target){ if(row.nextSibling!==target) target.parentNode.insertBefore(row,target); }
-  else { const last=sibs[sibs.length-1]; if(last.nextSibling!==row) last.parentNode.insertBefore(row,last.nextSibling); }
+  if(!sibs.length){ dragFollow(); return; }
+  const cy=y-_drag.off+row.getBoundingClientRect().height/2;
+  const target=sibs.find(x=>{ const b=x.getBoundingClientRect(); return cy<b.top+b.height/2; });
+  const before=new Map(sibs.map(x=>[x,x.getBoundingClientRect().top]));
+  let moved=false;
+  if(target){ if(row.nextSibling!==target){ target.parentNode.insertBefore(row,target); moved=true; } }
+  else { const last=sibs[sibs.length-1]; if(last.nextSibling!==row){ last.parentNode.insertBefore(row,last.nextSibling); moved=true; } }
+  if(moved){
+    sibs.forEach(x=>{ const d=before.get(x)-x.getBoundingClientRect().top; if(Math.abs(d)<1) return;
+      x.style.transition='none'; x.style.transform='translateY('+d+'px)'; x.getBoundingClientRect();
+      x.style.transition='transform .22s cubic-bezier(.2,.8,.2,1)'; x.style.transform=''; });
+  }
+  dragFollow();
 });
 function dragEnd(){
-  if(!_drag) return; const row=_drag.row; row.classList.remove('drag'); _drag=null;
+  if(!_drag) return; const row=_drag.row; _drag=null;
+  row.style.transition='transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease'; row.style.transform='none'; row.classList.remove('drag');
   const codes=[...document.querySelectorAll('#tblist .trow.ro')].map(x=>x.dataset.code);
-  LS.set(ORDKEY,codes); setTrove(S.troveList); const sc=document.getElementById('scroll'), st=sc?sc.scrollTop:0; render(); const s2=document.getElementById('scroll'); if(s2) s2.scrollTop=st;
+  setTimeout(()=>{ LS.set(ORDKEY,codes); setTrove(S.troveList); const sc=document.getElementById('scroll'), st=sc?sc.scrollTop:0; render(); const s2=document.getElementById('scroll'); if(s2) s2.scrollTop=st; },230);
 }
 document.addEventListener('pointerup',dragEnd); document.addEventListener('pointercancel',dragEnd);
 let _sw=null;
