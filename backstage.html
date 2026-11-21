@@ -1177,7 +1177,7 @@ function vAddRec(){
   }
   const L=S.alast||{}, sel=(arr,cur,ph)=>(ph?'<option value="">'+ph+'</option>':'')+arr.map(x=>'<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>').join('');
   const fmt='<label>Format<select id="aformat">'+(t==='CD'?sel(['CD'],'CD'):sel(['Vinyl','Tape','CD','45'],L.format))+'</select></label>';
-  let body=(t==='Trove'?'<div><label>Find the album</label><input id="tdq" class="pqs" placeholder="Scan the UPC, or type artist and album" autocomplete="off" autocapitalize="off" value="'+esc((S.td||{}).q||'')+'"><div id="tdlist">'+tdListHTML()+'</div></div>':'')+'<div class="pair"><label>Artist<input id="aartist" autocomplete="off" value="'+esc((S.td||{}).artist||'')+'"></label><label>Album<input id="aalbum" autocomplete="off" value="'+esc((S.td||{}).album||'')+'"></label></div>'+
+  let body=((t==='Trove'||t==='CD')?'<div><label>Find the album</label><input id="tdq" class="pqs" placeholder="Scan the UPC, or type artist and album" autocomplete="off" autocapitalize="off" value="'+esc((S.td||{}).q||'')+'"><div id="tdlist">'+tdListHTML()+'</div></div>':'')+'<div class="pair"><label>Artist<input id="aartist" autocomplete="off" value="'+esc((S.td||{}).artist||'')+'"></label><label>Album<input id="aalbum" autocomplete="off" value="'+esc((S.td||{}).album||'')+'"></label></div>'+
     '<div class="pair"><label>Genre<select id="agenre">'+sel(C.GENRES,(S.td&&S.td.genre)||L.genre,'Choose a genre')+'</select></label>'+fmt+'</div>';
   if(t==='Used'||t==='CD'){
     const CO=['Mint','NM','VG+','VG','G'];
@@ -1231,7 +1231,7 @@ function tdSearchSoon(){ clearTimeout(_tdt); const q=(S.td.q||'').trim(); _tdid+
 async function tdSearch(q){
   const my=++_tdid, bar=/^\d{8,14}$/.test(q);
   try{
-    const j=bar?await dget('database/search?type=release&per_page=6&barcode='+q):await dget('database/search?type=master&per_page=40&q='+encodeURIComponent(q));
+    const j=bar?await dget('database/search?type=release&per_page=6&barcode='+q+(S.atype==='CD'?'&format=CD':'')):await dget('database/search?type=master&per_page=40&q='+encodeURIComponent(q));
     if(my!==_tdid) return;
     const seen={}, out=[];
     (j.results||[]).forEach(x=>{ const n=usplit(x.title), r={mid:bar?(x.master_id||0):x.id,rid:bar?x.id:0,artist:n.artist,album:n.album,year:x.year||'',thumb:(x.cover_image&&!/spacer/.test(x.cover_image))?x.cover_image:(x.thumb||''),genre:ugenre(x.genre)}, k=ukey(r.artist,r.album); if(!n.artist||seen[k]) return; seen[k]=1; out.push(r); });
@@ -2042,7 +2042,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r60';
+const BUILD='r61';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2360,7 +2360,7 @@ document.addEventListener('click', async ev=>{
     if(t==='rcans'||t==='rsnacks'||t==='rother'){ S.cmode=t==='rsnacks'?'snacks':t==='rother'?'other':'cans'; S.cOther=false; S.cs=null; S.csup=''; S.iphoto=null; }
     if(t==='rkeg'){ S.kOther=false; S.ksize='1/6'; S.iphoto=null; S.rk=[]; S.ksup=''; S.rkBusy=false; S.rkDone=null; }
     if(t==='labels'){ S.pqs=''; S.pprinted=false; }
-    if(t==='addcd'){ S.adone=null; S.td=tdFresh(); S.atype='CD'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); return; }
+    if(t==='addcd'){ S.adone=null; S.td=tdFresh(); S.atype='CD'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); setTimeout(()=>{ const e=document.getElementById('tdq'); if(e) e.focus(); },80); return; }
     if(t==='addrecord'){ S.adone=null; S.atype=null; S.alisted={}; S.aprint=true; S.acond=null; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',kegs:'kegs',rkeg:'rkeg',labels:'labels',note:'note',issue:'issue',find:'find',supplies:'supplies',drops:'drops',reqlist:'reqlist',credit:'credit',rstock:'rstock',rcans:'rcans',rsnacks:'rcans',rother:'rcans'}[t]); }
   }
   else if(a==='go:trove'){}
@@ -2529,7 +2529,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='addtrove'){ S.adone=null; S.td=tdFresh(); S.atype='Trove'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); }
   else if(a==='acond'){ S.acond=S.acond===b.dataset.v?null:b.dataset.v; document.querySelectorAll('[data-act=acond]').forEach(x=>x.classList.toggle('on',x.dataset.v===S.acond)); }
   else if(a==='adpq'){ const D=S.adone; if(D&&!pqCount({code:D.rec.code,artist:D.rec.artist,title:D.rec.title})){ pqAdd(D.rec); S.pprinted=false; } render(); toast('Added to the print queue'); }
-  else if(a==='adagain'){ const t=S.adone&&S.adone.type; S.adone=null; S.td=tdFresh(); S.atype=t; S.alisted={}; S.acond=null; render(); const e=document.getElementById(t==='Trove'?'tdq':'aartist'); if(e) e.focus(); }
+  else if(a==='adagain'){ const t=S.adone&&S.adone.type; S.adone=null; S.td=tdFresh(); S.atype=t; S.alisted={}; S.acond=null; render(); const e=document.getElementById(t==='Trove'||t==='CD'?'tdq':'aartist'); if(e) e.focus(); }
   else if(a==='adhome'){ S.adone=null; S.atype=null; S.td=tdFresh(); S.alisted={}; S.view='home'; render(); }
   else if(a==='aprintq'){ S.aprint=!S.aprint; b.classList.toggle('on',S.aprint); b.textContent=S.aprint?'Added to print queue':'Add to print queue'; }
   else if(a==='alisted'){ const k=b.dataset.v; S.alisted[k]=!S.alisted[k]; b.classList.toggle('on',!!S.alisted[k]); }
