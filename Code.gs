@@ -579,6 +579,46 @@ function setSupplyRecipients() {
   Logger.log(PropertiesService.getScriptProperties().getProperty('SUPPLY_TO'));
 }
 
+/** Read-only check: Trove sheet vs Square. Logs counts; writes the TroveReview tab (Square Trove items in stock that are not on the sheet). */
+function troveAudit() {
+  var sh = ss_().getSheetByName('Trove');
+  var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 9).getValues();
+  var statusOf = {}, nm = {}, by = {};
+  rows.forEach(function (r) {
+    if (!(r[0] || r[1])) return;
+    var st = String(r[7] || '').trim() || 'Active'; by[st] = (by[st] || 0) + 1;
+    var code = String(r[5] || '').trim(); if (!code) return;
+    statusOf[code] = st; nm[code] = r[0] + ' - ' + r[1];
+  });
+  Logger.log('SHEET status counts: ' + JSON.stringify(by));
+  var items = [], cursor = null;
+  do {
+    var b = { category_ids: [TS.cat], limit: 100 }; if (cursor) b.cursor = cursor;
+    var s = sq_('post', '/v2/catalog/search-catalog-items', b);
+    (s.items || []).forEach(function (it) { (it.item_data.variations || []).forEach(function (v) { items.push({ id: v.id, sku: v.item_variation_data.sku, name: it.item_data.name, price: v.item_variation_data.price_money ? v.item_variation_data.price_money.amount / 100 : '' }); }); });
+    cursor = s.cursor;
+  } while (cursor);
+  var qty = {};
+  for (var j = 0; j < items.length; j += 100) {
+    var body = { catalog_object_ids: items.slice(j, j + 100).map(function (x) { return x.id; }), location_ids: [SQ.loc], states: ['IN_STOCK'] }, cur = null;
+    do { if (cur) body.cursor = cur; var c = sq_('post', '/v2/inventory/counts/batch-retrieve', body);
+      (c.counts || []).forEach(function (k) { qty[k.catalog_object_id] = Number(k.quantity); }); cur = c.cursor; } while (cur);
+  }
+  var groups = {}, samples = {};
+  items.forEach(function (x) {
+    var st = statusOf[x.sku] || 'NOT ON SHEET', stock = qty[x.id] > 0 ? 'in stock' : 'no stock';
+    var k = st + ' / ' + stock; groups[k] = (groups[k] || 0) + 1;
+    if (!(/^active/i.test(st) && stock === 'in stock')) { (samples[k] = samples[k] || []).length < 6 && samples[k].push(x.sku + ' ' + x.name); }
+  });
+  Logger.log('SQUARE Trove category: ' + items.length + ' items. By sheet status / Square stock: ' + JSON.stringify(groups));
+  Object.keys(samples).forEach(function (k) { Logger.log(k + ' e.g. ' + samples[k].join(' ; ')); });
+  var rev = items.filter(function (x) { return !statusOf[x.sku] && qty[x.id] > 0; }).map(function (x) { return [x.sku, x.name, x.price, qty[x.id]]; });
+  var ts = ss_().getSheetByName('TroveReview') || ss_().insertSheet('TroveReview');
+  ts.clear(); ts.getRange(1, 1, 1, 4).setValues([['Square SKU', 'Square item name', 'Price', 'Square stock']]).setFontWeight('bold');
+  if (rev.length) ts.getRange(2, 1, rev.length, 4).setValues(rev);
+  Logger.log('TroveReview tab written: ' + rev.length + ' rows');
+}
+
 function dstr_(v) { return v instanceof Date ? Utilities.formatDate(v, 'UTC', 'yyyy-MM-dd') : String(v); }
 
 /** Barcodes staff matched by hand (or Discogs matched): scanned code -> the UPC on the invoice. Shared by every iPad. */
