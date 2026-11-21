@@ -1320,7 +1320,7 @@ function uNextCode(){ let n=LS.get(USEQ,3); sqItems().forEach(i=>i.vars.forEach(
 /* ---------- supplies ---------- */
 // Seeded from the shop's "General Store Restock" sheet (Raleigh tab). [name, state, count unit, reorder level, start count]
 // state: 0 = stocked, 1 = low, 2 = out. Items with a unit are counted; the rest are one-tap restock requests.
-const SUPK='hd.sup9'; /* sup9 = fresh start Nov 21: nothing flagged, every count at 0 */
+const SUPK='hd.sup10'; /* sup10 = Nov 21: every supply is just Request restock > Requested > Restocked (no counts) */
 const SUPCATS=['General','Register','Player','Bathroom','Bar','Cleaning','Records','Shipping'];
 const SUPDEF={
   General:[['Clear tape'],['Blue tape'],['Sticky notes',1],['Black markers'],['Pens'],['Chalk markers'],['Paper clips',2]],
@@ -1332,7 +1332,7 @@ const SUPDEF={
   Records:[['Bags',1,'boxes',1,1],['Outer sleeves',1,'bags',1,1],['Inner sleeves',1,'bags',1,1],['XL sleeves',2,'bags',1,0],['Genre tabs',1],['Price gun labels']],
   Shipping:[['Packing tape',1],['Printer paper'],['Padding material',2],['Printer ink']]
 };
-function sups(){ let L=LS.get(SUPK,null); if(!L){ L=[]; SUPCATS.forEach(c=>SUPDEF[c].forEach(x=>{ L.push(x[2]?{n:x[0],k:c,t:'c',c:0,m:x[3],u:x[2]}:{n:x[0],k:c,t:'r',r:false}); })); LS.set(SUPK,L); } return L; }
+function sups(){ let L=LS.get(SUPK,null); if(!L){ L=[]; SUPCATS.forEach(c=>SUPDEF[c].forEach(x=>{ L.push({n:x[0],k:c,t:'r',r:false}); })); LS.set(SUPK,L); } return L; }
 function supSave(L){ LS.set(SUPK,L); }
 const SUPOPT={'Cash':['1s','5s','10s','20s'],'Record cleaner ingredients':['Isopropyl alcohol','Dawn','Distilled water']};
 const supD=x=>SUPOPT[x.n]||null;
@@ -1351,7 +1351,7 @@ function vSupplies(){
     if(items.length) out+='<div class="shead">'+c+'</div>'+items.map(p=>row(p[0],p[1])).join(''); });
   if(!out) out='<p class="hint" style="padding:18px">Nothing needs reordering.</p>';
   return topHTML('Supplies')+bannerHTML()+tog+'<div class="slist">'+out+'</div>'+
-    '<div class="sadd"><input id="snew" placeholder="Add a supply, like Coasters" autocomplete="off"><select id="snewc" aria-label="Section">'+SUPCATS.map(c=>'<option>'+c+'</option>').join('')+'</select><button class="btn ghost" data-act="sadd" data-t="c">Add with a count</button><button class="btn ghost" data-act="sadd" data-t="r">Add as a request</button></div>';
+    '<div class="sadd"><input id="snew" placeholder="Add a supply, like Coasters" autocomplete="off"><select id="snewc" aria-label="Section">'+SUPCATS.map(c=>'<option>'+c+'</option>').join('')+'</select><button class="btn ghost" data-act="sadd" data-t="r">Add supply</button></div>';
 }
 
 /* ---------- drop-off list (manager side: Bell works the offers) ---------- */
@@ -2404,7 +2404,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='sdcancel'){ S.sden=null; render(); }
   else if(a==='sdsend'){ const L=sups(), x=L[S.sden.i]; x.r=true; x.need=S.sden.sel.slice(); S.sden=null; supSave(L); render(); submit('supplies','Restock requested: '+x.n+' ('+x.need.join(', ')+'). Included in the evening supplies email.',{item:x.n,request:true,need:x.need},true); }
   else if(a==='sreq'){ const L=sups(), x=L[+b.dataset.i]; if(supD(x)&&!x.r){ S.sden={i:+b.dataset.i,sel:[]}; render(); return; } x.r=!x.r; if(!x.r) x.need=null; supSave(L); render();
-    if(x.r) submit('supplies','Restock requested: '+x.n+'. Included in the evening supplies email.',{item:x.n,request:true},true); else submit('supplies','Restock cancelled: '+x.n,{item:x.n,cancelled:true},true); }
+    if(x.r) submit('supplies','Restock requested: '+x.n+'. Included in the evening supplies email.',{item:x.n,request:true},true); else submit('supplies','Restocked: '+x.n,{item:x.n,cancelled:true},true); }
   else if(a==='smin'){ const L=sups(), x=L[+b.dataset.i]; x.m=Math.max(0,x.m+(+b.dataset.d)); supSave(L); render(); }
   else if(a==='scat'){ S.scat=b.dataset.v; render(); }
   else if(a==='sadd'){ const e=document.getElementById('snew'), n=(e&&e.value||'').trim(); if(!n) return; const L=sups(); if(L.some(x=>x.n.toLowerCase()===n.toLowerCase())){ toast('Already on the list'); return; } const nm=n.charAt(0).toUpperCase()+n.slice(1), k=(document.getElementById('snewc')||{}).value||'General'; L.push(b.dataset.t==='c'?{n:nm,k,t:'c',c:0,m:1,u:''}:{n:nm,k,t:'r',r:false}); supSave(L); render(); }
