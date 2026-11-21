@@ -51,7 +51,7 @@ function doPost(e) {
     var req = JSON.parse(e.postData.contents);
     var who = authenticate_(req.pin);
     if (req.action === 'login') out = { ok: true, name: who };
-    else if (req.action === 'trove') out = { ok: true, items: troveItems_() };
+    else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_() }; }
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
     else if (req.action === 'log') { var res = logEntry_(req, who) || {}; out = { ok: true, code: res.code || '' }; }
     else if (req.action === 'expected') out = { ok: true, lines: expectedLines_(), map: upcMap_() };
@@ -730,3 +730,46 @@ function backfillCosts() {
   rows.forEach(function (r) { if (!r[11] && cost[String(r[3])]) r[11] = cost[String(r[3])]; });
   rg.setValues(rows);
 }
+
+/* ---------- Trove: mark sold records ----------
+ * Looks up every Active Trove record in Square by its TT code (SKU). If the Square item exists but has no stock left,
+ * the record sold at the register: its Status in the Trove tab becomes "Sold" and it drops off the scan list.
+ * Runs when the app loads the Trove list (at most once every 5 minutes). Never writes to Square. */
+function troveSoldSync_(force) {
+  var cache = CacheService.getScriptCache();
+  if (!force && cache.get('trovesold')) return 0;
+  if (!PropertiesService.getScriptProperties().getProperty('SQUARE_TOKEN')) return 0;
+  var sh = ss_().getSheetByName('Trove');
+  if (!sh || sh.getLastRow() < 2) return 0;
+  var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 9).getValues(), idx = {}, codes = [];
+  rows.forEach(function (r, n) {
+    var code = String(r[5] || '').trim(), st = String(r[7] || 'Active');
+    if (code && /^(active|)$/i.test(st.trim())) { idx[code] = n; codes.push(code); }
+  });
+  var varId = {};
+  for (var i = 0; i < codes.length; i += 50) {
+    var res = sq_('post', '/v2/catalog/search', { object_types: ['ITEM_VARIATION'], query: { set_query: { attribute_name: 'sku', attribute_values: codes.slice(i, i + 50) } } });
+    (res.objects || []).forEach(function (o) { varId[o.id] = o.item_variation_data.sku; });
+  }
+  var ids = Object.keys(varId), inStock = {};
+  for (var j = 0; j < ids.length; j += 100) {
+    var body = { catalog_object_ids: ids.slice(j, j + 100), location_ids: [SQ.loc], states: ['IN_STOCK'] }, cur = null;
+    do {
+      if (cur) body.cursor = cur;
+      var c = sq_('post', '/v2/inventory/counts/batch-retrieve', body);
+      (c.counts || []).forEach(function (k) { if (Number(k.quantity) > 0) inStock[k.catalog_object_id] = true; });
+      cur = c.cursor;
+    } while (cur);
+  }
+  var sold = 0;
+  ids.forEach(function (id) {
+    if (inStock[id]) return;
+    var n = idx[varId[id]];
+    if (n === undefined) return;
+    sh.getRange(n + 2, 8).setValue('Sold'); sold++;
+  });
+  cache.put('trovesold', '1', 300);
+  return sold;
+}
+/** Run once by hand to check right now. */
+function troveSoldNow() { Logger.log(troveSoldSync_(true) + ' records marked Sold'); }
