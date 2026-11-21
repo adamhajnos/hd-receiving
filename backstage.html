@@ -1671,7 +1671,7 @@ function vLabels(){
   const done=S.pprinted&&n ? '<div class="tmsg ok" style="margin-top:12px"><b>Sent to the printer</b><span>If they printed fine, clear the queue.</span><button class="btn go" data-act="pqclear">Clear queue and move the start spot</button></div>' : '';
   return topHTML('Print labels')+bannerHTML()+
   '<div class="plwrap"><div class="plleft"><div class="plh"><b>Waiting to print</b><span class="chip">'+n+'</span>'+(n?'<button class="btn ghost" data-act="pqwipe" style="margin-left:auto;min-height:48px">Clear queue</button>':'')+'</div>'+
-  '<input id="pqs" class="pqs" placeholder="Add a record to print. Search artist or title" autocomplete="off" value="'+esc(S.pqs||'')+'"><div id="pqres">'+pqResHTML()+'</div>'+
+  '<input id="pqs" class="pqs" placeholder="Add a record to print. Search artist or title" autocomplete="off" value="'+esc(S.pqs||'')+'"><div id="pqres">'+pqResHTML()+'</div><button class="btn ghost" data-act="pqcd" style="margin:8px 0;min-height:52px">+ CD register label (scan, then type the price)</button>'+
   '<div class="pqlist">'+(rows||'<p class="hint">Nothing waiting. Records you add with “Add to print queue” show up here. Search above to reprint any record.</p>')+'</div></div>'+
   '<div class="plright"><div class="plh"><b>Preview</b><span class="o">first label</span></div><div class="pprev">'+(n?labelHTML(q[0]):'<div class="lbl blank"><span>No labels yet</span></div>')+'</div>'+
   '<div class="plh" style="margin-top:14px"><b>Start on label</b><span class="o">Tap the first empty spot on your sheet</span></div><div class="pgrid">'+cells+'</div><p class="hint" style="margin:6px 0 0">Spots count across, then down: 1 is top left, 2 is top right, 19 and 20 are the bottom row.</p>'+
@@ -2042,7 +2042,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r61';
+const BUILD='r62';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2528,6 +2528,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='addback'){ S.adone=null; S.td=tdFresh(); S.atype=null; render(); }
   else if(a==='addtrove'){ S.adone=null; S.td=tdFresh(); S.atype='Trove'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); }
   else if(a==='acond'){ S.acond=S.acond===b.dataset.v?null:b.dataset.v; document.querySelectorAll('[data-act=acond]').forEach(x=>x.classList.toggle('on',x.dataset.v===S.acond)); }
+  else if(a==='pqcd'){ pqAdd({code:'CD-VARIABLE',artist:'CDs',title:'Scan, then type the price',genre:'',price:'',notes:''}); S.pprinted=false; render(); toast('CD register label added'); }
   else if(a==='adpq'){ const D=S.adone; if(D&&!pqCount({code:D.rec.code,artist:D.rec.artist,title:D.rec.title})){ pqAdd(D.rec); S.pprinted=false; } render(); toast('Added to the print queue'); }
   else if(a==='adagain'){ const t=S.adone&&S.adone.type; S.adone=null; S.td=tdFresh(); S.atype=t; S.alisted={}; S.acond=null; render(); const e=document.getElementById(t==='Trove'||t==='CD'?'tdq':'aartist'); if(e) e.focus(); }
   else if(a==='adhome'){ S.adone=null; S.atype=null; S.td=tdFresh(); S.alisted={}; S.view='home'; render(); }
