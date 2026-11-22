@@ -784,7 +784,7 @@ function vHome(){
     const started = Object.keys(LS.get('hd.open.'+today(),{})).length;
     return headerHTML()+bannerHTML()+noteHTML()+'<button class="openbig" data-act="go:opening">'+(started?'Continue opening':'Open')+'</button>';
   }
-  const tile=(act,t,s,i)=>'<button class="tile" data-act="'+act+'"><span class="t">'+ic(i)+'<span>'+t+'</span></span><span class="s">'+(s||'\u00a0')+'</span></button>';
+  const tile=(act,t,s,i,n)=>'<button class="tile" data-act="'+act+'"><span class="t">'+ic(i)+'<span>'+t+'</span>'+(n?'<span class="dcnt">'+n+'</span>':'')+'</span><span class="s">'+(s||'\u00a0')+'</span></button>';
   const soon=(t,d)=>'<div class="tile soon" aria-disabled="true"><span class="t">'+t+'</span><span class="s">'+(d?d+' \u00b7 ':'')+'Soon</span></div>';
   const dr=S.feed.filter(e=>e.task==='dropoff').length, cl=latest('closing'), op=latest('opening')||{ts:new Date().toISOString()};
   const openTile='<div class="tile pill done" aria-label="Opening done"><span class="t">'+ic('sun')+'<span>Open</span></span><span class="s">Done \u00b7 '+fmtTime(op.ts)+'</span></div>';
@@ -795,7 +795,7 @@ function vHome(){
   return headerHTML(openTile+closeTile)+bannerHTML()+noteHTML()+'<button class="findbar" data-act="go:find">'+ic('search')+' Find a record</button><div class="cols">'+
     cat('Inventory',tile('go:addrecord','Add records','New, Trove or used','addrec')+tile('go:addcd','Add a CD','Type it in, print a label','disc')+tile('go:trove','Trove Inventory','List and shelf check','trove')+tile('go:labels','Print labels','Print the sticker sheet','labels'))+
     cat('Beer/THC',tile('go:kegs','Beer inventory','Kick a keg, change a price, put one on tap','beer')+tile('go:rstock','Receive stock','Kegs or cans, with the invoice photo','keg'))+
-    cat('Customers',tile('go:dropoff','Customer drop&#8209;off','Log records a customer left'+(dr?' \u00b7 '+dr+' today':''),'dropoff')+tile('go:request','Customer request','Record what a customer is looking for','request')+tile('go:drops','Drop-off list','Offers and what happens next','list'))+
+    cat('Customers',tile('go:dropoff','Customer drop&#8209;off','Log records a customer left'+(dr?' \u00b7 '+dr+' today':''),'dropoff')+tile('go:request','Customer request','Record what a customer is looking for','request')+tile('go:drops','Drop-off list','Offers and what happens next','list',dBadge()))+
     cat('Shop',tile('go:note','Note for next shift','Leave a heads-up for whoever opens','note')+tile('go:supplies','Supplies','Mark what is low or out','bag')+(isMgr()?tile('go:cash','Register count','History of open and close counts','cash'):'')+tile('go:issue','Report an issue','Flag a problem for the manager','issue')+tile('feat','Request a feature','Or report a bug in Backstage','bulb'))+'</div>';
 }
 function topHTML(t,act,right,nohome){ return '<div class="top"><button class="btn ghost" data-act="'+(act||'home')+'">\u2039 Back</button><h2>'+ic(TOPIC[t]||'')+'<span>'+t+'</span></h2>'+(right||'')+'</div>'; }
@@ -1463,16 +1463,40 @@ function vSupplies(){
 /* ---------- drop-off list (manager side: Bell works the offers) ---------- */
 const DRK='hd.drops3'; /* drops3 = fresh start Nov 22: sample customers removed */
 const DSTAT=['New','Offer made','Accepted','Declined','Paid','Done'];
-function drops(){ let L=LS.get(DRK,null); if(!L){ L=[]; LS.set(DRK,L); } L.forEach(x=>{ x.phone=fmtPhone(x.phone); }); return L; }
+function dMap(x){ return Object.assign({},x,{phone:fmtPhone(x.phone||''),email:x.email||'',offer:x.offer||'',hist:x.hist||[],pay:x.pay||'Cash',left:x.left||'Return'}); }
+async function dLoad(){ if(DEMO) return true; try{ const j=await apiRaw('droplist',{}); S.dlist=(j.drops||[]).map(dMap); S.derr=''; return true; }catch(e){ S.derr='Can’t load the drop-off list. Check the wifi and try again.'; return false; } }
+function dBadge(){ return isMgr()?drops().filter(x=>x.status==='New').length:0; }
+function drops(){ if(!DEMO) return S.dlist||[]; let L=LS.get(DRK,null); if(!L){ L=[]; LS.set(DRK,L); } L.forEach(x=>{ x.phone=fmtPhone(x.phone); }); return L; }
 function dSave(L){ LS.set(DRK,L); }
 function dWhen(iso){ const d=new Date(iso); return d.toLocaleDateString([], {month:'short',day:'numeric'})+', '+fmtTime(iso); }
 const DSTALE=3; // days before a waiting drop-off turns red
 function dAge(x){ const ms=Date.now()-new Date(x.sts||x.ts).getTime(), h=ms/36e5; return {h, txt:h<1?'just now':h<24?Math.floor(h)+'h':Math.floor(h/24)+(Math.floor(h/24)===1?' day':' days')}; }
-function dStale(x){ const h=dAge(x).h; return x.status==='New'?h>=24:(x.status!=='Done'&&h>=DSTALE*24); }
+function dDays(x){ return Math.floor((Date.now()-new Date(x.sent||x.sts||x.ts).getTime())/864e5); }
+function dStale(x){ const h=dAge(x).h; return x.status==='New'?h>=24:x.status==='Offer made'?dDays(x)>=10:(x.status!=='Done'&&h>=DSTALE*24); }
+function dChip(x){ if(x.status==='Offer made'){ const d=dDays(x); return d>=10?'Past due, day '+d:d<1?'Sent today':'Day '+d+' of 10'; } return dAge(x).txt; }
+const DLBL={offer:'Offer made',accepted:'Accepted',declined:'Declined',paid:'Paid',credit:'Paid',done:'Done'};
+async function dAct(op,id,extra){
+  if(S.dbusy) return false; S.dbusy=true;
+  try{
+    if(DEMO){
+      const L=drops(), x=L.find(y=>y.id===id), now=new Date().toISOString(); if(!x) return false;
+      if(op==='leftdone') x.leftDone=!x.leftDone;
+      else if(op==='undo'){ if(!x.hist.length||x.hasCard) return false; x.status=x.hist.pop(); x.sts=now; if(x.status==='New'){ x.offer=null; x.sent=null; } x.leftDone=false; }
+      else { if(op==='offer'){ x.offer=String(extra.amount); x.sent=now; } x.hist.push(x.status); x.status=DLBL[op]; x.sts=now; if(op==='credit'){ crAdd(x.name,x.phone,parseFloat(x.offer)); x.hasCard=true; } }
+      dSave(L); S.dconf=null; render();
+      if(DLBL[op]) submit('dropstatus','Drop-off '+x.name+': '+DLBL[op]+(x.offer&&op!=='done'?' ($'+x.offer+')':''),{id:x.id,status:DLBL[op],offer:x.offer||''},true);
+      return true;
+    }
+    await api('dropupdate',Object.assign({id,op},extra||{})); await dLoad(); S.dconf=null; render();
+    if(op==='offer') toast('Offer emailed ✓'); else if(op==='credit') toast('Gift card issued and emailed ✓');
+    return true;
+  }catch(e){ toast(e.message||'Couldn’t save. Try again.'); await dLoad(); render(); return false; }
+  finally{ S.dbusy=false; }
+}
 function dRow(x){
   const open=S.dsel===x.id, a=dAge(x), st=dStale(x);
   return '<div class="drow'+(open?' open':'')+(st?' stale':'')+'"><button class="dhead" data-act="dopen" data-id="'+x.id+'"><b class="dnm">'+esc(x.name)+'</b><span class="di">'+esc(x.items)+'</span>'+
-    (x.status==='Done'?'':'<span class="dchips">'+(x.offer&&x.status!=='New'?'<span class="dof">$'+esc(x.offer)+'</span>':'')+'<span class="chip age'+(st?' late':'')+'">'+a.txt+'</span></span>')+'</button>'+(open?dDetail(x):'')+'</div>';
+    (x.status==='Done'?'':'<span class="dchips">'+(x.offer&&x.status!=='New'?'<span class="dof">$'+esc(x.offer)+'</span>':'')+'<span class="chip age'+(st?' late':'')+'">'+dChip(x)+'</span></span>')+'</button>'+(open?dDetail(x):'')+'</div>';
 }
 
 /* ---------- store credit (demo; real version = Square gift cards + Loyalty) ---------- */
@@ -1504,20 +1528,24 @@ function vDrops(){
   const done=L.filter(x=>x.status==='Done').reverse(), q=(S.dq||'').trim().toLowerCase(), dr=q?done.filter(x=>(x.name+' '+x.items+' '+x.phone).toLowerCase().indexOf(q)>=0):done;
   const arch='<section class="dsec g-arch"><button class="dtog" data-act="darch" aria-expanded="'+(!!S.darch)+'"><span>'+(S.darch?'▾':'▸')+' Archived</span> <span class="nb">'+done.length+'</span></button>'+
     (S.darch?'<input id="dq" class="dq" placeholder="Search" autocomplete="off" value="'+esc(S.dq||'')+'">'+(dr.length?'<div class="dlist">'+dr.map(dRow).join('')+'</div>':'<p class="dnone">Nothing found.</p>'):'')+'</section>';
-  return topHTML('Drop-off list','home','<button class="btn ghost" data-act="go:credit" style="margin-left:auto">Store credit</button>')+bannerHTML()+(secs||'<p class="dnone" style="font-size:20px">All caught up.</p>')+arch;
+  return topHTML('Drop-off list','home','<button class="btn ghost" data-act="go:credit" style="margin-left:auto">Store credit</button>')+bannerHTML()+(S.derr?'<p class="dnone">'+esc(S.derr)+'</p>':'')+(secs||'<p class="dnone" style="font-size:20px">All caught up.</p>')+arch;
 }
 function dDetail(x){
-  const st=x.status, left=x.left==='Donate'?'donated':'returned';
-  const contact='<div class="dct"><a class="lnk" href="tel:'+esc(x.phone.replace(/\D/g,''))+'">'+esc(x.phone||'No phone')+'</a>'+(x.email?'<a class="lnk" href="mailto:'+esc(x.email)+'">'+esc(x.email)+'</a>':'')+'</div>';
+  const st=x.status, left=x.left==='Donate'?'donated':'returned', mgr=isMgr(), pay=String(x.pay||'').toLowerCase(), cf=S.dconf&&S.dconf.id===x.id?S.dconf:null;
+  const contact=mgr&&!x.legacy?'<div class="dct">'+(x.phone?'<a class="lnk" href="tel:'+esc(x.phone.replace(/\D/g,''))+'">'+esc(x.phone)+'</a>':'<span class="hint">No phone</span>')+(x.email?'<a class="lnk" href="mailto:'+esc(x.email)+'">'+esc(x.email)+'</a>':'')+(/^https:/.test(x.photo||'')?'<a class="lnk" href="'+esc(x.photo)+'" target="_blank" rel="noopener">Photo</a>':'')+'</div>':'';
+  const wait='<span class="hint">Bell is handling this one.</span>';
+  const money=v=>'$'+Number(v).toFixed(2);
   let act='';
-  if(st==='New') act='<label class="doff">Offer<span class="pre"><b>$</b><input id="doffer" inputmode="decimal" autocomplete="off" placeholder="0.00"></span></label><button class="btn go" data-act="dstep" data-v="Offer made" data-id="'+x.id+'">Offer made</button>';
-  else if(st==='Offer made') act='<span class="hint">Offer: <b>$'+esc(x.offer)+'</b>. What did the customer say?</span><button class="btn go" data-act="dstep" data-v="Accepted" data-id="'+x.id+'">Accepted</button><button class="btn ghost" data-act="dstep" data-v="Declined" data-id="'+x.id+'">Declined</button>';
-  else if(st==='Accepted') act='<span class="hint">Offer: <b>$'+esc(x.offer)+'</b>, paid in <b>'+esc(x.pay.toLowerCase())+'</b>.</span><button class="btn go" data-act="dstep" data-v="Paid" data-id="'+x.id+'">Mark paid ('+esc(x.pay.toLowerCase())+')</button>';
-  else if(st==='Paid') act='<button class="btn '+(x.leftDone?'ghost':'go')+'" data-act="dleftdone" data-id="'+x.id+'">'+(x.leftDone?'Leftovers '+left+' ✓':'Leftovers '+left)+'</button><button class="btn go" data-act="dstep" data-v="Done" data-id="'+x.id+'"'+(x.leftDone?'':' disabled')+'>Done</button>';
-  else if(st==='Declined') act='<span class="hint">Declined. Records go back to the customer.</span><button class="btn go" data-act="dstep" data-v="Done" data-id="'+x.id+'">Done</button>';
+  if(cf&&cf.kind==='offer') act='<span class="hint">Email an offer of <b>'+money(cf.amount)+'</b> in <b>'+esc(pay)+'</b> to <b>'+esc(x.email)+'</b>?</span><button class="btn go" data-act="dsend" data-id="'+x.id+'">Send offer</button><button class="btn ghost" data-act="dcancel">Cancel</button>';
+  else if(cf&&cf.kind==='card') act='<span class="hint">Create a <b>'+money(x.offer)+'</b> gift card and email it to <b>'+esc(x.email)+'</b>? This can’t be undone.</span><button class="btn go" data-act="dissue" data-id="'+x.id+'">Issue gift card</button><button class="btn ghost" data-act="dcancel">Cancel</button>';
+  else if(st==='New') act=mgr?'<label class="doff">Offer<span class="pre"><b>$</b><input id="doffer" inputmode="decimal" autocomplete="off" placeholder="0.00"></span></label><button class="btn go" data-act="dreview" data-id="'+x.id+'">Review offer</button>':wait;
+  else if(st==='Offer made') act=mgr?'<span class="hint">Offer: <b>'+money(x.offer)+'</b>, emailed '+esc(dWhen(x.sent||x.sts))+'. What did the customer say?</span><button class="btn go" data-act="dstep" data-v="accepted" data-id="'+x.id+'">Accepted</button><button class="btn ghost" data-act="dstep" data-v="declined" data-id="'+x.id+'">Declined</button>':wait;
+  else if(st==='Accepted') act=mgr?'<span class="hint">Offer: <b>'+money(x.offer)+'</b>, paid in <b>'+esc(pay)+'</b>.</span>'+(x.pay==='Store credit'?'<button class="btn go" data-act="dcard" data-id="'+x.id+'">Issue store credit</button>':'<button class="btn go" data-act="dstep" data-v="paid" data-id="'+x.id+'">Mark paid (cash)</button>'):wait;
+  else if(st==='Paid') act=(x.pay==='Store credit'&&mgr?'<span class="hint">Gift card emailed.</span>':'')+'<button class="btn '+(x.leftDone?'ghost':'go')+'" data-act="dleftdone" data-id="'+x.id+'">'+(x.leftDone?'Leftovers '+left+' ✓':'Leftovers '+left)+'</button><button class="btn go" data-act="dstep" data-v="done" data-id="'+x.id+'"'+(x.leftDone?'':' disabled')+'>Done</button>';
+  else if(st==='Declined') act='<span class="hint">Declined. Records go back to the customer.</span><button class="btn go" data-act="dstep" data-v="done" data-id="'+x.id+'">Done</button>';
   else act='<span class="hint">Finished.</span>';
-  const undo=(x.hist&&x.hist.length&&st!=='Done')?'<button class="lnk" data-act="dundo" data-id="'+x.id+'">Undo last step</button>':'';
-  return '<div class="ddet"><p class="o">Dropped off '+esc(dWhen(x.ts))+' by '+esc(x.who)+'. Paid in <b>'+esc(x.pay.toLowerCase())+'</b>. Unwanted records: <b>'+esc(x.left==='Donate'?'donate':'return')+'</b>.</p>'+contact+'<div class="dact">'+act+undo+'</div></div>';
+  const undo=(mgr&&!cf&&x.hist&&x.hist.length&&st!=='Done'&&!x.hasCard)?'<button class="lnk" data-act="dundo" data-id="'+x.id+'">Undo last step</button>':'';
+  return '<div class="ddet"><p class="o">Dropped off '+esc(dWhen(x.ts))+' by '+esc(x.who)+'. Paid in <b>'+esc(pay)+'</b>. Unwanted records: <b>'+esc(x.left==='Donate'?'donate':'return')+'</b>.</p>'+contact+'<div class="dact">'+act+undo+'</div></div>';
 }
 /* ---------- receive records ---------- */
 const tc=x=>String(x||'').toLowerCase().replace(/\b[a-z]/g,m=>m.toUpperCase());
@@ -1657,7 +1685,7 @@ function vDrop(){
   return topHTML('Customer drop&#8209;off')+bannerHTML()+
   '<div class="form dform"><div class="dgrid"><div class="dcol dl">'+
   '<label>Name<input id="cname" autocomplete="off"></label>'+
-  '<div class="pair"><label>Phone<input id="cphone" type="tel" autocomplete="off"><p class="eerr" id="perr" hidden>That phone number needs 10 digits, like (919) 555-1212.</p></label>'+
+  '<div class="pair"><label>Phone (optional)<input id="cphone" type="tel" autocomplete="off"><p class="eerr" id="perr" hidden>That phone number needs 10 digits, like (919) 555-1212.</p></label>'+
   '<label>Email<input id="cemail" type="email" autocomplete="off"><p class="eerr" id="eerr" hidden>That doesn\u2019t look like an email address. Check it, like name@example.com.</p><p class="esug" id="esug" hidden></p></label></div>'+
   '</div><div class="dcol">'+
   '<div class="drp" style="display:flex;gap:12px;align-items:center"><div style="display:flex;gap:12px;align-items:center"><button class="btn ghost camb" data-act="iphoto" aria-label="'+(S.iphoto?'Retake photo':'Take a photo of the drop-off')+'"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.2l1.4-2h6.8l1.4 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.8"/></svg></button><span class="camt">'+(S.iphoto?'Photo added. Tap the camera to retake.':'Take a photo of the drop-off')+'</span><input id="iphotoin" type="file" accept="image/*" capture="environment" hidden><div id="iprev">'+iprevHTML()+'</div></div></div>'+
@@ -1665,7 +1693,7 @@ function vDrop(){
   '<div class="pair"><div><label>How do they want to be paid?</label><div class="fmts" style="margin-top:7px">'+['Cash','Store credit'].map(x=>'<button data-act="dpay" data-v="'+x+'" class="'+(S.dpay===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
   '<div><label>Records we don\u2019t want</label><div class="fmts" style="margin-top:7px">'+['Donate','Return'].map(x=>'<button data-act="dleft" data-v="'+x+'" class="'+(S.dleft===x?'on':'')+'">'+x+'</button>').join('')+'</div></div></div>'+
   '</div></div>'+
-  '<div id="cbox" class="cbox" hidden><p class="cbh">Hand the iPad to the customer</p><label>Confirm email address<input id="cphone2" type="email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><p class="eerr" id="p2err" hidden>These email addresses don\u2019t match. Check both and try again.</p></label><label class="agree"><input id="cagree" type="checkbox"><span>I have read and agree that my store credit is sent to this email address. It\u2019s how I receive my gift card.</span></label></div>'+
+  '<div id="cbox" class="cbox"><p class="cbh">Hand the iPad to the customer</p><label>Confirm email address<input id="cphone2" type="email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><p class="eerr" id="p2err" hidden>These email addresses don\u2019t match. Check both and try again.</p></label><label class="agree"><input id="cagree" type="checkbox"><span>I have read and agree that my offer, and any store credit, is sent to this email address.</span></label></div>'+
   termsRow('drop')+
   '<div><button class="btn go" id="sub" data-act="savedrop" disabled>Log drop-off</button></div></div>';
 }
@@ -2240,7 +2268,7 @@ function bindForms(){
       const add=document.getElementById('radd'); if(add) add.disabled = !(who&&cur);
       sub.textContent = 'Send'+((S.ritems.length+(cur?1:0))>1?' '+(S.ritems.length+(cur?1:0))+' requests':'');
     }
-    if(S.view==='drop') ok = !!S.dpay && !!S.dleft && !!val('cname') && !!val('citems') && !!val('cphone') && pv.length>=10 && !!val('cemail') && eo && po && !!S.tagree && (S.dpay!=='Store credit' || (!!val('cphone2') && val('cphone2').toLowerCase()===val('cemail').toLowerCase() && !!(document.getElementById('cagree')||{}).checked));
+    if(S.view==='drop') ok = !!S.dpay && !!S.dleft && !!val('cname') && !!val('citems') && !!val('cemail') && eo && po && !!S.tagree && !!val('cphone2') && val('cphone2').toLowerCase()===val('cemail').toLowerCase() && !!(document.getElementById('cagree')||{}).checked;
     sub.disabled = !ok || S.busy;
   };
   document.querySelectorAll('input,textarea,select').forEach(e=>e.addEventListener('input',check));
@@ -2278,7 +2306,7 @@ async function tryLogin(){
     const j=await api('login',{pin});
     S.who=j.name; S.pin=pin; S.role=j.role||'staff'; S.entry=''; S.err='';
     LS.set('hd.shift',{who:S.who,pin:S.pin,start:Date.now()});
-    await refreshFeed(); await rqLoad(); S.view='home';
+    await refreshFeed(); await rqLoad(); await dLoad(); S.view='home';
     const ack=LS.get('hd.noteack',{}); S.notePop = !!(S.note && S.note.who!==S.who && ack[S.who]!==S.note.ts);
   }catch(e){
     S.entry=''; S.err = /PIN|tries/i.test(e.message) ? e.message+'.' : 'Can\u2019t reach the server. Check the wifi and try again.';
@@ -2466,6 +2494,7 @@ document.addEventListener('click', async ev=>{
     else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='dropoff'||t==='request') S.tagree=false; if(t==='dropoff'){ S.iphoto=null; S.dpay=null; S.dleft=null; } if(t==='request'){ S.rs=null; S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ await rqLoad(); if(DEMO||await rLoad()) rEnter(); return; }
     if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); covMerge(j.covers); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
     if(t==='kegs'){ S.kv='taps'; S.ks=null; }
+    if(t==='drops'){ S.dconf=null; dLoad().then(()=>{ if(S.view==='drops') render(); }); }
     if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqcol=isMgr()?{quoted:1,ordered:1,wait:1,done:1}:{}; S.rqq=''; S.rqshop='All'; rqLoad().then(()=>{ if(S.view==='reqlist') render(); }); }
     if(t==='credit'){ S.crq=''; S.crsel=null; }
     if(t==='rcans'||t==='rsnacks'||t==='rother'){ S.cmode=t==='rsnacks'?'snacks':t==='rother'?'other':'cans'; S.cOther=false; S.cs=null; S.csup=''; S.iphoto=null; }
@@ -2524,7 +2553,7 @@ document.addEventListener('click', async ev=>{
     submit(closing?'closing':'opening', summary, {amounts,done,cant,regnote:regnote.join('; ')});
   }
   else if(a==='efix'){ const e=document.getElementById(b.dataset.id); if(e){ e.value=b.dataset.v; if(S.recheck) S.recheck(); } }
-  else if(a==='dpay'||a==='dleft'){ const k=a==='dpay'?'dpay':'dleft'; S[k]=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(a==='dpay'){ const cb=document.getElementById('cbox'); if(cb) cb.hidden=S.dpay!=='Store credit'; } if(S.recheck) S.recheck(); }
+  else if(a==='dpay'||a==='dleft'){ const k=a==='dpay'?'dpay':'dleft'; S[k]=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(S.recheck) S.recheck(); }
   else if(a==='itype'){ S.itype=b.dataset.v; document.querySelectorAll('.fmts button').forEach(x=>x.classList.toggle('on',x===b)); if(S.recheck) S.recheck(); }
   else if(a==='iphoto'){ document.getElementById('iphotoin').click(); }
   else if(a==='iphotorm'){ S.iphoto=null; const p=document.getElementById('iprev'); if(p) p.innerHTML=iprevHTML(); if(S.recheck) S.recheck(); }
@@ -2568,12 +2597,14 @@ document.addEventListener('click', async ev=>{
   else if(a==='rundo'){ const h=(S.rhist||[]).pop(); if(h){ if(h.u){ S.rscan[h.u]=Math.max(0,(S.rscan[h.u]||0)-1); } else if(h.x){ const e=(S.rextra||[]).find(z=>z.upc===h.x); if(e){ e.qty=(e.qty||1)-1; if(e.qty<=0) S.rextra=S.rextra.filter(z=>z!==e); } } else if(h.b){ S.rbad[h.b]=(S.rbad[h.b]||1)-1; if(S.rbad[h.b]<=0) delete S.rbad[h.b]; } const p=S.rhist[S.rhist.length-1]; S.rlast=p&&p.u?p.u:null; S.rhold=[]; rSave(); render(); toast('Removed that scan'); focusScan(); } }
   else if(a==='rnext'){ rqAside(rHeld()); S.rhold=[]; render(); focusScan(); }
   else if(a==='dopen'){ S.dsel=S.dsel===b.dataset.id?null:b.dataset.id; render(); }
-  else if(a==='dleftdone'){ const L=drops(), x=L.find(y=>y.id===b.dataset.id); x.leftDone=!x.leftDone; dSave(L); render(); }
-  else if(a==='dundo'){ const L=drops(), x=L.find(y=>y.id===b.dataset.id); if(x.hist.length){ x.status=x.hist.pop(); x.sts=new Date().toISOString(); if(x.status==='New') x.offer=null; x.leftDone=false; dSave(L); render(); } }
-  else if(a==='dstep'){ const L=drops(), x=L.find(y=>y.id===b.dataset.id), v=b.dataset.v;
-    if(v==='Offer made'){ const o=(document.getElementById('doffer')||{}).value||''; if(!/^\d{1,6}(\.\d{1,2})?$/.test(o.trim())||!(parseFloat(o)>0)){ toast('Enter the offer, like 85'); return; } x.offer=String(parseFloat(o)); }
-    x.hist.push(x.status); x.status=v; x.sts=new Date().toISOString(); if(v==='Paid'&&x.pay==='Store credit'&&x.offer) crAdd(x.name,x.phone,parseFloat(x.offer)); dSave(L); render();
-    submit('dropstatus','Drop-off '+x.name+': '+v+(x.offer&&v!=='Done'?' ($'+x.offer+')':''),{id:x.id,status:v,offer:x.offer||''},true); }
+  else if(a==='dleftdone'){ await dAct('leftdone',b.dataset.id); }
+  else if(a==='dundo'){ await dAct('undo',b.dataset.id); }
+  else if(a==='dreview'){ const o=(document.getElementById('doffer')||{}).value||''; if(!/^\d{1,6}(\.\d{1,2})?$/.test(o.trim())||!(parseFloat(o)>0)){ toast('Enter the offer, like 85'); return; } S.dconf={id:b.dataset.id,kind:'offer',amount:parseFloat(o)}; render(); }
+  else if(a==='dsend'){ const c=S.dconf; if(c&&c.kind==='offer') await dAct('offer',b.dataset.id,{amount:c.amount}); }
+  else if(a==='dcard'){ S.dconf={id:b.dataset.id,kind:'card'}; render(); }
+  else if(a==='dissue'){ await dAct('credit',b.dataset.id); }
+  else if(a==='dcancel'){ S.dconf=null; render(); }
+  else if(a==='dstep'){ await dAct(b.dataset.v,b.dataset.id); }
   else if(a==='rlist'){ S.view='recvlist'; render(); }
   else if(a==='rrec'){ await rqLoad(); if(DEMO||await rLoad()){ S.rwarn=null; S.rhold=[]; rEnter(); focusScan(); } }
   else if(a==='rpick'){ S.rorder=b.dataset.id; const sv=LS.get(RK(),{})||{}; S.rhist=sv.hist||[]; S.rhold=[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); focusScan(); }
@@ -2740,7 +2771,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='savedrop'){
     const n='';
     const dr={id:'d'+Date.now(),ts:new Date().toISOString(),who:S.who,name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),pay:S.dpay,left:S.dleft,status:'New',hist:[]};
-    submit('dropoff','Drop-off ('+S.dpay+'; unwanted: '+S.dleft.toLowerCase()+')',{payment:S.dpay,unwanted:S.dleft,name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),count:'',photo:S.iphoto?S.iphoto.split(',')[1]:''}).then(ok=>{ if(ok){ const L=drops(); L.unshift(dr); dSave(L); } });
+    submit('dropoff','Drop-off ('+S.dpay+'; unwanted: '+S.dleft.toLowerCase()+')',{payment:S.dpay,unwanted:S.dleft,name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),count:'',photo:S.iphoto?S.iphoto.split(',')[1]:''}).then(ok=>{ if(ok){ if(DEMO){ const L=drops(); L.unshift(dr); dSave(L); } else dLoad(); } });
   }
 });
 
@@ -2777,7 +2808,7 @@ setInterval(async()=>{ if(S.view==='home'&&S.who){ await refreshFeed(); if(S.vie
 
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) pauseCheck(); });
 setInterval(pauseCheck,30000);
-(async function(){ loadLogoJpg(); await pauseCheck(); if(C.TEST_SKIP&&DEMO&&!S.who){ S.who=((C.STAFF||[])[0]||{}).name||'Adam'; S.role=/[?&]role=staff/.test(location.search)?'staff':'manager'; S.view='home'; } if(S.who){ if(!S.role){ try{ const j=await apiRaw('login',{pin:S.pin}); S.role=j.role||'staff'; }catch(e){} } await refreshFeed(); await rqLoad(); } render(); })();
+(async function(){ loadLogoJpg(); await pauseCheck(); if(C.TEST_SKIP&&DEMO&&!S.who){ S.who=((C.STAFF||[])[0]||{}).name||'Adam'; S.role=/[?&]role=staff/.test(location.search)?'staff':'manager'; S.view='home'; } if(S.who){ if(!S.role){ try{ const j=await apiRaw('login',{pin:S.pin}); S.role=j.role||'staff'; }catch(e){} } await refreshFeed(); await rqLoad(); await dLoad(); } render(); })();
 })();
 </script>
 </body>
