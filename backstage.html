@@ -317,7 +317,7 @@ div.tile.done{cursor:default}
 .dsum{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}.dsn{padding:8px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-size:17px;color:var(--muted)}.dsn b{font-size:20px;color:var(--fg)}.dsn.has.g-new{background:var(--warn-bg);border-color:var(--warn-fg);color:var(--warn-fg)}.dsn.has.g-fin{background:#DCE9F7;border-color:#24527F;color:#24527F}.dsn.late{background:#FBEAE6;border-color:var(--bad);color:var(--bad)}.dsn.late b{color:var(--bad)}
 .dsec{margin:0 0 18px}.dsec h3{margin:0 0 8px;font-size:21px;display:flex;align-items:center;gap:8px}.dsec h3 .o{font-size:16px;font-weight:400;color:var(--muted)}.dsec.g-new h3{color:var(--warn-fg)}.dsec.g-wait h3{color:#24527F}.dsec.g-fin h3{color:#24527F}.dnone{margin:0;padding:12px 4px;color:var(--muted);font-size:17px}
 .dsec.g-new .drow{border-left:6px solid var(--warn-fg)}.dsec.g-wait .drow,.dsec.g-fin .drow{border-left:6px solid #7FA7D3}.drow.stale{border-color:var(--bad);border-left:6px solid var(--bad)!important}.chip.age{background:#EDEDEB;color:var(--muted)}.chip.age.late{background:#FBEAE6;color:var(--bad);font-weight:700}
-.dtog{display:flex;align-items:center;gap:8px;min-height:56px;width:100%;padding:0 6px;background:none;border:0;font-size:21px;font-weight:700;text-align:left}.dq{width:100%;max-width:520px;margin:6px 0 10px}
+.rqtog{cursor:pointer;user-select:none}.rqtog .caret{display:inline-block;width:1.1em}.dtog{display:flex;align-items:center;gap:8px;min-height:56px;width:100%;padding:0 6px;background:none;border:0;font-size:21px;font-weight:700;text-align:left}.dq{width:100%;max-width:520px;margin:6px 0 10px}
 .dlist{display:flex;flex-direction:column;gap:10px}
 .drow{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}.drow.open{border-color:var(--accent)}
 .dupn{margin:0 0 10px;padding:10px 14px;border-radius:12px;background:#FFF1D6;border:1px solid #E8A317;font-size:19px;font-weight:600}.rqp{padding:6px 0;font-size:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:baseline}.rqs{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;margin-bottom:22px}.rqs .dbar{margin:0!important;border-radius:0}.rqs .dsub{margin:0;padding:10px 18px;background:color-mix(in srgb,var(--c) 7%,#fff);border-bottom:1px solid var(--line)}.rqs .dlist{gap:0}.rqs .drow,.dsec.rqs[style] .drow,.dsec.rqs[style] .drow.stale{border:0!important;border-top:1px solid var(--line)!important;border-radius:0;background:#fff}.rqs .dlist .drow:first-child,.rqs .dsub+.dlist .drow:first-child{border-top:0!important}.rqs .drow.open{background:color-mix(in srgb,var(--c) 6%,#fff)}.rqs .rqh .who{font-size:24px;font-weight:600;color:var(--fg);text-align:right}.rqs .rqh{grid-template-columns:1fr 240px auto}.rqs .drow.open .rqh{border-bottom:1px solid var(--line)}.dhead.rqh{grid-template-columns:1fr 200px auto}.rec{font-size:26px;line-height:1.2;color:var(--fg)}.rec b{font-weight:800}.who{font-size:19px;color:var(--muted)}.dnm{font-size:22px}.dof{font-size:20px;font-weight:700}.dhead{display:grid;grid-template-columns:230px 1fr auto;align-items:center;gap:16px;width:100%;padding:14px 18px;background:none;border:0;text-align:left;min-height:72px}
@@ -1130,7 +1130,7 @@ function rqStale(x){ const d={'New':2,'Ordered':10}[x.status]; return d?dAge(x).
 function rqRow(x){
   const g=x._g&&x._g.length>1?x._g:null, open=S.rqsel===x.id, a=dAge(x), st=rqStale(x), done=x.status==='Picked up'||x.status==='Closed', mine=rqOwn(x);
   return '<div class="drow'+(open?' open':'')+(st?' stale':'')+'"><button class="dhead rqh" data-act="rqopen" data-id="'+x.id+'"><span class="rec"><b>'+esc(x.artist)+'</b> – '+esc(x.album)+(x.format&&x.format!=='Vinyl'?' <span class="o">'+esc(x.format)+'</span>':'')+'</span><span class="who">'+(g?g.length+' people asked':esc(x.name))+'</span>'+
-    '<span class="dchips">'+(!mine?'<span class="chip">'+esc(x.shop)+'</span>':'')+(x.quote!=null&&x.status!=='New'&&!done?'<span class="chip">$'+esc(money(x.quote))+'</span>':'')+(done?'<span class="chip">'+esc(x.status==='Closed'?'Closed':'Picked up')+' '+esc(dShort(x.sts))+'</span>':'<span class="chip age'+((st||rqExp(x))?' late':'')+'">'+(rqExp(x)?'Hold expired':x.status==='Waiting for pickup'&&x.holdUntil?'Held to '+dShort(x.holdUntil):a.txt)+'</span>')+(x.aside&&!done?'<span class="chip">Set aside</span>':'')+'</span></button>'+(open?rqDetail(x):'')+'</div>';
+    '<span class="dchips">'+(!mine?'<span class="chip">'+esc(x.shop)+'</span>':'')+(x.quote!=null&&x.status!=='New'&&!done?'<span class="chip">$'+esc(money(x.quote))+'</span>':'')+(done?'<span class="chip">'+esc(x.status==='Closed'?'Closed':'Picked up')+' '+esc(dShort(x.sts))+'</span>':'<span class="chip age'+((st||rqExp(x))?' late':'')+'">'+(rqExp(x)?'Hold expired':x.status==='Waiting for pickup'&&x.holdUntil?'Held to '+dShort(x.holdUntil):(x.source==='Import'&&/Date unknown/.test(x.notes||'')?'No date':a.txt))+'</span>')+(x.aside&&!done?'<span class="chip">Set aside</span>':'')+'</span></button>'+(open?rqDetail(x):'')+'</div>';
 }
 function rqContact(y){ return '<div class="rqp"><b>'+esc(y.name)+'</b> '+(y.phone?'<a class="lnk" href="tel:'+esc(String(y.phone).replace(/\D/g,''))+'">'+esc(y.phone)+'</a>':'')+(y.email&&y.email!=='(on file)'?' <a class="lnk" href="mailto:'+esc(y.email)+'">'+esc(y.email)+'</a>':'')+' <span class="o">asked '+esc(dWhen(y.ts))+(y.who?' ('+esc(y.who)+')':'')+(y.source==='Web'?' on the website':'')+'</span></div>'; }
 function rqDetail(x){
@@ -1160,7 +1160,8 @@ function rqCustRow(x){
     (open?'<div class="ddet"><p class="o">'+c.length+' records for '+esc(x.name)+' are here. Hand them over together.</p>'+(x.phone?'<div class="rqp"><a class="lnk" href="tel:'+esc(String(x.phone).replace(/\D/g,''))+'">'+esc(x.phone)+'</a></div>':'')+list+'<div class="dact"><button class="btn go" data-act="rqstep" data-op="pickedup" data-ids="'+ids+'">Picked up all '+c.length+'</button></div></div>':'')+'</div>';
 }
 function rqGroup(r){ const by={}, out=[]; r.forEach(x=>{ const k=x.shop+'|'+ukey(x.artist,x.album); if(by[k]&&rqOwn(x)){ by[k]._g.push(x); } else { x._g=[x]; by[k]=x; out.push(x); } }); return out; }
-function rqSec(c,t,d,rows,grp,fn){ let r=rows; if(grp==='cust') r=rqCustGroup(r); else if(grp) r=rqGroup(r); fn=fn||rqRow; r=r.sort((a,b)=>new Date(a.sts||a.ts)-new Date(b.sts||b.ts)); return r.length?'<section class="dsec rqs" style="--c:'+c+'"><h3 class="dbar"><span>'+t+'</span><span class="dcnt">'+r.length+'</span></h3>'+(d?'<p class="dsub">'+esc(d)+'</p>':'')+'<div class="dlist">'+r.map(fn).join('')+'</div></section>':''; }
+function rqColl(k){ const q=(S.rqq||'').trim(); return !q&&!!(S.rqcol&&S.rqcol[k]); }
+function rqSec(c,t,d,rows,grp,fn,k,newest){ let r=rows; if(grp==='cust') r=rqCustGroup(r); else if(grp) r=rqGroup(r); fn=fn||rqRow; r=r.sort((a,b)=>(newest?-1:1)*(new Date(a.sts||a.ts)-new Date(b.sts||b.ts))); const col=k&&rqColl(k); return r.length?'<section class="dsec rqs" style="--c:'+c+'"><h3 class="dbar rqtog" role="button" tabindex="0" data-act="rqtog" data-k="'+(k||'')+'" aria-expanded="'+(!col)+'"><span><span class="caret">'+(col?'\u25B8':'\u25BE')+'</span> '+t+'</span><span class="dcnt">'+r.length+'</span></h3>'+(col?'':(d?'<p class="dsub">'+esc(d)+'</p>':'')+'<div class="dlist">'+r.map(fn).join('')+'</div>')+'</section>':''; }
 function vReqList(){
   const mgr=isMgr(), q=(S.rqq||'').trim().toLowerCase();
   let L=reqs().slice(); L.forEach(x=>{ delete x._g; });
@@ -1175,14 +1176,13 @@ function vReqList(){
     body=rqSec('#0F7C8A','Waiting for pickup','The record is here. Find the customer, hand it over, tap Picked up.',L.filter(x=>x.status==='Waiting for pickup'),'cust',rqCustRow)+rqSec('#2F6DB5','On order','Not in yet. Scanning it at receiving tells the customer.',L.filter(x=>x.status==='Ordered'),true);
   } else {
     const open=x=>['New','Quoted','Ordered','Waiting for pickup'].includes(x.status);
-    body=rqSec('#E8590C','New requests','Contact the customer, then log the price you quoted.',L.filter(x=>x.status==='New'),true)+
-      rqSec('#7A5CC2','Quoted, waiting for an answer','Closes itself after 14 days with no answer.',L.filter(x=>x.status==='Quoted'),true)+
-      rqSec('#2F6DB5','Ordered','On order with the distributor. Scanning the record at receiving alerts staff and emails the customer.',L.filter(x=>x.status==='Ordered'),true)+
-      rqSec('#0F7C8A','Waiting for pickup','The record is here. We hold it '+holdDays()+' days. Tap Picked up when they collect it.',L.filter(x=>x.status==='Waiting for pickup'),'cust',rqCustRow);
-    const done=L.filter(x=>x.status==='Picked up'||x.status==='Closed').sort((a,b)=>new Date(b.sts)-new Date(a.sts));
-    body+='<section class="dsec g-arch"><button class="dtog" data-act="rqarch" aria-expanded="'+(!!S.rqarch)+'"><span>'+(S.rqarch||q?'▾':'▸')+' Picked up and closed</span> <span class="nb">'+done.length+'</span></button>'+(S.rqarch||q?(done.length?'<div class="dlist">'+done.map(rqRow).join('')+'</div>':'<p class="dnone">Nothing found.</p>'):'')+'</section>';
+    body=rqSec('#E8590C','New requests','Contact the customer, then log the price you quoted.',L.filter(x=>x.status==='New'),true,null,'new')+
+      rqSec('#7A5CC2','Quoted, waiting for an answer','Closes itself after 14 days with no answer.',L.filter(x=>x.status==='Quoted'),true,null,'quoted')+
+      rqSec('#2F6DB5','Ordered','On order with the distributor. Scanning the record at receiving alerts staff and emails the customer.',L.filter(x=>x.status==='Ordered'),true,null,'ordered')+
+      rqSec('#0F7C8A','Waiting for pickup','The record is here. We hold it '+holdDays()+' days. Tap Picked up when they collect it.',L.filter(x=>x.status==='Waiting for pickup'),'cust',rqCustRow,'wait');
+    body+=rqSec('#6B7280','Picked up','Finished. Newest first.',L.filter(x=>x.status==='Picked up'),false,null,'pu',true)+rqSec('#9A5B3C','Closed','Declined, couldn\u2019t get it, or never picked up. Newest first.',L.filter(x=>x.status==='Closed'),false,null,'cl',true);
   }
-  if(!body.replace(/<section class="dsec g-arch">[\s\S]*$/,'').trim()) body='<p class="dnone" style="font-size:20px">'+(q?'Nothing found.':(mgr?'No open requests.':'Nothing waiting for pickup.'))+'</p>'+(body.indexOf('g-arch')>=0?body.slice(body.indexOf('<section class="dsec g-arch">')):'');
+  if(!body.trim()) body='<p class="dnone" style="font-size:20px">'+(q?'Nothing found.':(mgr?'No open requests.':'Nothing waiting for pickup.'))+'</p>';
   return topHTML(mgr?'Request list':'Pickups','go:request').replace('<h2>','<h2 class="hbig">')+'<p class="hsub">'+(mgr?'Every request, every shop, from request to pickup.':'Customers picking up a record: find their name and check them off.')+'</p>'+bannerHTML()+err+chips+search+body;
 }
 function rqBadge(){ return reqs().filter(x=>rqOwn(x)&&(isMgr()?x.status==='New':x.status==='Waiting for pickup')).length; }
@@ -2074,7 +2074,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r66';
+const BUILD='r67';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2387,7 +2387,7 @@ document.addEventListener('click', async ev=>{
     else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='dropoff'||t==='request') S.tagree=false; if(t==='dropoff'){ S.iphoto=null; S.dpay=null; S.dleft=null; } if(t==='request'){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ await rqLoad(); if(DEMO||await rLoad()) rEnter(); return; }
     if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
     if(t==='kegs'){ S.kv='taps'; S.ks=null; }
-    if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqq=''; S.rqshop='All'; rqLoad().then(()=>{ if(S.view==='reqlist') render(); }); }
+    if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqcol=isMgr()?{quoted:1,ordered:1,wait:1,pu:1,cl:1}:{}; S.rqq=''; S.rqshop='All'; rqLoad().then(()=>{ if(S.view==='reqlist') render(); }); }
     if(t==='credit'){ S.crq=''; S.crsel=null; }
     if(t==='rcans'||t==='rsnacks'||t==='rother'){ S.cmode=t==='rsnacks'?'snacks':t==='rother'?'other':'cans'; S.cOther=false; S.cs=null; S.csup=''; S.iphoto=null; }
     if(t==='rkeg'){ S.kOther=false; S.ksize='1/6'; S.iphoto=null; S.rk=[]; S.ksup=''; S.rkBusy=false; S.rkDone=null; }
@@ -2473,6 +2473,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='tclose'){ const o=document.querySelector('.tscrim'); if(o) o.remove(); }
   else if(a==='tagree'){ S.tagree=true; const o=document.querySelector('.tscrim'); if(o) o.remove(); const t=document.getElementById('tstat'); if(t){ t.textContent='Agreed \u2713'; t.classList.add('ok'); } if(S.recheck) S.recheck(); }
   else if(a==='rqopen'){ S.rqsel=S.rqsel===b.dataset.id?null:b.dataset.id; render(); }
+  else if(a==='rqtog'){ const k=b.dataset.k; S.rqcol=S.rqcol||{}; S.rqcol[k]=S.rqcol[k]?0:1; render(); }
   else if(a==='rqarch'){ S.rqarch=!S.rqarch; S.rqq=''; S.rqsel=null; render(); }
   else if(a==='rqshop'){ S.rqshop=b.dataset.v; render(); }
   else if(a==='rqquote'){ const pr=parseFloat((document.getElementById('rqprice')||{}).value); if(!(pr>0)){ toast('Enter the price you quoted'); return; } rqAct('quote',(b.dataset.ids||'').split(','),{price:pr,note:(document.getElementById('rqnote')||{}).value||''}); }
