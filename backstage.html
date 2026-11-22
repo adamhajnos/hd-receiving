@@ -2205,6 +2205,7 @@ function bindForms(){
 /* ---------- actions ---------- */
 function toast(m,ms){ const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=m; document.getElementById('screen').appendChild(t); setTimeout(()=>t.remove(),ms||2200); }
 async function submit(task, summary, data, stay, msg){
+  if(S.busy) return false; /* a second tap while the first is saving would log it twice */
   S.busy=true; S.err=''; const sub=document.getElementById('sub'); if(sub) sub.disabled=true;
   try{
     S.lastRes=await api('log',{who:S.who,task,summary,data});

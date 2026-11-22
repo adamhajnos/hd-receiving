@@ -377,6 +377,19 @@ function registerLog_() {
     if (isNaN(amt) && r[3] === '') return;
     out.push({ ts: new Date(r[0]).toISOString(), who: String(r[1]), kind: String(r[5] || 'Count'), amount: isNaN(amt) ? '' : amt, deposit: r[3] === '' ? '' : parseFloat(r[3]), note: String(r[4] || ''), src: String(r[6] || '') });
   });
+  // The old register sheet is the record for the days it covers: drop live Opening/Closing rows on a day that has an imported row of the same kind.
+  var tz = ss.getSpreadsheetTimeZone(), day = function (iso) { return Utilities.formatDate(new Date(iso), tz, 'yyyy-MM-dd'); }, imported = {};
+  out.forEach(function (c) { if (c.src === 'Import') imported[c.kind + day(c.ts)] = true; });
+  out = out.filter(function (c) { return c.src === 'Import' || c.src === 'Cash' || !imported[c.kind + day(c.ts)] || c.kind === 'Count'; });
+  // A double-tap on Finish logs the same open/close several times: keep the first of identical rows within two minutes.
+  out.sort(function (a, b) { return a.ts < b.ts ? -1 : 1; });
+  var seen = {};
+  out = out.filter(function (c) {
+    if (c.kind === 'Count' || c.src === 'Import') return true;
+    var k = c.kind + '|' + c.who + '|' + c.amount, t = new Date(c.ts).getTime();
+    if (seen[k] && t - seen[k] < 120000) return false;
+    seen[k] = t; return true;
+  });
   out.sort(function (a, b) { return a.ts < b.ts ? 1 : -1; });
   return out.slice(0, 600);
 }
