@@ -1205,7 +1205,7 @@ function rListHTML(){
   if(R.busy) return '<p class="hint">Searching Discogs\u2026</p>';
   const res=(R.res||[]).slice(0,6); R.shown=res;
   const typed=/ - /.test(q)?'<button class="btn ghost" data-act="rtyped">Use \u201C'+esc(q)+'\u201D as typed</button>':'<p class="hint">Not on Discogs? Type it as Artist - Album.</p>';
-  return (res.length?'<div class="uh">Tap the right record</div>'+res.map((r,i)=>uRow(r.artist,r.album,r.year,'','data-i="'+i+'"',r.thumb).replace('data-act="upick"','data-act="rpick"')).join(''):'<p class="hint">No match on Discogs.</p>')+typed;
+  return (res.length?'<div class="uh">Tap the right record</div>'+res.map((r,i)=>uRow(r.artist,r.album,r.year,'','data-i="'+i+'"',r.thumb).replace('data-act="upick"','data-act="rqpick"')).join(''):'<p class="hint">No match on Discogs.</p>')+typed;
 }
 function rRefreshList(){ const l=document.getElementById('rlist'); if(l) l.innerHTML=rListHTML(); }
 function rSearchSoon(){ clearTimeout(_rtm); const q=(rs().q||'').trim(); _rid++; if(q.length<3){ rs().res=null; rs().busy=false; rRefreshList(); return; } rs().busy=true; rRefreshList(); _rtm=setTimeout(()=>rSearch(q),300); }
@@ -2584,7 +2584,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='rqyes'){ S.rq=false; rDoFinish(true); }
   else if(a==='rqno'){ S.rq=false; rDoFinish(false); }
   else if(a==='rqcancel'){ S.rq=false; render(); }
-  else if(a==='rpick'){ const r=(rs().shown||[])[+b.dataset.i]; if(r) rChoose(r.artist,r.album); }
+  else if(a==='rqpick'){ const r=(rs().shown||[])[+b.dataset.i]; if(r) rChoose(r.artist,r.album); }
   else if(a==='rtyped'){ const u=usplit(rs().q); if(u.artist&&u.album) rChoose(u.artist,u.album); }
   else if(a==='rclear'){ rChoose('',''); }
   else if(a==='tdpick'){ const r=(S.td.shown||[])[+b.dataset.i]; if(r){ S.td.artist=r.artist; S.td.album=r.album; S.td.genre=r.genre||''; S.td.q=''; S.td.res=null; S.td.picked=true; tdRefreshList(); const set=(id,v)=>{ const e=document.getElementById(id); if(e){ e.value=v; e.dispatchEvent(new Event('input',{bubbles:true})); } }; set('aartist',r.artist); set('aalbum',r.album); const q=document.getElementById('tdq'); if(q) q.value=''; if(r.genre) set('agenre',r.genre); else { try{ let g=''; if(r.mid){ const m=await dget('masters/'+r.mid); g=ugenre(m.genres); } else if(r.rid){ const x=await dget('releases/'+r.rid); g=ugenre(x.genres); } if(g){ S.td.genre=g; set('agenre',g); } }catch(e){} } toast('Filled in from Discogs'); const pe=document.getElementById('aprice'); if(pe) pe.focus(); } }
