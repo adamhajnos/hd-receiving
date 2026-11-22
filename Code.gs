@@ -983,9 +983,10 @@ var REQ_MOVES_ = { // action: [from statuses, new status]
 
 /** Staff may only mark Picked up and Arrived (receiving); managers can do every step. {ids:[...], op:'quote'|'accepted'|'declined'|'cantget'|'arrived'|'pickedup', price, note}. Several ids = the same record asked for by several people. */
 function reqUpdate_(req, who) {
-  var op = clean_(req.op), mv = REQ_MOVES_[op];
+  var op = clean_(req.op), mv = REQ_MOVES_[op], setSt = op === 'setstatus' ? clean_(req.status) : '';
   if (AUTH_ROLE_ !== 'manager' && op !== 'pickedup' && op !== 'arrived') throw new Error('Managers only'); // staff: check people off, and mark arrivals from receiving
-  if (!mv) throw new Error('Unknown request action');
+  if (setSt && ['New', 'Quoted', 'Ordered', 'Waiting for pickup', 'Picked up', 'Closed'].indexOf(setSt) < 0) throw new Error('Unknown status');
+  if (!mv && !setSt) throw new Error('Unknown request action');
   var ids = (req.ids || []).map(String).slice(0, 25);
   if (!ids.length) throw new Error('No request chosen');
   var price = Number(req.price);
@@ -997,9 +998,14 @@ function reqUpdate_(req, who) {
     var vals = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 19).getValues() : [];
     vals.forEach(function (row, i) {
       if (ids.indexOf(String(row[RQ.ID])) < 0) return;
-      if (row[RQ.SHOP] !== shop) throw new Error('That request belongs to another shop');
-      if (mv[0].indexOf(row[RQ.STATUS]) < 0) throw new Error(row[RQ.ARTIST] + ' is ' + row[RQ.STATUS] + ', so that step is not allowed');
-      row[RQ.STATUS] = mv[1]; row[RQ.CHANGED] = now; row[RQ.BY] = who;
+      if (AUTH_ROLE_ !== 'manager' && row[RQ.SHOP] !== shop) throw new Error('That request belongs to another shop'); // managers work every shop's list
+      if (!setSt && mv[0].indexOf(row[RQ.STATUS]) < 0) throw new Error(row[RQ.ARTIST] + ' is ' + row[RQ.STATUS] + ', so that step is not allowed');
+      var ns = setSt || mv[1], was = row[RQ.STATUS];
+      row[RQ.STATUS] = ns; row[RQ.CHANGED] = now; row[RQ.BY] = who;
+      if (setSt) { // manager sets the status directly: no emails
+        if (ns === 'Waiting for pickup') { row[RQ.HOLD] = new Date(now.getTime() + HOLD_DAYS * 86400000); row[RQ.REMINDED] = 'manual'; } else if (was === 'Waiting for pickup') row[RQ.HOLD] = '';
+        row[RQ.REASON] = ns === 'Closed' ? (row[RQ.REASON] || 'Closed by manager') : '';
+      }
       if (op === 'quote') { row[RQ.QUOTE] = price; row[RQ.QNOTE] = clean_(req.note); }
       if (op === 'declined') row[RQ.REASON] = 'Customer declined the quote';
       if (op === 'cantget') row[RQ.REASON] = "Can't get it";
@@ -1007,7 +1013,7 @@ function reqUpdate_(req, who) {
       sh.getRange(i + 2, 1, 1, 19).setValues([row]);
       changed.push(row);
       sheet_(ss, 'Log').appendRow([now, Utilities.formatDate(now, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd'), who, 'reqstatus',
-        'Request ' + row[RQ.NAME] + ' (' + row[RQ.ARTIST] + ' - ' + row[RQ.ALBUM] + '): ' + mv[1], JSON.stringify({ id: row[RQ.ID], op: op })]);
+        'Request ' + row[RQ.NAME] + ' (' + row[RQ.ARTIST] + ' - ' + row[RQ.ALBUM] + '): ' + ns, JSON.stringify({ id: row[RQ.ID], op: op })]);
     });
     if (!changed.length) throw new Error('Request not found');
   } finally { lock.releaseLock(); }

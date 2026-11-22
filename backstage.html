@@ -328,6 +328,9 @@ div.tile.done{cursor:default}
 .ddet{padding:4px 18px 18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
 .dwhat{margin:12px 0 0;font-size:20px}.dct{display:flex;gap:22px;flex-wrap:wrap}.dct .lnk{font-size:19px}
 .dact{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px}.dact .btn{min-height:60px;font-size:21px;padding:0 24px}.doff{display:flex;flex-direction:row;align-items:center;gap:10px;font-weight:700}.doff .pre{width:170px}
+
+.rqv .dbar{font-size:16px!important;padding:8px 14px}.rqv .dcnt{font-size:14px;min-width:26px;padding:1px 8px}.rqv .dsub{font-size:14px!important;padding:6px 14px!important}.rqv .dhead{font-size:15px;min-height:44px}.rqv .dhead .rec,.rqv .dhead .who{font-size:15px}.rqv .chip{font-size:13px;padding:3px 9px}.rqv .ddet p,.rqv .rqp,.rqv .rqp a{font-size:14px}.rqv .o{font-size:13px}.rqv .btn{min-height:42px;font-size:15px;padding:0 16px}.rqv .tchip{font-size:15px;min-height:40px;padding:0 14px}.rqv .dq{font-size:16px;min-height:44px}.rqv .ddet input{font-size:15px;min-height:42px}.rqv .dtog{font-size:16px}
+.stpick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;padding-top:10px;border-top:1px dashed var(--line)}.stpick .tchip:disabled{opacity:1}
 </style>
 </head>
 <body>
@@ -687,7 +690,7 @@ async function apiRaw(action, payload){
       }
       const op=payload.op, MOV={quote:['New','Quoted'],accepted:['Quoted','Ordered'],declined:['Quoted','Closed'],cantget:['*','Closed'],arrived:['Ordered','Waiting for pickup'],pickedup:['Waiting for pickup','Picked up']};
       if(!mgr&&op!=='pickedup'&&op!=='arrived') throw new Error('Managers only');
-      (payload.ids||[]).forEach(id=>{ const x=L.find(y=>y.id===id); if(!x) return; if(x.shop!==SHOPN()) throw new Error('That request belongs to '+x.shop); const m=MOV[op]; if(!m) throw new Error('Unknown action'); if(m[0]!=='*'&&x.status!==m[0]) throw new Error('Already '+x.status); x.status=m[1]; x.changed=now;
+      (payload.ids||[]).forEach(id=>{ const x=L.find(y=>y.id===id); if(!x) return; if(!mgr&&x.shop!==SHOPN()) throw new Error('That request belongs to '+x.shop); if(op==='setstatus'){ x.status=payload.status; x.changed=now; if(payload.status!=='Waiting for pickup') delete x.holdUntil; else x.holdUntil=new Date(Date.now()+10*864e5).toISOString(); return; } const m=MOV[op]; if(!m) throw new Error('Unknown action'); if(m[0]!=='*'&&x.status!==m[0]) throw new Error('Already '+x.status); x.status=m[1]; x.changed=now;
         if(op==='quote'){ x.quote=+payload.price; x.quoteNote=payload.note||''; } if(op==='arrived') x.holdUntil=new Date(Date.now()+10*864e5).toISOString(); if(op==='declined') x.reason='customer declined'; if(op==='cantget') x.reason="can't get it"; });
       LS.set(RQ_K,L); return {ok:true};
     }
@@ -1134,7 +1137,7 @@ function rqRow(x){
 }
 function rqContact(y){ return '<div class="rqp"><b>'+esc(y.name)+'</b> '+(y.phone?'<a class="lnk" href="tel:'+esc(String(y.phone).replace(/\D/g,''))+'">'+esc(y.phone)+'</a>':'')+(y.email&&y.email!=='(on file)'?' <a class="lnk" href="mailto:'+esc(y.email)+'">'+esc(y.email)+'</a>':'')+' <span class="o">asked '+esc(dWhen(y.ts))+(y.who?' ('+esc(y.who)+')':'')+(y.source==='Web'?' on the website':'')+'</span></div>'; }
 function rqDetail(x){
-  const grp=x._g&&x._g.length>1?x._g:null, ids=(grp||[x]).map(y=>y.id).join(','), st=x.status, mine=rqOwn(x);
+  const grp=x._g&&x._g.length>1?x._g:null, ids=(grp||[x]).map(y=>y.id).join(','), st=x.status, mine=rqOwn(x)||isMgr();
   const b=(op,t,c)=>'<button class="btn '+(c||'go')+'" data-act="rqstep" data-op="'+op+'" data-ids="'+ids+'">'+t+'</button>';
   const people=(grp||[x]).map(rqContact).join('');
   const head=(grp?'<p class="o"><b>'+grp.length+' people asked for this.</b> One quote and one order cover everyone. Buttons apply to all '+grp.length+'.</p>':'');
@@ -1149,7 +1152,8 @@ function rqDetail(x){
   else note='<p class="o">'+(st==='Closed'?'Closed: '+esc(x.reason||'')+'.':'Picked up '+esc(dWhen(x.sts))+'.')+(x.quote!=null?' Quoted $'+esc(money(x.quote))+'.':'')+'</p>';
   const also=reqs().filter(y=>rqOwn(y)&&!(grp||[x]).some(p=>p.id===y.id)&&['New','Quoted','Ordered','Waiting for pickup'].includes(y.status)&&(grp||[x]).some(p=>custKey(p)===custKey(y)));
   if(also.length&&isMgr()) note+='<p class="o"><b>Also asking for:</b> '+also.map(y=>esc(y.artist)+' \u2013 '+esc(y.album)+' ('+esc(y.status)+')').join('; ')+'.</p>';
-  return '<div class="ddet">'+head+note+(isMgr()?people:'<div class="rqp"><b>'+esc(x.name)+'</b>'+(x.phone?' <a class="lnk" href="tel:'+esc(String(x.phone).replace(/\D/g,''))+'">'+esc(x.phone)+'</a>':'')+'</div>')+(act?'<div class="dact">'+act+'</div>':'')+'</div>';
+  const pick=isMgr()?'<div class="stpick"><span class="o">Set status</span>'+['New','Quoted','Ordered','Waiting for pickup','Picked up','Closed'].map(s=>'<button class="tchip'+(x.status===s?' on':'')+'" data-act="rqset" data-st="'+s+'" data-ids="'+ids+'"'+(x.status===s?' disabled':'')+'>'+s+'</button>').join('')+'</div>':'';
+  return '<div class="ddet">'+head+note+(isMgr()?people:'<div class="rqp"><b>'+esc(x.name)+'</b>'+(x.phone?' <a class="lnk" href="tel:'+esc(String(x.phone).replace(/\D/g,''))+'">'+esc(x.phone)+'</a>':'')+'</div>')+(act?'<div class="dact">'+act+'</div>':'')+pick+'</div>';
 }
 function rqCustGroup(r){ const by={},out=[]; r.forEach(x=>{ const k=x.shop+'|'+custKey(x); if(by[k]&&rqOwn(x)){ by[k]._c.push(x); } else { x._c=[x]; by[k]=x; out.push(x); } }); return out; }
 function rqCustRow(x){
@@ -1180,10 +1184,10 @@ function vReqList(){
       rqSec('#7A5CC2','Quoted, waiting for an answer','Closes itself after 14 days with no answer.',L.filter(x=>x.status==='Quoted'),true,null,'quoted')+
       rqSec('#2F6DB5','Ordered','On order with the distributor. Scanning the record at receiving alerts staff and emails the customer.',L.filter(x=>x.status==='Ordered'),true,null,'ordered')+
       rqSec('#0F7C8A','Waiting for pickup','The record is here. We hold it '+holdDays()+' days. Tap Picked up when they collect it.',L.filter(x=>x.status==='Waiting for pickup'),'cust',rqCustRow,'wait');
-    body+=rqSec('#6B7280','Picked up','Finished. Newest first.',L.filter(x=>x.status==='Picked up'),false,null,'pu',true)+rqSec('#9A5B3C','Closed','Declined, couldn\u2019t get it, or never picked up. Newest first.',L.filter(x=>x.status==='Closed'),false,null,'cl',true);
+    body+=rqSec('#6B7280','Completed','Picked up, declined, or closed. Newest first.',L.filter(x=>x.status==='Picked up'||x.status==='Closed'),false,null,'done',true);
   }
   if(!body.trim()) body='<p class="dnone" style="font-size:20px">'+(q?'Nothing found.':(mgr?'No open requests.':'Nothing waiting for pickup.'))+'</p>';
-  return topHTML(mgr?'Request list':'Pickups','go:request').replace('<h2>','<h2 class="hbig">')+'<p class="hsub">'+(mgr?'Every request, every shop, from request to pickup.':'Customers picking up a record: find their name and check them off.')+'</p>'+bannerHTML()+err+chips+search+body;
+  return topHTML(mgr?'Request list':'Pickups','go:request').replace('<h2>','<h2 class="hbig">')+'<p class="hsub">'+(mgr?'Every request, every shop, from request to pickup.':'Customers picking up a record: find their name and check them off.')+'</p>'+bannerHTML()+err+'<div class="rqv">'+chips+search+body+'</div>';
 }
 function rqBadge(){ return reqs().filter(x=>rqOwn(x)&&(isMgr()?x.status==='New':x.status==='Waiting for pickup')).length; }
 function vRequest(){
@@ -2387,7 +2391,7 @@ document.addEventListener('click', async ev=>{
     else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='dropoff'||t==='request') S.tagree=false; if(t==='dropoff'){ S.iphoto=null; S.dpay=null; S.dleft=null; } if(t==='request'){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ await rqLoad(); if(DEMO||await rLoad()) rEnter(); return; }
     if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
     if(t==='kegs'){ S.kv='taps'; S.ks=null; }
-    if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqcol=isMgr()?{quoted:1,ordered:1,wait:1,pu:1,cl:1}:{}; S.rqq=''; S.rqshop='All'; rqLoad().then(()=>{ if(S.view==='reqlist') render(); }); }
+    if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqcol=isMgr()?{quoted:1,ordered:1,wait:1,done:1}:{}; S.rqq=''; S.rqshop='All'; rqLoad().then(()=>{ if(S.view==='reqlist') render(); }); }
     if(t==='credit'){ S.crq=''; S.crsel=null; }
     if(t==='rcans'||t==='rsnacks'||t==='rother'){ S.cmode=t==='rsnacks'?'snacks':t==='rother'?'other':'cans'; S.cOther=false; S.cs=null; S.csup=''; S.iphoto=null; }
     if(t==='rkeg'){ S.kOther=false; S.ksize='1/6'; S.iphoto=null; S.rk=[]; S.ksup=''; S.rkBusy=false; S.rkDone=null; }
@@ -2478,6 +2482,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='rqshop'){ S.rqshop=b.dataset.v; render(); }
   else if(a==='rqquote'){ const pr=parseFloat((document.getElementById('rqprice')||{}).value); if(!(pr>0)){ toast('Enter the price you quoted'); return; } rqAct('quote',(b.dataset.ids||'').split(','),{price:pr,note:(document.getElementById('rqnote')||{}).value||''}); }
   else if(a==='rqundo_old'){ const L=reqs(), x=L.find(y=>y.id===b.dataset.id); if(x&&x.hist.length){ x.status=x.hist.pop(); x.sts=new Date().toISOString(); rqSave(L); render(); } }
+  else if(a==='rqset'){ rqAct('setstatus',(b.dataset.ids||'').split(','),{status:b.dataset.st}); }
   else if(a==='rqstep'){ rqAct(b.dataset.op,(b.dataset.ids||b.dataset.id||'').split(',')); }
   else if(a==='rhold'){ const ids=(b.dataset.ids||'').split(','); S.rhold=(S.rhold||[]).filter(i=>!ids.includes(i)); rqAdvanceMany(ids,'In shop'); focusScan(); }
   else if(a==='feat'){ S.feat={text:''}; S.err=''; render(); const t=document.getElementById('ftxt'); if(t) t.focus(); }
