@@ -26,7 +26,7 @@ var TABS = {
   Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted', 'Unit cost'],
   UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
-  DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records', 'ID', 'Status', 'Pay', 'Unwanted', 'Offer', 'Offer sent', 'Status changed', 'Last action by', 'Leftovers done', 'History', 'Card', 'Card issued', 'Photo'],
+  DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records', 'ID', 'Status', 'Pay', 'Unwanted', 'Offer', 'Offer sent', 'Status changed', 'Last action by', 'Leftovers done', 'History', 'Card', 'Card issued', 'Photo', 'Shop'],
   Requests: ['ID', 'Created', 'Source', 'Shop', 'Name', 'Phone', 'Email', 'Artist', 'Album', 'Format', 'Notes', 'Status', 'Status changed', 'Quote', 'Quote note', 'Last action by', 'Hold until', 'Closed reason', 'Reminded'],
   Covers: ['Key', 'URL', 'Updated'],
   SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #', 'Unit cost']
@@ -269,7 +269,7 @@ function logEntry_(req, who) {
       drow[DR.TS] = now; drow[DR.WHO] = who; drow[DR.NAME] = clean_(d.name); drow[DR.PHONE] = phoneFmt_(d.phone); drow[DR.EMAIL] = dem; drow[DR.ITEMS] = clean_(d.items);
       drow[DR.COUNT] = Number(d.count) || ''; drow[DR.ID] = 'D' + Utilities.getUuid().replace(/-/g, '').slice(0, 7).toUpperCase(); drow[DR.STATUS] = 'New';
       drow[DR.PAY] = dpay; drow[DR.LEFT] = dleft; drow[DR.CHANGED] = now; drow[DR.BY] = who; drow[DR.HIST] = '[]';
-      drow[DR.PHOTO] = d.photo ? saveIssuePhoto_(String(d.photo), now, tz) : '';
+      drow[DR.PHOTO] = d.photo ? saveIssuePhoto_(String(d.photo), now, tz) : ''; drow[DR.SHOP] = myShop_();
       dsh.getRange(dsh.getLastRow() + 1, 1, 1, DR_W).setValues([drow]);
       result.drop = drow;
     }
@@ -1179,8 +1179,8 @@ function installRequestsTrigger() {
  * SQUARE_TOKEN (needs gift card write permission) for store credit.
  * ===================================================================================== */
 var DR = { TS: 0, WHO: 1, NAME: 2, PHONE: 3, EMAIL: 4, ITEMS: 5, COUNT: 6, ID: 7, STATUS: 8, PAY: 9, LEFT: 10, OFFER: 11, SENT: 12, CHANGED: 13, BY: 14,
-           LEFTDONE: 15, HIST: 16, CARD: 17, CARDOK: 18, PHOTO: 19 };
-var DR_W = 20;
+           LEFTDONE: 15, HIST: 16, CARD: 17, CARDOK: 18, PHOTO: 19, SHOP: 20 };
+var DR_W = 21;
 
 function dropSheet_() {
   var sh = sheet_(ss_(), 'DropOffs');
@@ -1207,8 +1207,9 @@ function dropObj_(row, n, mgr) {
 function dropList_() {
   var mgr = AUTH_ROLE_ === 'manager', sh = dropSheet_(), last = sh.getLastRow();
   if (last < 2) return [];
-  var from = Math.max(2, last - 399), vals = sh.getRange(from, 1, last - from + 1, DR_W).getValues();
-  return vals.map(function (r, i) { return dropObj_(r, from + i, mgr); }).filter(function (o) { return o.name; });
+  var from = Math.max(2, last - 799), vals = sh.getRange(from, 1, last - from + 1, DR_W).getValues();
+  var me = myShop_();
+  return vals.map(function (r, i) { return [r, i]; }).filter(function (p) { return p[0][DR.NAME] && (!p[0][DR.SHOP] || p[0][DR.SHOP] === me); }).map(function (p) { return dropObj_(p[0], from + p[1], mgr); });
 }
 
 function dropAlert_(r) {
