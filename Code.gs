@@ -1213,7 +1213,7 @@ function dropList_() {
 
 function dropAlert_(r) {
   var to = PropertiesService.getScriptProperties().getProperty('DROPOFF_ALERT_TO') || PropertiesService.getScriptProperties().getProperty('REGISTER_ALERT_TO') || Session.getEffectiveUser().getEmail();
-  var body = 'A customer dropped off records at Hunky Dory Records ' + myShop_() + '.\n\n' +
+  var body = 'A customer dropped off records at HD ' + myShop_() + '.\n\n' +
     'Customer: ' + r[DR.NAME] + '\nEmail: ' + r[DR.EMAIL] + '\nPhone: ' + (r[DR.PHONE] || 'none') + '\nWhat they dropped off: ' + r[DR.ITEMS] + '\n' +
     'Wants to be paid in: ' + r[DR.PAY] + '\nRecords we do not want: ' + String(r[DR.LEFT]).toLowerCase() + '\nLogged by: ' + r[DR.WHO] + '\n' + (r[DR.PHOTO] ? 'Photo: ' + r[DR.PHOTO] + '\n' : '') +
     '\nMake the offer under Drop-off list in HD Backstage.';
@@ -1302,19 +1302,19 @@ function dropMoney_(n) { return '$' + Number(n).toFixed(2); }
 
 function sendDropOffer_(row) {
   var cash = row[DR.PAY] === 'Cash', shop = myShop_();
-  sendAutoEmail_({ to: row[DR.EMAIL], subject: 'Your offer from Hunky Dory Records ' + shop,
-    body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nThanks for bringing your records in to Hunky Dory Records ' + shop + '. We looked through them and can offer you ' + dropMoney_(row[DR.OFFER]) +
+  sendAutoEmail_({ to: row[DR.EMAIL], subject: 'Your offer from HD ' + shop,
+    body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nThanks for bringing your records in to HD ' + shop + '. We looked through them and can offer you ' + dropMoney_(row[DR.OFFER]) +
       (cash ? ' in cash' : ' in store credit') + ' for the records we are keeping.\n\n' +
       (row[DR.LEFT] === 'Donate' ? 'The records we are not buying will be donated.' : 'The records we are not buying are ours to hold for you. You can pick them up at the shop.') +
       '\n\nReply to this email to accept or decline. If we do not hear back within 10 days, we may donate or dispose of your records, as in the drop-off terms you agreed to.' +
-      (cash ? '' : '\n\nStore credit is sent to this email address as a gift card.') + '\n\nHunky Dory Records' }, 'dropoff', 'Backstage');
+      (cash ? '' : '\n\nStore credit is sent to this email address as a gift card.') + '\n\nHD ' + myShop_() + '' }, 'dropoff', 'Backstage');
 }
 
 function sendDropCard_(row, card) {
   var gan = String(card.gan || '').replace(/(\d{4})(?=\d)/g, '$1 ');
-  sendAutoEmail_({ to: row[DR.EMAIL], subject: 'Your Hunky Dory Records store credit: ' + dropMoney_(card.amount),
-    body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nYour store credit is ready: ' + dropMoney_(card.amount) + ' at Hunky Dory Records.\n\nGift card number: ' + gan +
-      '\n\nGive this number to us at the register and we will take it off your total. Keep this email; it is your gift card.\n\nHunky Dory Records' }, 'dropoff', 'Backstage');
+  sendAutoEmail_({ to: row[DR.EMAIL], subject: 'Your HD ' + myShop_() + ' store credit: ' + dropMoney_(card.amount),
+    body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nYour store credit is ready: ' + dropMoney_(card.amount) + ' at HD ' + myShop_() + '.\n\nGift card number: ' + gan +
+      '\n\nGive this number to us at the register and we will take it off your total. Keep this email; it is your gift card.\n\nHD ' + myShop_() + '' }, 'dropoff', 'Backstage');
 }
 
 /** Shared album-cover links so every iPad looks a cover up once, ever. */
