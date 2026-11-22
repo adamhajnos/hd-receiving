@@ -331,7 +331,7 @@ div.tile.done{cursor:default}
 
 .rqv .dbar{font-size:16px!important;padding:8px 14px}.rqv .dcnt{font-size:14px;min-width:26px;padding:1px 8px}.rqv .dsub{font-size:14px!important;padding:6px 14px!important}.rqv .dhead{font-size:15px;min-height:44px}.rqv .dhead .rec,.rqv .dhead .who{font-size:15px}.rqv .chip{font-size:13px;padding:3px 9px}.rqv .ddet p,.rqv .rqp,.rqv .rqp a{font-size:14px}.rqv .o{font-size:13px}.rqv .btn{min-height:42px;font-size:15px;padding:0 16px}.rqv .tchip{font-size:15px;min-height:40px;padding:0 14px}.rqv .dq{font-size:16px;min-height:44px}.rqv .ddet input{font-size:15px;min-height:42px}.rqv .dtog{font-size:16px}
 .stpick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;padding-top:10px;border-top:1px dashed var(--line)}.stpick .tchip:disabled{opacity:1}
-.regv{display:grid;grid-template-columns:380px 1fr;gap:36px;align-items:start;margin-top:6px}.regv.solo{grid-template-columns:minmax(0,520px)}.regf{max-width:none;gap:18px}.regf label>span{font-weight:inherit}.regf .oi{display:inline;margin-left:4px;font-size:inherit}.regl{min-width:0}.reglh{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 10px}.rlog{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:auto;max-height:calc(100vh - 230px)}.rlday{padding:8px 18px;background:#F3F1EC;font-size:14px;font-weight:700;color:var(--muted);position:sticky;top:41px;z-index:1}.rlrow{display:grid;grid-template-columns:90px 84px 110px 110px 130px 1fr;gap:14px;align-items:center;padding:11px 18px;border-top:1px solid var(--line);font-size:17px}.rlday+.rlrow{border-top:0}.rlhead{position:sticky;top:0;z-index:2;background:#fff;border-top:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:12px 18px}.rlt,.rlw,.rln{color:var(--muted);font-size:15px}.rln{color:var(--fg)}.rla{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}.rlnone{color:#BBB;font-weight:400}.rlk{display:inline-block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 10px;border-radius:999px;background:#E9EEF5;color:#334}.rlk.k-open{background:#E3F3E6;color:#1d5a2a}.rlk.k-close{background:#F0E6F5;color:#5a2a6a}@media (max-width:860px){.regv{grid-template-columns:1fr}.rlrow{grid-template-columns:70px 70px 90px 90px 1fr;}.rln{grid-column:1/-1}}
+.regv{display:grid;grid-template-columns:380px 1fr;gap:36px;align-items:start;margin-top:6px}.regv.solo{grid-template-columns:minmax(0,520px)}.regf{max-width:none;gap:18px}.regf label>span{font-weight:inherit}.regf .oi{display:inline;margin-left:4px;font-size:inherit}.regl{min-width:0}.reglh{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 10px}.rlog{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:auto;max-height:calc(100vh - 230px)}.rlday{padding:8px 18px;background:#F3F1EC;font-size:14px;font-weight:700;color:var(--muted);position:sticky;top:41px;z-index:1}.rlrow{display:grid;grid-template-columns:120px 120px 120px 100px 110px 110px 1fr;gap:14px;align-items:center;padding:11px 18px;border-top:1px solid var(--line);font-size:17px}.rlday+.rlrow{border-top:0}.rlhead{position:sticky;top:0;z-index:2;background:#fff;border-top:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:12px 18px}.rlt,.rlw,.rln{color:var(--muted);font-size:15px}.rln{color:var(--fg)}.rla{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}.rlnone{color:#BBB;font-weight:400}.rld{font-weight:700}.rlbad{color:#B3261E;background:#FDECEA;border-radius:8px;padding:2px 8px}.rlbad small{display:block;font-size:12px;font-weight:600}.rlk{display:inline-block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 10px;border-radius:999px;background:#E9EEF5;color:#334}.rlk.k-open{background:#E3F3E6;color:#1d5a2a}.rlk.k-close{background:#F0E6F5;color:#5a2a6a}@media (max-width:860px){.regv{grid-template-columns:1fr}.rlrow{grid-template-columns:90px 1fr 1fr 1fr 1fr;}.rlw{grid-column:1/-1}.rln{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -1593,11 +1593,16 @@ function rlogHTML(){
   if(L===undefined||L===null) return '<p class="o" style="padding:16px">Loading the log\u2026</p>';
   if(L===false) return '<p class="o" style="padding:16px">Couldn\u2019t load the log. Check the wifi and reopen this page.</p>';
   if(!L.length) return '<p class="o" style="padding:16px">No counts logged yet.</p>';
-  const $=v=>v===''||v==null?'<span class="rlnone">\u2014</span>':'$'+Number(v).toFixed(2);
-  let last='', out='<div class="rlhead rlrow"><span>Time</span><span>Type</span><span class="rla">Count</span><span class="rla">Deposit</span><span>Who</span><span>Note</span></div>';
-  L.forEach(c=>{ const d=new Date(c.ts), day=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-    if(day!==last){ out+='<div class="rlday">'+day+'</div>'; last=day; }
-    out+='<div class="rlrow"><span class="rlt">'+(c.src==='Import'?'':fmtTime(c.ts))+'</span><span><b class="rlk k-'+c.kind.toLowerCase()+'">'+c.kind+'</b></span><span class="rla">'+$(c.amount)+'</span><span class="rla">'+$(c.deposit)+'</span><span class="rlw">'+esc(c.who)+'</span><span class="rln">'+esc(c.note||'')+'</span></div>'; });
+  const $=v=>v===''||v==null||isNaN(v)?'<span class="rlnone">\u2014</span>':'$'+Number(v).toFixed(2);
+  const days={};
+  L.forEach(c=>{ const d=new Date(c.ts), k=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); const r=days[k]||(days[k]={k,ts:c.ts}); if(c.kind==='Open'){ r.open=c.amount; r.on=c.note; r.ow=c.who; } else if(c.kind==='Close'){ r.close=c.amount; r.dep=c.deposit; r.cn=c.note; r.cw=c.who; } });
+  const rows=Object.values(days).sort((x,y)=>x.k-y.k); let prev=null;
+  rows.forEach(r=>{ r.rem=(r.close===undefined||r.close==='')?null:Number(r.close)-(Number(r.dep)||0); r.exp=prev; r.bad=prev!==null&&r.open!==undefined&&r.open!==''&&Math.abs(Number(r.open)-prev)>=0.005; if(r.rem!==null) prev=r.rem; });
+  let out='<div class="rlhead rlrow"><span>Date</span><span class="rla">Register open</span><span class="rla">Register close</span><span class="rla">Deposit</span><span class="rla">Remaining</span><span>Who</span><span>Notes</span></div>';
+  rows.reverse().forEach(r=>{ const d=new Date(r.ts), day=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    const notes=[r.on?(r.cn?'Open: ':'')+r.on:'',r.cn?(r.on?'Close: ':'')+r.cn:''].filter(Boolean).join(' \u00b7 ');
+    const who=[...new Set([r.ow,r.cw].filter(Boolean))].join(' / ');
+    out+='<div class="rlrow"><span class="rld">'+day+'</span><span class="rla'+(r.bad?' rlbad':'')+'">'+$(r.open)+(r.bad?'<small>expected '+$(r.exp)+'</small>':'')+'</span><span class="rla">'+$(r.close)+'</span><span class="rla">'+(r.close===undefined?$(null):$(r.dep||0))+'</span><span class="rla">'+$(r.rem)+'</span><span class="rln">'+esc(notes)+'</span></div>'; });
   return out;
 }
 function rlogLoad(){
@@ -1607,7 +1612,7 @@ function rlogLoad(){
 function vCash(){
   if(!isMgr()) return topHTML('Register count')+bannerHTML()+'<p class="o">The register history is for managers.</p>';
   return topHTML('Register count')+bannerHTML()+
-  '<div class="regl"><p class="o" style="margin:0 0 12px">History of the register: every open and close count, with deposits and notes. Newest first.</p><div class="rlog" id="rlog">'+rlogHTML()+'</div></div>';
+  '<div class="regl"><p class="o" style="margin:0 0 12px">One row per day: opening count, closing count, deposit, and what\u2019s left in the drawer. Newest first.</p><div class="rlog" id="rlog">'+rlogHTML()+'</div></div>';
 }
 function vDrop(){
   return topHTML('Customer drop&#8209;off')+bannerHTML()+
