@@ -1088,7 +1088,7 @@ const TERMS={
     'If we can’t reach you, or we hear nothing from you within '+TD.offer+' days of our offer, your records are treated as unclaimed and will be donated.',
     'Records we don’t buy are returned or donated, whichever you chose at drop-off. Returned records must be picked up within '+TD.pickup+' days of our notice. After that they are donated.',
     'Payment is cash or store credit, as you chose at drop-off.',
-    'All store credit works through the phone number you gave us. It’s how you access your gift card.',
+    'Store credit is sent to the email address you gave us. It’s how you receive your gift card.',
     'Once records are donated we can’t return them or pay for them.']},
   req:{h:'Request terms',l:[
     'A request is not a guarantee. We’ll try to find the record, but we can’t promise we’ll get it.',
@@ -1626,7 +1626,7 @@ function vDrop(){
   '<div class="pair"><div><label>How do they want to be paid?</label><div class="fmts" style="margin-top:7px">'+['Cash','Store credit'].map(x=>'<button data-act="dpay" data-v="'+x+'" class="'+(S.dpay===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
   '<div><label>Records we don\u2019t want</label><div class="fmts" style="margin-top:7px">'+['Donate','Return'].map(x=>'<button data-act="dleft" data-v="'+x+'" class="'+(S.dleft===x?'on':'')+'">'+x+'</button>').join('')+'</div></div></div>'+
   '</div></div>'+
-  '<div id="cbox" class="cbox" hidden><p class="cbh">Hand the iPad to the customer</p><label>Confirm phone number<input id="cphone2" type="tel" autocomplete="off"><p class="eerr" id="p2err" hidden>The two numbers don\u2019t match.</p></label><label class="agree"><input id="cagree" type="checkbox"><span>I have read and agree that all store credit works through my phone number. It\u2019s how I access my gift card.</span></label></div>'+
+  '<div id="cbox" class="cbox" hidden><p class="cbh">Hand the iPad to the customer</p><label>Confirm email address<input id="cphone2" type="email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><p class="eerr" id="p2err" hidden>The two email addresses don\u2019t match.</p></label><label class="agree"><input id="cagree" type="checkbox"><span>I have read and agree that my store credit is sent to this email address. It\u2019s how I receive my gift card.</span></label></div>'+
   termsRow('drop')+
   '<div><button class="btn go" id="sub" data-act="savedrop" disabled>Log drop-off</button></div></div>';
 }
@@ -2181,7 +2181,7 @@ function bindForms(){
     const EML=v=>!v||/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), ef=document.getElementById(S.view==='drop'?'cemail':'remail'), eo=EML(ef?ef.value.trim():''), ee=document.getElementById('eerr'); if(ee) ee.hidden=eo; if(ef) ef.style.borderColor=eo?'':'var(--bad)';
     const pf=document.getElementById(S.view==='drop'?'cphone':'rphone'), pv=pf?pf.value.replace(/\D/g,''):'', po=!(pf&&pf.value.trim())||pv.length===10||(pv.length===11&&pv[0]==='1'), pe=document.getElementById('perr'); if(pe) pe.hidden=po; if(pf) pf.style.borderColor=po?'':'var(--bad)';
     if(pf){ const g=fmtPhone(pf.value); if(g!==pf.value&&pv.length<=11) pf.value=g; }
-    const p2=document.getElementById('cphone2'), p2e=document.getElementById('p2err'); if(p2){ const g2=fmtPhone(p2.value); if(g2!==p2.value) p2.value=g2; const d2=p2.value.replace(/\D/g,''), bad=d2.length>=10&&d2!==pv; if(p2e) p2e.hidden=!bad; p2.style.borderColor=bad?'var(--bad)':''; }
+    const p2=document.getElementById('cphone2'), p2e=document.getElementById('p2err'); if(p2){ const e1=(ef?ef.value:'').trim().toLowerCase(), e2=p2.value.trim().toLowerCase(), bad=!!e2&&e2!==e1&&(e2.length>=e1.length||!e1.startsWith(e2)); if(p2e) p2e.hidden=!bad; p2.style.borderColor=bad?'var(--bad)':''; }
     const eh=document.getElementById('ehint'); if(eh) eh.hidden=!(ef&&ef.value.trim()&&eo);
     const es=document.getElementById('esug'), sg=ef?emailFix(ef.value):''; if(es){ es.hidden=!sg; es.innerHTML=sg?'Did you mean <b>'+esc(sg)+'</b>? <button class="lnk" data-act="efix" data-id="'+ef.id+'" data-v="'+esc(sg)+'">Use it</button>':''; }
     if(S.view==='cash') ok = MONEY.test(val('drawer')) && (!val('deposit') || MONEY.test(val('deposit')));
@@ -2201,7 +2201,7 @@ function bindForms(){
       const add=document.getElementById('radd'); if(add) add.disabled = !(who&&cur);
       sub.textContent = 'Send'+((S.ritems.length+(cur?1:0))>1?' '+(S.ritems.length+(cur?1:0))+' requests':'');
     }
-    if(S.view==='drop') ok = !!S.dpay && !!S.dleft && !!val('cname') && !!val('citems') && !!val('cphone') && pv.length>=10 && !!val('cemail') && eo && po && !!S.tagree && (S.dpay!=='Store credit' || (!!val('cphone2') && val('cphone2').replace(/\D/g,'')===pv && !!(document.getElementById('cagree')||{}).checked));
+    if(S.view==='drop') ok = !!S.dpay && !!S.dleft && !!val('cname') && !!val('citems') && !!val('cphone') && pv.length>=10 && !!val('cemail') && eo && po && !!S.tagree && (S.dpay!=='Store credit' || (!!val('cphone2') && val('cphone2').toLowerCase()===val('cemail').toLowerCase() && !!(document.getElementById('cagree')||{}).checked));
     sub.disabled = !ok || S.busy;
   };
   document.querySelectorAll('input,textarea,select').forEach(e=>e.addEventListener('input',check));
