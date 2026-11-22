@@ -78,7 +78,9 @@ h2{margin:0;font:400 30px var(--big);letter-spacing:-.015em;display:flex;align-i
 .tile.pill{min-height:64px;min-width:230px;padding:8px 18px;gap:2px;justify-content:center}.tile.pill .t{font-size:28px}.tile.pill .s{font-size:17px}.lnk{background:none;border:0;padding:6px 0;font:inherit;color:var(--fg);text-decoration:underline;min-height:44px}
 .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}.col{display:flex;flex-direction:column;gap:10px;min-width:0}.col .tile{min-height:118px;padding:14px 18px}.col .tile .t{font-size:26px}.cat{margin:6px 0 2px;font:800 15px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.tile{display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:150px;padding:18px 20px;text-align:left;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
+.dthumb{float:right;width:88px;height:88px;padding:0;margin:0 0 8px 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}.dthumb img{width:100%;height:100%;object-fit:cover;display:block}.dthumb.ld{background:#eee}.dzoom{position:absolute;inset:0;z-index:9000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:24px}.dzoom img{max-width:100%;max-height:100%;border-radius:12px}
+.nbadge{position:absolute;top:-9px;right:-9px;min-width:30px;height:30px;padding:0 8px;box-sizing:border-box;border-radius:15px;background:#E5322D;color:#fff;font:800 16px/30px var(--mono,sans-serif);text-align:center;box-shadow:0 0 0 3px var(--bg,#f6f6f4),0 2px 6px rgba(0,0,0,.25);pointer-events:none}
+.tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:150px;padding:18px 20px;text-align:left;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
 .tile .t{font-weight:800;font-size:28px;line-height:1.15;display:flex;align-items:center;gap:10px}.tile .t svg{flex:none;width:28px;height:28px;color:var(--accent)}.tile.done .t svg{color:var(--ok)}.tile.todo .t svg{color:var(--warn-fg)}.tile:not(.soon){box-shadow:0 1px 0 rgba(20,17,13,.04),0 8px 18px -12px rgba(20,17,13,.3)}
 .tile .s{font:500 18px var(--display);line-height:1.25;color:var(--muted)}
 .tile.todo{border-color:var(--warn-fg);background:var(--warn-bg)}
@@ -113,7 +115,7 @@ input.money{font:500 34px var(--mono);min-height:72px}
 .rlast{display:flex;align-items:baseline;gap:18px;padding:12px 18px;border-radius:14px;background:var(--panel);border:1px solid var(--ok);font-size:22px}.rlast b{font:700 30px var(--mono);color:var(--ok);margin-left:auto}
 .row2{display:flex;align-items:center;gap:18px}.calc{font:600 28px var(--mono)}
 select{font:500 25px var(--display);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:0 16px;min-height:64px;width:100%}
-.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}.dform{max-width:none}.dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:32px;align-items:start}.dcol{display:flex;flex-direction:column;gap:18px}.dl .pair{grid-template-columns:1fr}.dform .cbox{max-width:none}.rchip{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px;border:1px solid var(--line);border-radius:14px;background:#fff;font-size:21px}.rchip b{flex:1}.dform textarea{min-height:110px}.dform .fmts,.dcol .fmts{flex-wrap:nowrap}.dcol .fmts button{padding:0 18px}.dform .fmts button{padding:0 20px;white-space:nowrap}@media (max-width:860px){.dgrid{grid-template-columns:1fr}}
 /* opening gate */
 .openbig{width:100%;min-height:380px;border-radius:24px;border:1.5px solid var(--warn);background:var(--warn-bg);font:800 72px var(--display);color:var(--warn-fg)}
 .openbig:active{background:var(--warn);color:#1d1604}
@@ -179,7 +181,7 @@ div.tile.done{cursor:default}
 .tpanel.ok{border-color:var(--ok);background:var(--ok-bg)}.tpanel.bad{border-color:#ff5a4d;background:rgba(255,90,77,.18);animation:flash .5s 2}.tpanel.dup{border-color:var(--warn-fg)}
 @keyframes flash{50%{background:rgba(255,90,77,.55)}}
 .tpanel .btn{min-height:56px}
-.addpick{display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px}.addpick .btn{min-height:124px;font-size:34px;font-weight:800;text-align:left;padding:14px 26px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px}.addpick .btn small{font:400 20px var(--display);opacity:.72}
+.addpick{display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px}.addpick .btn{min-height:96px!important}.rtop .kbig,.rtop .kdone{min-height:100px}.rtop{margin:0 0 14px}.kform{max-width:none;margin-top:0;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;align-items:start}.kform>*{grid-column:1/-1}.kform>.half{grid-column:auto}@media (max-width:860px){.kform{grid-template-columns:1fr}.kform>.half{grid-column:1/-1}}.addpick .btn{min-height:124px;font-size:34px;font-weight:800;text-align:left;padding:14px 26px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px}.addpick .btn small{font:400 20px var(--display);opacity:.72}
 .tact{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0 12px}
 .tact .btn{min-height:104px;font-size:30px;font-weight:800;letter-spacing:-.01em;line-height:1.25;text-align:left;padding:12px 22px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
 .tact .btn small{font:400 18px var(--display);opacity:.72;letter-spacing:0}
@@ -331,7 +333,7 @@ div.tile.done{cursor:default}
 
 .rqv .dbar{font-size:16px!important;padding:8px 14px}.rqv .dcnt{font-size:14px;min-width:26px;padding:1px 8px}.rqv .dsub{font-size:14px!important;padding:6px 14px!important}.rqv .dhead{font-size:15px;min-height:44px}.rqv .dhead .rec,.rqv .dhead .who{font-size:15px}.rqv .chip{font-size:13px;padding:3px 9px}.rqv .ddet p,.rqv .rqp,.rqv .rqp a{font-size:14px}.rqv .o{font-size:13px}.rqv .btn{min-height:42px;font-size:15px;padding:0 16px}.rqv .tchip{font-size:15px;min-height:40px;padding:0 14px}.rqv .dq{font-size:16px;min-height:44px}.rqv .ddet input{font-size:15px;min-height:42px}.rqv .dtog{font-size:16px}
 .stpick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;padding-top:10px;border-top:1px dashed var(--line)}.stpick .tchip:disabled{opacity:1}
-.regv{display:grid;grid-template-columns:380px 1fr;gap:36px;align-items:start;margin-top:6px}.regv.solo{grid-template-columns:minmax(0,520px)}.regf{max-width:none;gap:18px}.regf label>span{font-weight:inherit}.regf .oi{display:inline;margin-left:4px;font-size:inherit}.regl{min-width:0}.reglh{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 10px}.rlog{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:auto;max-height:calc(100vh - 230px)}.rlday{padding:8px 18px;background:#F3F1EC;font-size:14px;font-weight:700;color:var(--muted);position:sticky;top:41px;z-index:1}.rlrow{display:grid;grid-template-columns:90px 84px 110px 110px 130px 1fr;gap:14px;align-items:center;padding:11px 18px;border-top:1px solid var(--line);font-size:17px}.rlday+.rlrow{border-top:0}.rlhead{position:sticky;top:0;z-index:2;background:#fff;border-top:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:12px 18px}.rlt,.rlw,.rln{color:var(--muted);font-size:15px}.rln{color:var(--fg)}.rla{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}.rlnone{color:#BBB;font-weight:400}.rlk{display:inline-block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 10px;border-radius:999px;background:#E9EEF5;color:#334}.rlk.k-open{background:#E3F3E6;color:#1d5a2a}.rlk.k-close{background:#F0E6F5;color:#5a2a6a}@media (max-width:860px){.regv{grid-template-columns:1fr}.rlrow{grid-template-columns:70px 70px 90px 90px 1fr;}.rln{grid-column:1/-1}}
+.regv{display:grid;grid-template-columns:380px 1fr;gap:36px;align-items:start;margin-top:6px}.regv.solo{grid-template-columns:minmax(0,520px)}.regf{max-width:none;gap:18px}.regf label>span{font-weight:inherit}.regf .oi{display:inline;margin-left:4px;font-size:inherit}.regl{min-width:0}.reglh{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 10px}.rlog{background:#fff;margin:0 -4px}.rlday{padding:8px 18px;background:#F3F1EC;font-size:14px;font-weight:700;color:var(--muted);position:sticky;top:41px;z-index:1}.rlrow{display:grid;grid-template-columns:170px 120px 120px 100px 110px 110px 1fr;gap:14px;align-items:center;padding:11px 18px;border-top:1px solid var(--line);font-size:17px}.rlday+.rlrow{border-top:0}.rlhead{background:#fff;border-top:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:12px 18px}.rlt,.rlw,.rln{color:var(--muted);font-size:15px}.rln{color:var(--fg)}.rla{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}.rlnone{color:#BBB;font-weight:400}.rld{font-weight:400}.rlbad{color:#B3261E;background:#FDECEA;border-radius:8px;padding:2px 8px}.rlbad small{display:block;font-size:12px;font-weight:600}.rlk{display:inline-block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 10px;border-radius:999px;background:#E9EEF5;color:#334}.rlk.k-open{background:#E3F3E6;color:#1d5a2a}.rlk.k-close{background:#F0E6F5;color:#5a2a6a}@media (max-width:860px){.regv{grid-template-columns:1fr}.rlrow{grid-template-columns:90px 1fr 1fr 1fr 1fr;}.rlw{grid-column:1/-1}.rln{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -784,7 +786,7 @@ function vHome(){
     const started = Object.keys(LS.get('hd.open.'+today(),{})).length;
     return headerHTML()+bannerHTML()+noteHTML()+'<button class="openbig" data-act="go:opening">'+(started?'Continue opening':'Open')+'</button>';
   }
-  const tile=(act,t,s,i)=>'<button class="tile" data-act="'+act+'"><span class="t">'+ic(i)+'<span>'+t+'</span></span><span class="s">'+(s||'\u00a0')+'</span></button>';
+  const tile=(act,t,s,i,n)=>'<button class="tile" data-act="'+act+'">'+(n?'<span class="nbadge" aria-label="'+n+' need attention">'+n+'</span>':'')+'<span class="t">'+ic(i)+'<span>'+t+'</span></span><span class="s">'+(s||'\u00a0')+'</span></button>';
   const soon=(t,d)=>'<div class="tile soon" aria-disabled="true"><span class="t">'+t+'</span><span class="s">'+(d?d+' \u00b7 ':'')+'Soon</span></div>';
   const dr=S.feed.filter(e=>e.task==='dropoff').length, cl=latest('closing'), op=latest('opening')||{ts:new Date().toISOString()};
   const openTile='<div class="tile pill done" aria-label="Opening done"><span class="t">'+ic('sun')+'<span>Open</span></span><span class="s">Done \u00b7 '+fmtTime(op.ts)+'</span></div>';
@@ -795,7 +797,7 @@ function vHome(){
   return headerHTML(openTile+closeTile)+bannerHTML()+noteHTML()+'<button class="findbar" data-act="go:find">'+ic('search')+' Find a record</button><div class="cols">'+
     cat('Inventory',tile('go:addrecord','Add records','New, Trove or used','addrec')+tile('go:addcd','Add a CD','Type it in, print a label','disc')+tile('go:trove','Trove Inventory','List and shelf check','trove')+tile('go:labels','Print labels','Print the sticker sheet','labels'))+
     cat('Beer/THC',tile('go:kegs','Beer inventory','Kick a keg, change a price, put one on tap','beer')+tile('go:rstock','Receive stock','Kegs or cans, with the invoice photo','keg'))+
-    cat('Customers',tile('go:dropoff','Customer drop&#8209;off','Log records a customer left'+(dr?' \u00b7 '+dr+' today':''),'dropoff')+tile('go:request','Customer request','Record what a customer is looking for','request')+tile('go:drops','Drop-off list','Offers and what happens next','list'))+
+    cat('Customers',tile('go:dropoff','Customer drop&#8209;off','Log records a customer left'+(dr?' \u00b7 '+dr+' today':''),'dropoff')+tile('go:request','Customer request','Record what a customer is looking for','request')+tile('go:drops','Drop-off list','Offers and what happens next','list',dBadge()))+
     cat('Shop',tile('go:note','Note for next shift','Leave a heads-up for whoever opens','note')+tile('go:supplies','Supplies','Mark what is low or out','bag')+(isMgr()?tile('go:cash','Register count','History of open and close counts','cash'):'')+tile('go:issue','Report an issue','Flag a problem for the manager','issue')+tile('feat','Request a feature','Or report a bug in Backstage','bulb'))+'</div>';
 }
 function topHTML(t,act,right,nohome){ return '<div class="top"><button class="btn ghost" data-act="'+(act||'home')+'">\u2039 Back</button><h2>'+ic(TOPIC[t]||'')+'<span>'+t+'</span></h2>'+(right||'')+'</div>'; }
@@ -863,9 +865,18 @@ async function covFetch(el){
     }
     if(!url&&fail){ _covStop=Date.now()+30000; return; } // lookup errored: try again later, don't remember as "no cover"
     COV[k]=url;
-    LS.set(COVKEY,COV);
+    LS.set(COVKEY,COV); if(url) covShare(k,url);
     if(COV[k]) document.querySelectorAll('.cov.ph').forEach(n=>{ if(n.dataset.k===k){ const im=document.createElement('img'); im.className='cov'; im.alt=''; im.src=COV[k]; im.dataset.ph=n.textContent; n.replaceWith(im); } });
   }catch(e){ _covStop=Date.now()+60000; }
+}
+let _covPush=[], _covPt=null;
+function covShare(k,u){ if(DEMO||!k||!u) return; _covPush.push({k,u}); clearTimeout(_covPt); _covPt=setTimeout(async()=>{ const b=_covPush.splice(0,200); if(!b.length) return; try{ await api('coverset',{entries:b}); }catch(e){ _covPush=b.concat(_covPush); } },4000); }
+function covMerge(srv){ // shared covers fill what this iPad lacks; this iPad's finds that the sheet lacks go up once
+  if(DEMO||!srv) return; let ch=false;
+  Object.keys(srv).forEach(k=>{ if(COV[k]!==srv[k]){ COV[k]=srv[k]; ch=true; } });
+  if(ch) LS.set(COVKEY,COV);
+  const up=Object.keys(COV).filter(k=>COV[k]&&!srv[k]).slice(0,200).map(k=>({k,u:COV[k]}));
+  if(up.length) api('coverset',{entries:up}).catch(()=>{});
 }
 async function covPump(){
   if(_covBusy) return; _covBusy=true;
@@ -1088,7 +1099,7 @@ const TERMS={
     'If we can’t reach you, or we hear nothing from you within '+TD.offer+' days of our offer, your records are treated as unclaimed and will be donated.',
     'Records we don’t buy are returned or donated, whichever you chose at drop-off. Returned records must be picked up within '+TD.pickup+' days of our notice. After that they are donated.',
     'Payment is cash or store credit, as you chose at drop-off.',
-    'All store credit works through the phone number you gave us. It’s how you access your gift card.',
+    'Store credit is sent to the email address you gave us. It’s how you receive your gift card.',
     'Once records are donated we can’t return them or pay for them.']},
   req:{h:'Request terms',l:[
     'A request is not a guarantee. We’ll try to find the record, but we can’t promise we’ll get it.',
@@ -1196,16 +1207,45 @@ function vReqList(){
   return topHTML(mgr?'Request list':'Pickups','go:request').replace('<h2>','<h2 class="hbig">')+'<p class="hsub">'+(mgr?'Every request, every shop, from request to pickup.':'Customers picking up a record: find their name and check them off.')+'</p>'+bannerHTML()+err+'<div class="rqv">'+chips+search+body+'</div>';
 }
 function rqBadge(){ return reqs().filter(x=>rqOwn(x)&&(isMgr()?x.status==='New':x.status==='Waiting for pickup')).length; }
+let _rtm=null,_rid=0;
+const rs=()=>S.rs||(S.rs={q:'',res:null,busy:false,shown:[]});
+function rChosenHTML(a,b){ return (a&&b)?'<div class="rchip"><b>'+esc(a)+' \u2013 '+esc(b)+'</b><button class="btn ghost" data-act="rclear">Change</button></div>':''; }
+function rListHTML(){
+  const R=rs(), q=(R.q||'').trim();
+  if(q.length<3) return '<p class="hint">Pick it from Discogs and the spelling fills in for you.</p>';
+  if(R.busy) return '<p class="hint">Searching Discogs\u2026</p>';
+  const res=(R.res||[]).slice(0,6); R.shown=res;
+  const typed=/ - /.test(q)?'<button class="btn ghost" data-act="rtyped">Use \u201C'+esc(q)+'\u201D as typed</button>':'<p class="hint">Not on Discogs? Type it as Artist - Album.</p>';
+  return (res.length?'<div class="uh">Tap the right record</div>'+res.map((r,i)=>uRow(r.artist,r.album,r.year,'','data-i="'+i+'"',r.thumb).replace('data-act="upick"','data-act="rqpick"')).join(''):'<p class="hint">No match on Discogs.</p>')+typed;
+}
+function rRefreshList(){ const l=document.getElementById('rlist'); if(l) l.innerHTML=rListHTML(); }
+function rSearchSoon(){ clearTimeout(_rtm); const q=(rs().q||'').trim(); _rid++; if(q.length<3){ rs().res=null; rs().busy=false; rRefreshList(); return; } rs().busy=true; rRefreshList(); _rtm=setTimeout(()=>rSearch(q),300); }
+async function rSearch(q){
+  const my=++_rid, bar=/^\d{8,14}$/.test(q);
+  try{
+    const j=bar?await dget('database/search?type=release&per_page=6&barcode='+q):await dget('database/search?type=master&per_page=40&q='+encodeURIComponent(q));
+    if(my!==_rid) return;
+    const seen={}, out=[];
+    (j.results||[]).forEach(x=>{ const n=usplit(x.title), r={artist:n.artist,album:n.album,year:x.year||'',thumb:(x.cover_image&&!/spacer/.test(x.cover_image))?x.cover_image:(x.thumb||'')}, k=ukey(r.artist,r.album); if(!n.artist||seen[k]) return; seen[k]=1; out.push(r); });
+    rs().res=out;
+  }catch(e){ if(my!==_rid) return; rs().res=[]; }
+  rs().busy=false; rRefreshList();
+}
+function rChoose(a,b){ const set=(id,v)=>{ const e=document.getElementById(id); if(e){ e.value=v; e.dispatchEvent(new Event('input',{bubbles:true})); } };
+  set('rartist',a); set('ralbum',b); rs().q=''; rs().res=null; const w=document.getElementById('rqwrap'), c=document.getElementById('rchosen'); if(w) w.hidden=!!(a&&b); if(c) c.innerHTML=rChosenHTML(a,b); if(!(a&&b)){ const q=document.getElementById('rq'); if(q){ q.value=''; q.focus(); } rRefreshList(); } }
 function vRequest(){
-  const f=['Vinyl','CD','Cassette','Other'], c=S.rc||{};
+  const f=['Vinyl','CD','Cassette','Other'], c=S.rc||{}, rpre=S.rpre||{};
   const added=S.ritems.map((r,k)=>'<div class="radded"><span><b>'+esc(r.artist)+'</b> \u00b7 '+esc(r.album)+' <span class="o">'+esc(r.format)+'</span></span><button class="btn ghost" data-act="rdel" data-i="'+k+'">Remove</button></div>').join('');
   return topHTML('Customer request','home','<button class="btn go reqbtn" data-act="go:reqlist">'+ic('list')+'<span>'+(isMgr()?'Request list':'Pickups')+'</span>'+(rqBadge()?'<span class="dcnt">'+rqBadge()+'</span>':'')+'</button>')+bannerHTML()+
-  '<div class="form"><label>Name<input id="rname" autocomplete="off" value="'+esc(c.name||'')+'"></label>'+
+  '<div class="form dform"><div class="dgrid"><div class="dcol dl"><label>Name<input id="rname" autocomplete="off" value="'+esc(c.name||'')+'"></label>'+
   '<div class="pair"><label>Phone<input id="rphone" type="tel" autocomplete="off" value="'+esc(c.phone||'')+'"><p class="eerr" id="perr" hidden>That phone number needs 10 digits, like (919) 555-1212.</p></label><label>Email<input id="remail" type="email" autocomplete="off" value="'+esc(c.email||'')+'"><p class="eerr" id="eerr" hidden>That doesn\u2019t look like an email address. Check it, like name@example.com.</p><p class="esug" id="esug" hidden></p><p class="ehint" id="ehint" hidden>We’ll email them a confirmation that this is a request, not a guarantee.</p></label></div>'+
+  '</div><div class="dcol">'+
   added+(S.rpre&&dupNote(S.rpre.artist,S.rpre.album)?'<p class="dupn">'+esc(dupNote(S.rpre.artist,S.rpre.album))+'. Adding yours puts you on the same order.</p>':'')+
-  '<div class="pair"><label>Artist<input id="rartist" autocomplete="off" value="'+esc((S.rpre||{}).artist||'')+'"></label><label>Album<input id="ralbum" autocomplete="off" value="'+esc((S.rpre||{}).album||'')+'"></label></div>'+
+  '<div id="rqwrap"'+(rpre.artist&&rpre.album?' hidden':'')+'><label>Find the record<input id="rq" class="pqs" placeholder="Type artist and album" autocomplete="off" autocapitalize="off" value="'+esc(rs().q||(rpre.artist&&!rpre.album?rpre.artist:''))+'"></label><div id="rlist">'+rListHTML()+'</div></div>'+
+  '<div id="rchosen">'+rChosenHTML(rpre.artist&&rpre.album?rpre.artist:'',rpre.album||'')+'</div><input type="hidden" id="rartist" value="'+esc(rpre.artist&&rpre.album?rpre.artist:'')+'"><input type="hidden" id="ralbum" value="'+esc(rpre.album||'')+'">'+
   '<div><label>Format</label><div class="fmts" style="margin-top:8px">'+f.map(x=>'<button data-act="rfmt" data-v="'+x+'" class="'+(S.rfmt===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
   '<label>Notes <span class="o">(optional)</span><input id="rnotes" autocomplete="off"></label>'+
+  '</div></div>'+
   termsRow('req')+
   '<div style="display:flex;gap:14px;align-items:center"><button class="btn ghost" id="radd" data-act="radd" disabled>+ Add another request</button><button class="btn go" id="sub" data-act="saverequest" disabled>Send</button></div></div>';
 }
@@ -1227,7 +1267,8 @@ function vAddRec(){
   }
   const L=S.alast||{}, sel=(arr,cur,ph)=>(ph?'<option value="">'+ph+'</option>':'')+arr.map(x=>'<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>').join('');
   const fmt='<label>Format<select id="aformat">'+(t==='CD'?sel(['CD'],'CD'):sel(['Vinyl','Tape','CD','45'],L.format))+'</select></label>';
-  let body=((t==='Trove'||t==='CD')?'<div><label>Find the album</label><input id="tdq" class="pqs" placeholder="Scan the UPC, or type artist and album" autocomplete="off" autocapitalize="off" value="'+esc((S.td||{}).q||'')+'"><div id="tdlist">'+tdListHTML()+'</div></div>':'')+'<div class="pair"><label>Artist<input id="aartist" autocomplete="off" value="'+esc((S.td||{}).artist||'')+'"></label><label>Album<input id="aalbum" autocomplete="off" value="'+esc((S.td||{}).album||'')+'"></label></div>'+
+  let body='<div class="dgrid"><div class="dcol dl">'+((t==='Trove'||t==='CD')?'<div><label>Find the album</label><input id="tdq" class="pqs" placeholder="Scan the UPC, or type artist and album" autocomplete="off" autocapitalize="off" value="'+esc((S.td||{}).q||'')+'"><div id="tdlist">'+tdListHTML()+'</div></div>':'')+'<div class="pair"><label>Artist<input id="aartist" autocomplete="off" value="'+esc((S.td||{}).artist||'')+'"></label><label>Album<input id="aalbum" autocomplete="off" value="'+esc((S.td||{}).album||'')+'"></label></div>'+
+    '</div><div class="dcol">'+
     '<div class="pair"><label>Genre<select id="agenre">'+sel(C.GENRES,(S.td&&S.td.genre)||L.genre,'Choose a genre')+'</select></label>'+fmt+'</div>';
   if(t==='Used'||t==='CD'){
     const CO=['Mint','NM','VG+','VG','G'];
@@ -1242,7 +1283,7 @@ function vAddRec(){
       '<div></div></div>';
   }
   body+='<label><span>Notes <span class="o">(optional'+(t==='Used'||t==='CD'?', e.g. cracked case':', e.g. blue special original pressing')+')</span></span><input id="anotes" autocomplete="off"></label>'+
-    '<div><button class="btn go" id="sub" data-act="saveaddrec" disabled>'+'Add record'+'</button></div>';
+    '<div><button class="btn go" id="sub" data-act="saveaddrec" disabled>'+'Add record'+'</button></div></div></div>';
   return topHTML(t==='Used'?'Add a used record':t==='CD'?'Add a CD':'Add a Trove record','addback')+bannerHTML()+'<div class="form tight" style="max-width:none">'+body+'</div>';
 }
 /* ---------- add a used record: scan or search, Discogs names, no duplicate items ---------- */
@@ -1424,16 +1465,40 @@ function vSupplies(){
 /* ---------- drop-off list (manager side: Bell works the offers) ---------- */
 const DRK='hd.drops3'; /* drops3 = fresh start Nov 22: sample customers removed */
 const DSTAT=['New','Offer made','Accepted','Declined','Paid','Done'];
-function drops(){ let L=LS.get(DRK,null); if(!L){ L=[]; LS.set(DRK,L); } L.forEach(x=>{ x.phone=fmtPhone(x.phone); }); return L; }
+function dMap(x){ return Object.assign({},x,{phone:fmtPhone(x.phone||''),email:x.email||'',offer:x.offer||'',hist:x.hist||[],pay:x.pay||'Cash',left:x.left||'Return'}); }
+async function dLoad(){ if(DEMO) return true; try{ const j=await apiRaw('droplist',{}); S.dlist=(j.drops||[]).map(dMap); S.derr=''; return true; }catch(e){ S.derr='Can’t load the drop-off list. Check the wifi and try again.'; return false; } }
+function dBadge(){ return isMgr()?drops().filter(x=>x.status==='New').length:0; }
+function drops(){ if(!DEMO) return S.dlist||[]; let L=LS.get(DRK,null); if(!L){ L=[]; LS.set(DRK,L); } L.forEach(x=>{ x.phone=fmtPhone(x.phone); }); return L; }
 function dSave(L){ LS.set(DRK,L); }
 function dWhen(iso){ const d=new Date(iso); return d.toLocaleDateString([], {month:'short',day:'numeric'})+', '+fmtTime(iso); }
 const DSTALE=3; // days before a waiting drop-off turns red
 function dAge(x){ const ms=Date.now()-new Date(x.sts||x.ts).getTime(), h=ms/36e5; return {h, txt:h<1?'just now':h<24?Math.floor(h)+'h':Math.floor(h/24)+(Math.floor(h/24)===1?' day':' days')}; }
-function dStale(x){ const h=dAge(x).h; return x.status==='New'?h>=24:(x.status!=='Done'&&h>=DSTALE*24); }
+function dDays(x){ return Math.floor((Date.now()-new Date(x.sent||x.sts||x.ts).getTime())/864e5); }
+function dStale(x){ const h=dAge(x).h; return x.status==='New'?h>=24:x.status==='Offer made'?dDays(x)>=10:(x.status!=='Done'&&h>=DSTALE*24); }
+function dChip(x){ if(x.status==='Offer made'){ const d=dDays(x); return d>=10?'Past due, day '+d:d<1?'Sent today':'Day '+d+' of 10'; } return dAge(x).txt; }
+const DLBL={offer:'Offer made',accepted:'Accepted',declined:'Declined',paid:'Paid',credit:'Paid',done:'Done'};
+async function dAct(op,id,extra){
+  if(S.dbusy) return false; S.dbusy=true;
+  try{
+    if(DEMO){
+      const L=drops(), x=L.find(y=>y.id===id), now=new Date().toISOString(); if(!x) return false;
+      if(op==='leftdone') x.leftDone=!x.leftDone;
+      else if(op==='undo'){ if(!x.hist.length||x.hasCard) return false; x.status=x.hist.pop(); x.sts=now; if(x.status==='New'){ x.offer=null; x.sent=null; } x.leftDone=false; }
+      else { if(op==='offer'){ x.offer=String(extra.amount); x.sent=now; } x.hist.push(x.status); x.status=DLBL[op]; x.sts=now; if(op==='credit'){ crAdd(x.name,x.phone,parseFloat(x.offer)); x.hasCard=true; } }
+      dSave(L); S.dconf=null; render();
+      if(DLBL[op]) submit('dropstatus','Drop-off '+x.name+': '+DLBL[op]+(x.offer&&op!=='done'?' ($'+x.offer+')':''),{id:x.id,status:DLBL[op],offer:x.offer||''},true);
+      return true;
+    }
+    await api('dropupdate',Object.assign({id,op},extra||{})); await dLoad(); S.dconf=null; render();
+    if(op==='offer') toast('Offer emailed ✓'); else if(op==='credit') toast('Gift card issued and emailed ✓');
+    return true;
+  }catch(e){ toast(e.message||'Couldn’t save. Try again.'); await dLoad(); render(); return false; }
+  finally{ S.dbusy=false; }
+}
 function dRow(x){
   const open=S.dsel===x.id, a=dAge(x), st=dStale(x);
   return '<div class="drow'+(open?' open':'')+(st?' stale':'')+'"><button class="dhead" data-act="dopen" data-id="'+x.id+'"><b class="dnm">'+esc(x.name)+'</b><span class="di">'+esc(x.items)+'</span>'+
-    (x.status==='Done'?'':'<span class="dchips">'+(x.offer&&x.status!=='New'?'<span class="dof">$'+esc(x.offer)+'</span>':'')+'<span class="chip age'+(st?' late':'')+'">'+a.txt+'</span></span>')+'</button>'+(open?dDetail(x):'')+'</div>';
+    (x.status==='Done'?'':'<span class="dchips">'+(x.offer&&x.status!=='New'?'<span class="dof">$'+esc(x.offer)+'</span>':'')+'<span class="chip age'+(st?' late':'')+'">'+dChip(x)+'</span></span>')+'</button>'+(open?dDetail(x):'')+'</div>';
 }
 
 /* ---------- store credit (demo; real version = Square gift cards + Loyalty) ---------- */
@@ -1465,20 +1530,25 @@ function vDrops(){
   const done=L.filter(x=>x.status==='Done').reverse(), q=(S.dq||'').trim().toLowerCase(), dr=q?done.filter(x=>(x.name+' '+x.items+' '+x.phone).toLowerCase().indexOf(q)>=0):done;
   const arch='<section class="dsec g-arch"><button class="dtog" data-act="darch" aria-expanded="'+(!!S.darch)+'"><span>'+(S.darch?'▾':'▸')+' Archived</span> <span class="nb">'+done.length+'</span></button>'+
     (S.darch?'<input id="dq" class="dq" placeholder="Search" autocomplete="off" value="'+esc(S.dq||'')+'">'+(dr.length?'<div class="dlist">'+dr.map(dRow).join('')+'</div>':'<p class="dnone">Nothing found.</p>'):'')+'</section>';
-  return topHTML('Drop-off list','home','<button class="btn ghost" data-act="go:credit" style="margin-left:auto">Store credit</button>')+bannerHTML()+(secs||'<p class="dnone" style="font-size:20px">All caught up.</p>')+arch;
+  return topHTML('Drop-off list','home','<button class="btn ghost" data-act="go:credit" style="margin-left:auto">Store credit</button>')+bannerHTML()+(S.derr?'<p class="dnone">'+esc(S.derr)+'</p>':'')+(secs||'<p class="dnone" style="font-size:20px">All caught up.</p>')+arch;
 }
 function dDetail(x){
-  const st=x.status, left=x.left==='Donate'?'donated':'returned';
-  const contact='<div class="dct"><a class="lnk" href="tel:'+esc(x.phone.replace(/\D/g,''))+'">'+esc(x.phone||'No phone')+'</a>'+(x.email?'<a class="lnk" href="mailto:'+esc(x.email)+'">'+esc(x.email)+'</a>':'')+'</div>';
+  const st=x.status, left=x.left==='Donate'?'donated':'returned', mgr=isMgr(), pay=String(x.pay||'').toLowerCase(), cf=S.dconf&&S.dconf.id===x.id?S.dconf:null;
+  const contact=mgr&&!x.legacy?'<div class="dct">'+(x.phone?'<a class="lnk" href="tel:'+esc(x.phone.replace(/\D/g,''))+'">'+esc(x.phone)+'</a>':'<span class="hint">No phone</span>')+(x.email?'<a class="lnk" href="mailto:'+esc(x.email)+'">'+esc(x.email)+'</a>':'')+(/^https:/.test(x.photo||'')?'<a class="lnk" href="'+esc(x.photo)+'" target="_blank" rel="noopener">Photo</a>':'')+'</div>':'';
+  const wait='<span class="hint">Bell is handling this one.</span>';
+  const money=v=>'$'+Number(v).toFixed(2);
   let act='';
-  if(st==='New') act='<label class="doff">Offer<span class="pre"><b>$</b><input id="doffer" inputmode="decimal" autocomplete="off" placeholder="0.00"></span></label><button class="btn go" data-act="dstep" data-v="Offer made" data-id="'+x.id+'">Offer made</button>';
-  else if(st==='Offer made') act='<span class="hint">Offer: <b>$'+esc(x.offer)+'</b>. What did the customer say?</span><button class="btn go" data-act="dstep" data-v="Accepted" data-id="'+x.id+'">Accepted</button><button class="btn ghost" data-act="dstep" data-v="Declined" data-id="'+x.id+'">Declined</button>';
-  else if(st==='Accepted') act='<span class="hint">Offer: <b>$'+esc(x.offer)+'</b>, paid in <b>'+esc(x.pay.toLowerCase())+'</b>.</span><button class="btn go" data-act="dstep" data-v="Paid" data-id="'+x.id+'">Mark paid ('+esc(x.pay.toLowerCase())+')</button>';
-  else if(st==='Paid') act='<button class="btn '+(x.leftDone?'ghost':'go')+'" data-act="dleftdone" data-id="'+x.id+'">'+(x.leftDone?'Leftovers '+left+' ✓':'Leftovers '+left)+'</button><button class="btn go" data-act="dstep" data-v="Done" data-id="'+x.id+'"'+(x.leftDone?'':' disabled')+'>Done</button>';
-  else if(st==='Declined') act='<span class="hint">Declined. Records go back to the customer.</span><button class="btn go" data-act="dstep" data-v="Done" data-id="'+x.id+'">Done</button>';
+  if(cf&&cf.kind==='offer') act='<span class="hint">Email an offer of <b>'+money(cf.amount)+'</b> in <b>'+esc(pay)+'</b> to <b>'+esc(x.email)+'</b>?</span><button class="btn go" data-act="dsend" data-id="'+x.id+'">Send offer</button><button class="btn ghost" data-act="dcancel">Cancel</button>';
+  else if(cf&&cf.kind==='card') act='<span class="hint">Create a <b>'+money(x.offer)+'</b> gift card and email it to <b>'+esc(x.email)+'</b>? This can’t be undone.</span><button class="btn go" data-act="dissue" data-id="'+x.id+'">Issue gift card</button><button class="btn ghost" data-act="dcancel">Cancel</button>';
+  else if(st==='New') act=mgr?'<label class="doff">Offer<span class="pre"><b>$</b><input id="doffer" inputmode="decimal" autocomplete="off" placeholder="0.00"></span></label><button class="btn go" data-act="dreview" data-id="'+x.id+'">Review offer</button>':wait;
+  else if(st==='Offer made') act=mgr?'<span class="hint">Offer: <b>'+money(x.offer)+'</b>, emailed '+esc(dWhen(x.sent||x.sts))+'. What did the customer say?</span><button class="btn go" data-act="dstep" data-v="accepted" data-id="'+x.id+'">Accepted</button><button class="btn ghost" data-act="dstep" data-v="declined" data-id="'+x.id+'">Declined</button>':wait;
+  else if(st==='Accepted') act=mgr?'<span class="hint">Offer: <b>'+money(x.offer)+'</b>, paid in <b>'+esc(pay)+'</b>.</span>'+(x.pay==='Store credit'?'<button class="btn go" data-act="dcard" data-id="'+x.id+'">Issue store credit</button>':'<button class="btn go" data-act="dstep" data-v="paid" data-id="'+x.id+'">Mark paid (cash)</button>'):wait;
+  else if(st==='Paid') act=(x.pay==='Store credit'&&mgr?'<span class="hint">Gift card emailed.</span>':'')+'<button class="btn '+(x.leftDone?'ghost':'go')+'" data-act="dleftdone" data-id="'+x.id+'">'+(x.leftDone?'Leftovers '+left+' ✓':'Leftovers '+left)+'</button><button class="btn go" data-act="dstep" data-v="done" data-id="'+x.id+'"'+(x.leftDone?'':' disabled')+'>Done</button>';
+  else if(st==='Declined') act='<span class="hint">Declined. Records go back to the customer.</span><button class="btn go" data-act="dstep" data-v="done" data-id="'+x.id+'">Done</button>';
   else act='<span class="hint">Finished.</span>';
-  const undo=(x.hist&&x.hist.length&&st!=='Done')?'<button class="lnk" data-act="dundo" data-id="'+x.id+'">Undo last step</button>':'';
-  return '<div class="ddet"><p class="o">Dropped off '+esc(dWhen(x.ts))+' by '+esc(x.who)+'. Paid in <b>'+esc(x.pay.toLowerCase())+'</b>. Unwanted records: <b>'+esc(x.left==='Donate'?'donate':'return')+'</b>.</p>'+contact+'<div class="dact">'+act+undo+'</div></div>';
+  const undo=(mgr&&!cf&&x.hist&&x.hist.length&&st!=='Done'&&!x.hasCard)?'<button class="lnk" data-act="dundo" data-id="'+x.id+'">Undo last step</button>':'';
+  const ph=x.photoData||(S.dph||{})[x.id]; const photo=ph?'<button class="dthumb" data-act="dzoom" data-id="'+x.id+'" aria-label="Enlarge the drop-off photo"><img alt="Photo taken at drop-off" src="'+esc(ph)+'"></button>':(x.hasPhoto?'<span class="dthumb ld"></span>':'');
+  return '<div class="ddet">'+photo+'<p class="o">Dropped off '+esc(dWhen(x.ts))+' by '+esc(x.who)+'. Paid in <b>'+esc(pay)+'</b>. Unwanted records: <b>'+esc(x.left==='Donate'?'donate':'return')+'</b>.</p>'+contact+'<div class="dact">'+act+undo+'</div></div>';
 }
 /* ---------- receive records ---------- */
 const tc=x=>String(x||'').toLowerCase().replace(/\b[a-z]/g,m=>m.toUpperCase());
@@ -1593,11 +1663,16 @@ function rlogHTML(){
   if(L===undefined||L===null) return '<p class="o" style="padding:16px">Loading the log\u2026</p>';
   if(L===false) return '<p class="o" style="padding:16px">Couldn\u2019t load the log. Check the wifi and reopen this page.</p>';
   if(!L.length) return '<p class="o" style="padding:16px">No counts logged yet.</p>';
-  const $=v=>v===''||v==null?'<span class="rlnone">\u2014</span>':'$'+Number(v).toFixed(2);
-  let last='', out='<div class="rlhead rlrow"><span>Time</span><span>Type</span><span class="rla">Count</span><span class="rla">Deposit</span><span>Who</span><span>Note</span></div>';
-  L.forEach(c=>{ const d=new Date(c.ts), day=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-    if(day!==last){ out+='<div class="rlday">'+day+'</div>'; last=day; }
-    out+='<div class="rlrow"><span class="rlt">'+(c.src==='Import'?'':fmtTime(c.ts))+'</span><span><b class="rlk k-'+c.kind.toLowerCase()+'">'+c.kind+'</b></span><span class="rla">'+$(c.amount)+'</span><span class="rla">'+$(c.deposit)+'</span><span class="rlw">'+esc(c.who)+'</span><span class="rln">'+esc(c.note||'')+'</span></div>'; });
+  const $=v=>v===''||v==null||isNaN(v)?'<span class="rlnone">\u2014</span>':'$'+Number(v).toFixed(2);
+  const days={};
+  L.forEach(c=>{ const d=new Date(c.ts), k=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); const r=days[k]||(days[k]={k,ts:c.ts}); if(c.kind==='Open'){ r.open=c.amount; r.on=c.note; r.ow=c.who; } else if(c.kind==='Close'){ r.close=c.amount; r.dep=c.deposit; r.cn=c.note; r.cw=c.who; } });
+  const rows=Object.values(days).sort((x,y)=>x.k-y.k); let prev=null;
+  rows.forEach(r=>{ r.rem=(r.close===undefined||r.close==='')?null:Number(r.close)-(Number(r.dep)||0); r.exp=prev; r.bad=prev!==null&&r.open!==undefined&&r.open!==''&&Math.abs(Number(r.open)-prev)>=0.005; if(r.rem!==null) prev=r.rem; });
+  let out='<div class="rlhead rlrow"><span>Date</span><span class="rla">Open</span><span class="rla">Close</span><span class="rla">Deposit</span><span class="rla">Remaining</span><span>Who</span><span>Notes</span></div>';
+  rows.reverse().forEach(r=>{ const d=new Date(r.ts), day=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    const notes=[r.on?(r.cn?'Open: ':'')+r.on:'',r.cn?(r.on?'Close: ':'')+r.cn:''].filter(Boolean).join(' \u00b7 ');
+    const who=[...new Set([r.ow,r.cw].filter(Boolean))].join(' / ');
+    out+='<div class="rlrow"><span class="rld">'+day+'</span><span class="rla'+(r.bad?' rlbad':'')+'">'+$(r.open)+(r.bad?'<small>expected '+$(r.exp)+'</small>':'')+'</span><span class="rla">'+$(r.close)+'</span><span class="rla">'+(r.close===undefined?$(null):$(r.dep||0))+'</span><span class="rla">'+$(r.rem)+'</span><span class="rlw">'+esc(who)+'</span><span class="rln">'+esc(notes)+'</span></div>'; });
   return out;
 }
 function rlogLoad(){
@@ -1607,19 +1682,21 @@ function rlogLoad(){
 function vCash(){
   if(!isMgr()) return topHTML('Register count')+bannerHTML()+'<p class="o">The register history is for managers.</p>';
   return topHTML('Register count')+bannerHTML()+
-  '<div class="regl"><p class="o" style="margin:0 0 12px">History of the register: every open and close count, with deposits and notes. Newest first.</p><div class="rlog" id="rlog">'+rlogHTML()+'</div></div>';
+  '<div class="regl"><p class="o" style="margin:0 0 12px">One row per day: opening count, closing count, deposit, and what\u2019s left in the drawer. Newest first.</p><div class="rlog" id="rlog">'+rlogHTML()+'</div></div>';
 }
 function vDrop(){
   return topHTML('Customer drop&#8209;off')+bannerHTML()+
-  '<div class="form">'+
+  '<div class="form dform"><div class="dgrid"><div class="dcol dl">'+
   '<label>Name<input id="cname" autocomplete="off"></label>'+
-  '<div class="pair"><label>Phone<input id="cphone" type="tel" autocomplete="off"><p class="eerr" id="perr" hidden>That phone number needs 10 digits, like (919) 555-1212.</p></label>'+
+  '<div class="pair"><label>Phone (optional)<input id="cphone" type="tel" autocomplete="off"><p class="eerr" id="perr" hidden>That phone number needs 10 digits, like (919) 555-1212.</p></label>'+
   '<label>Email<input id="cemail" type="email" autocomplete="off"><p class="eerr" id="eerr" hidden>That doesn\u2019t look like an email address. Check it, like name@example.com.</p><p class="esug" id="esug" hidden></p></label></div>'+
+  '</div><div class="dcol">'+
   '<div class="drp" style="display:flex;gap:12px;align-items:center"><div style="display:flex;gap:12px;align-items:center"><button class="btn ghost camb" data-act="iphoto" aria-label="'+(S.iphoto?'Retake photo':'Take a photo of the drop-off')+'"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.2l1.4-2h6.8l1.4 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.8"/></svg></button><span class="camt">'+(S.iphoto?'Photo added. Tap the camera to retake.':'Take a photo of the drop-off')+'</span><input id="iphotoin" type="file" accept="image/*" capture="environment" hidden><div id="iprev">'+iprevHTML()+'</div></div></div>'+
     '<label>What they dropped off<textarea id="citems"></textarea></label>'+
   '<div class="pair"><div><label>How do they want to be paid?</label><div class="fmts" style="margin-top:7px">'+['Cash','Store credit'].map(x=>'<button data-act="dpay" data-v="'+x+'" class="'+(S.dpay===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
   '<div><label>Records we don\u2019t want</label><div class="fmts" style="margin-top:7px">'+['Donate','Return'].map(x=>'<button data-act="dleft" data-v="'+x+'" class="'+(S.dleft===x?'on':'')+'">'+x+'</button>').join('')+'</div></div></div>'+
-  '<div id="cbox" class="cbox" hidden><p class="cbh">Hand the iPad to the customer</p><label>Confirm phone number<input id="cphone2" type="tel" autocomplete="off"><p class="eerr" id="p2err" hidden>The two numbers don\u2019t match.</p></label><label class="agree"><input id="cagree" type="checkbox"><span>I have read and agree that all store credit works through my phone number. It\u2019s how I access my gift card.</span></label></div>'+
+  '</div></div>'+
+  '<div id="cbox" class="cbox"><p class="cbh">Hand the iPad to the customer</p><label>Confirm email address<input id="cphone2" type="email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><p class="eerr" id="p2err" hidden>These email addresses don\u2019t match. Check both and try again.</p></label><label class="agree"><input id="cagree" type="checkbox"><span>I have read and agree that my offer, and any store credit, is sent to this email address.</span></label></div>'+
   termsRow('drop')+
   '<div><button class="btn go" id="sub" data-act="savedrop" disabled>Log drop-off</button></div></div>';
 }
@@ -1847,13 +1924,13 @@ function vRKeg(){
   const big=S.iphoto
     ? '<div class="kdone"><img class="iimg" alt="" src="'+S.iphoto+'"><div><b>Invoice photo ✓</b><div><button class="btn ghost" data-act="kphoto" style="margin-top:8px">Retake</button></div></div></div>'
     : '<button class="kbig" data-act="kphoto"><span class="kcam">○</span><span><b>Take a photo of the invoice</b><span>Do this first</span></span></button>';
-  return topHTML('Receive keg','go:rstock')+bannerHTML()+big+inp+
-  '<div class="form" style="margin-top:18px"><div class="hint" style="margin:0"><b>Add the kegs by hand</b></div>'+
+  return topHTML('Receive keg','go:rstock')+bannerHTML()+'<div class="rtop">'+big+inp+'</div>'+
+  '<div class="form kform"><div class="hint" style="margin:0"><b>Add the kegs by hand</b></div>'+
   supField('k',sup,S.ksup,S.kOther)+
   L.map((k,i)=>'<div class="kcard" style="margin:0"><span class="kx" style="flex:1"><b>'+esc(k.beer)+'</b><span>'+esc(k.brewery)+'</span></span><span class="kp">'+kfmt(k.price)+'</span><button class="btn ghost" data-act="krm" data-n="'+i+'">Remove</button></div>').join('')+
   '<div class="pair"><label>Beer<input id="kbeer" autocomplete="off"></label><label>Brewery<input id="kbrew" autocomplete="off"></label></div>'+
-  '<label>Brewery city, state <span class="o">(for the Instagram post)</span><input id="kcity" autocomplete="off" placeholder="Charleston, SC"></label>'+
-  '<label>Sixtel (1/6 barrel) cost from the invoice<div class="pre"><b>$</b><input class="money" id="kcost" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label>'+
+  '<label class="half">Brewery city, state <span class="o">(for the Instagram post)</span><input id="kcity" autocomplete="off" placeholder="Charleston, SC"></label>'+
+  '<label class="half">Sixtel (1/6 barrel) cost from the invoice<div class="pre"><b>$</b><input class="money" id="kcost" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label>'+
   '<div class="keq" id="keq">'+keqHTML('')+'</div>'+
   '<div style="display:flex;gap:12px;align-items:flex-end"><label style="flex:1">Price for a 12oz pour <span class="o">(filled in for you, you can change it)</span><div class="pre"><b>$</b><input class="money" id="kprice" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label><button class="btn ghost" id="kadd" data-act="kadd" disabled>Add keg</button></div>'+
   '<div><button class="btn go" id="sub" data-act="savekegrecv" disabled>Put '+L.length+' keg'+(L.length===1?'':'s')+' on deck</button></div></div>';
@@ -1901,8 +1978,8 @@ function vRCans(){
   const big=S.iphoto
     ? '<div class="kdone"><img class="iimg" alt="" src="'+S.iphoto+'"><div><b>Invoice photo ✓</b><div><button class="btn ghost" data-act="cphoto" style="margin-top:8px">Retake</button></div></div></div>'
     : '<button class="kbig" data-act="cphoto"><span class="kcam">○</span><span><b>Take a photo of the invoice</b><span>Do this first</span></span></button>';
-  return topHTML(OT?'Receive other':SN?'Receive snacks':'Receive cans','go:rstock')+bannerHTML()+big+'<input id="cphotoin" type="file" accept="image/*" capture="environment" hidden>'+
-  '<div class="form" style="margin-top:18px">'+supField('c',sup,S.csup,S.cOther||OT)+
+  return topHTML(OT?'Receive other':SN?'Receive snacks':'Receive cans','go:rstock')+bannerHTML()+'<div class="rtop">'+big+'<input id="cphotoin" type="file" accept="image/*" capture="environment" hidden></div>'+
+  '<div class="form kform">'+supField('c',sup,S.csup,S.cOther||OT)+
   L.map((x,i)=>'<div class="kcard" style="margin:0"><span class="kx" style="flex:1"><b>'+esc(x.prod)+'</b><span>'+esc(x.brand||'')+(x.brand?' · ':'')+esc(x.type)+'</span></span><span class="kp">'+x.qty+' '+esc(x.unit.toLowerCase())+'</span><button class="btn ghost" data-act="crm" data-n="'+i+'">Remove</button></div>').join('')+
   '<div class="pair"><label>Product<input id="cprod" autocomplete="off" placeholder="'+(OT?'Name of the item':SN?'Name of the snack':'Name of the drink')+'"></label><label>Brand<input id="cbrand" autocomplete="off"></label></div>'+
   '<div class="pair"><div><label>Type</label><div class="fmts" style="margin-top:7px">'+TY.map(x=>'<button data-act="ctype" data-v="'+x+'" class="'+(C2.type===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
@@ -2174,7 +2251,7 @@ function bindForms(){
     const EML=v=>!v||/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), ef=document.getElementById(S.view==='drop'?'cemail':'remail'), eo=EML(ef?ef.value.trim():''), ee=document.getElementById('eerr'); if(ee) ee.hidden=eo; if(ef) ef.style.borderColor=eo?'':'var(--bad)';
     const pf=document.getElementById(S.view==='drop'?'cphone':'rphone'), pv=pf?pf.value.replace(/\D/g,''):'', po=!(pf&&pf.value.trim())||pv.length===10||(pv.length===11&&pv[0]==='1'), pe=document.getElementById('perr'); if(pe) pe.hidden=po; if(pf) pf.style.borderColor=po?'':'var(--bad)';
     if(pf){ const g=fmtPhone(pf.value); if(g!==pf.value&&pv.length<=11) pf.value=g; }
-    const p2=document.getElementById('cphone2'), p2e=document.getElementById('p2err'); if(p2){ const g2=fmtPhone(p2.value); if(g2!==p2.value) p2.value=g2; const d2=p2.value.replace(/\D/g,''), bad=d2.length>=10&&d2!==pv; if(p2e) p2e.hidden=!bad; p2.style.borderColor=bad?'var(--bad)':''; }
+    const p2=document.getElementById('cphone2'), p2e=document.getElementById('p2err'); if(p2){ const e1=(ef?ef.value:'').trim().toLowerCase(), e2=p2.value.trim().toLowerCase(), bad=!!e2&&e2!==e1&&(!e1.startsWith(e2)||document.activeElement!==p2); if(p2e) p2e.hidden=!bad; p2.style.borderColor=bad?'var(--bad)':''; }
     const eh=document.getElementById('ehint'); if(eh) eh.hidden=!(ef&&ef.value.trim()&&eo);
     const es=document.getElementById('esug'), sg=ef?emailFix(ef.value):''; if(es){ es.hidden=!sg; es.innerHTML=sg?'Did you mean <b>'+esc(sg)+'</b>? <button class="lnk" data-act="efix" data-id="'+ef.id+'" data-v="'+esc(sg)+'">Use it</button>':''; }
     if(S.view==='cash') ok = MONEY.test(val('drawer')) && (!val('deposit') || MONEY.test(val('deposit')));
@@ -2194,10 +2271,11 @@ function bindForms(){
       const add=document.getElementById('radd'); if(add) add.disabled = !(who&&cur);
       sub.textContent = 'Send'+((S.ritems.length+(cur?1:0))>1?' '+(S.ritems.length+(cur?1:0))+' requests':'');
     }
-    if(S.view==='drop') ok = !!S.dpay && !!S.dleft && !!val('cname') && !!val('citems') && !!val('cphone') && pv.length>=10 && !!val('cemail') && eo && po && !!S.tagree && (S.dpay!=='Store credit' || (!!val('cphone2') && val('cphone2').replace(/\D/g,'')===pv && !!(document.getElementById('cagree')||{}).checked));
+    if(S.view==='drop') ok = !!S.dpay && !!S.dleft && !!val('cname') && !!val('citems') && !!val('cemail') && eo && po && !!S.tagree && !!val('cphone2') && val('cphone2').toLowerCase()===val('cemail').toLowerCase() && !!(document.getElementById('cagree')||{}).checked;
     sub.disabled = !ok || S.busy;
   };
   document.querySelectorAll('input,textarea,select').forEach(e=>e.addEventListener('input',check));
+  const q2=document.getElementById('cphone2'); if(q2) q2.addEventListener('blur',check);
   S.recheck=check;
   check();
 }
@@ -2205,6 +2283,7 @@ function bindForms(){
 /* ---------- actions ---------- */
 function toast(m,ms){ const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); t.textContent=m; document.getElementById('screen').appendChild(t); setTimeout(()=>t.remove(),ms||2200); }
 async function submit(task, summary, data, stay, msg){
+  if(S.busy) return false; /* a second tap while the first is saving would log it twice */
   S.busy=true; S.err=''; const sub=document.getElementById('sub'); if(sub) sub.disabled=true;
   try{
     S.lastRes=await api('log',{who:S.who,task,summary,data});
@@ -2230,7 +2309,7 @@ async function tryLogin(){
     const j=await api('login',{pin});
     S.who=j.name; S.pin=pin; S.role=j.role||'staff'; S.entry=''; S.err='';
     LS.set('hd.shift',{who:S.who,pin:S.pin,start:Date.now()});
-    await refreshFeed(); await rqLoad(); S.view='home';
+    await refreshFeed(); await rqLoad(); await dLoad(); S.view='home';
     const ack=LS.get('hd.noteack',{}); S.notePop = !!(S.note && S.note.who!==S.who && ack[S.who]!==S.note.ts);
   }catch(e){
     S.entry=''; S.err = /PIN|tries/i.test(e.message) ? e.message+'.' : 'Can\u2019t reach the server. Check the wifi and try again.';
@@ -2243,6 +2322,7 @@ document.addEventListener('input',ev=>{
   if(ev.target&&ev.target.id==='crq'){ S.crq=ev.target.value; render(); const q=document.getElementById('crq'); if(q){ q.focus(); q.setSelectionRange(q.value.length,q.value.length); } return; }
   if(ev.target&&ev.target.id==='dq'){ S.dq=ev.target.value; render(); const q=document.getElementById('dq'); if(q){ q.focus(); q.setSelectionRange(q.value.length,q.value.length); } return; }
   if(ev.target&&ev.target.id==='uq'){ S.u.q=ev.target.value; uSearchSoon(); return; }
+  if(ev.target&&ev.target.id==='rq'){ rs().q=ev.target.value; rSearchSoon(); return; }
   if(ev.target&&ev.target.id==='tdq'){ S.td.q=ev.target.value; tdSearchSoon(); return; }
   if(ev.target&&ev.target.id==='uprice'){ let v=ev.target.value.replace(/[^\d.]/g,''); const i=v.indexOf('.'); if(i>=0) v=v.slice(0,i+1)+v.slice(i+1).replace(/\./g,'').slice(0,2); if(v!==ev.target.value) ev.target.value=v; S.u.price=v; uCheck(); return; }
   if(ev.target&&ev.target.id==='ugenre'){ S.u.genre=ev.target.value; uCheck(); return; }
@@ -2387,6 +2467,7 @@ document.addEventListener('touchmove',ev=>{ if(!_sw) return; const p=ev.touches[
 document.addEventListener('touchend',()=>swEnd()); document.addEventListener('touchcancel',()=>swEnd());
 let _tb='', _tt=null;
 document.addEventListener('keydown',ev=>{
+  if(ev.key==='Enter'&&ev.target&&ev.target.id==='rq'){ ev.preventDefault(); clearTimeout(_rtm); const q=(rs().q||'').trim(); if(q.length>=3){ rs().busy=true; rRefreshList(); rSearch(q); } return; }
   if(ev.key==='Enter'&&ev.target&&ev.target.id==='tdq'){ ev.preventDefault(); clearTimeout(_tdt); const q=(S.td.q||'').trim(); if(q.length>=3){ S.td.busy=true; tdRefreshList(); tdSearch(q); } return; }
   if(ev.key==='Enter'&&ev.target&&ev.target.id==='uq'){ ev.preventDefault(); clearTimeout(_utm); const q=(S.u.q||'').trim(); if(q.length>=3){ S.u.busy=true; uRefreshList(); uSearch(q); } return; }
   if(S.view==='trove' && S.tscan){
@@ -2413,9 +2494,10 @@ document.addEventListener('click', async ev=>{
   else if(a.startsWith('go:')){
     const t=a.slice(3);
     if(t==='opening'||t==='closing'){ S.flow=t; go('opening'); }
-    else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='dropoff'||t==='request') S.tagree=false; if(t==='dropoff'){ S.iphoto=null; S.dpay=null; S.dleft=null; } if(t==='request'){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ await rqLoad(); if(DEMO||await rLoad()) rEnter(); return; }
-    if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
+    else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='dropoff'||t==='request') S.tagree=false; if(t==='dropoff'){ S.iphoto=null; S.dpay=null; S.dleft=null; } if(t==='request'){ S.rs=null; S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ await rqLoad(); if(DEMO||await rLoad()) rEnter(); return; }
+    if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); covMerge(j.covers); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
     if(t==='kegs'){ S.kv='taps'; S.ks=null; }
+    if(t==='drops'){ S.dconf=null; dLoad().then(()=>{ if(S.view==='drops') render(); }); }
     if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqcol=isMgr()?{quoted:1,ordered:1,wait:1,done:1}:{}; S.rqq=''; S.rqshop='All'; rqLoad().then(()=>{ if(S.view==='reqlist') render(); }); }
     if(t==='credit'){ S.crq=''; S.crsel=null; }
     if(t==='rcans'||t==='rsnacks'||t==='rother'){ S.cmode=t==='rsnacks'?'snacks':t==='rother'?'other':'cans'; S.cOther=false; S.cs=null; S.csup=''; S.iphoto=null; }
@@ -2430,7 +2512,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='tcheck'){ S.tstand=true; S.flow='opening'; S.tfound=LS.get('hd.trove.s.'+today(),{}); S.tskip=LS.get('hd.trove.s.'+today()+'.skip',{}); S.tq=''; S.tonly=false; S.tscan=false; S.tmsg=null; S.tbad={}; S.tshow=false; S.tconfirm=false; S.view='trove'; render(); }
   else if(a==='otrove'){ S.tstand=false;
     S.tfound=LS.get(KT(),{}); S.tskip=LS.get(tskipKey(),{}); S.tq=''; S.tonly=false; S.tscan=false; S.tmsg=null; S.tbad={}; S.tshow=false; S.tconfirm=false; S.view='trove'; S.tload=true; render();
-    try{ const j=await api('trove'); setTrove(j.items); S.err=''; }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; }
+    try{ const j=await api('trove'); covMerge(j.covers); setTrove(j.items); S.err=''; }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; }
     S.tload=false; render();
   }
   else if(a==='tstart'){ S.tscan=true; S.tshow=true; S.tmsg=null; S.tconfirm=false; beep('ok'); render(); }
@@ -2474,7 +2556,7 @@ document.addEventListener('click', async ev=>{
     submit(closing?'closing':'opening', summary, {amounts,done,cant,regnote:regnote.join('; ')});
   }
   else if(a==='efix'){ const e=document.getElementById(b.dataset.id); if(e){ e.value=b.dataset.v; if(S.recheck) S.recheck(); } }
-  else if(a==='dpay'||a==='dleft'){ const k=a==='dpay'?'dpay':'dleft'; S[k]=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(a==='dpay'){ const cb=document.getElementById('cbox'); if(cb) cb.hidden=S.dpay!=='Store credit'; } if(S.recheck) S.recheck(); }
+  else if(a==='dpay'||a==='dleft'){ const k=a==='dpay'?'dpay':'dleft'; S[k]=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(S.recheck) S.recheck(); }
   else if(a==='itype'){ S.itype=b.dataset.v; document.querySelectorAll('.fmts button').forEach(x=>x.classList.toggle('on',x===b)); if(S.recheck) S.recheck(); }
   else if(a==='iphoto'){ document.getElementById('iphotoin').click(); }
   else if(a==='iphotorm'){ S.iphoto=null; const p=document.getElementById('iprev'); if(p) p.innerHTML=iprevHTML(); if(S.recheck) S.recheck(); }
@@ -2517,13 +2599,16 @@ document.addEventListener('click', async ev=>{
     const ok=await submit('feature','Feature/bug: '+t.slice(0,200),{text:t,autoEmail:{to:C.FEATURE_EMAIL||'',subject:'Backstage feature or bug from '+S.who,body:t+'\n\nFrom '+S.who+' on '+new Date().toLocaleString('en-US')}},true); if(ok){ S.feat=null; render(); toast('Sent to Adam \u2713'); } }
   else if(a==='rundo'){ const h=(S.rhist||[]).pop(); if(h){ if(h.u){ S.rscan[h.u]=Math.max(0,(S.rscan[h.u]||0)-1); } else if(h.x){ const e=(S.rextra||[]).find(z=>z.upc===h.x); if(e){ e.qty=(e.qty||1)-1; if(e.qty<=0) S.rextra=S.rextra.filter(z=>z!==e); } } else if(h.b){ S.rbad[h.b]=(S.rbad[h.b]||1)-1; if(S.rbad[h.b]<=0) delete S.rbad[h.b]; } const p=S.rhist[S.rhist.length-1]; S.rlast=p&&p.u?p.u:null; S.rhold=[]; rSave(); render(); toast('Removed that scan'); focusScan(); } }
   else if(a==='rnext'){ rqAside(rHeld()); S.rhold=[]; render(); focusScan(); }
-  else if(a==='dopen'){ S.dsel=S.dsel===b.dataset.id?null:b.dataset.id; render(); }
-  else if(a==='dleftdone'){ const L=drops(), x=L.find(y=>y.id===b.dataset.id); x.leftDone=!x.leftDone; dSave(L); render(); }
-  else if(a==='dundo'){ const L=drops(), x=L.find(y=>y.id===b.dataset.id); if(x.hist.length){ x.status=x.hist.pop(); x.sts=new Date().toISOString(); if(x.status==='New') x.offer=null; x.leftDone=false; dSave(L); render(); } }
-  else if(a==='dstep'){ const L=drops(), x=L.find(y=>y.id===b.dataset.id), v=b.dataset.v;
-    if(v==='Offer made'){ const o=(document.getElementById('doffer')||{}).value||''; if(!/^\d{1,6}(\.\d{1,2})?$/.test(o.trim())||!(parseFloat(o)>0)){ toast('Enter the offer, like 85'); return; } x.offer=String(parseFloat(o)); }
-    x.hist.push(x.status); x.status=v; x.sts=new Date().toISOString(); if(v==='Paid'&&x.pay==='Store credit'&&x.offer) crAdd(x.name,x.phone,parseFloat(x.offer)); dSave(L); render();
-    submit('dropstatus','Drop-off '+x.name+': '+v+(x.offer&&v!=='Done'?' ($'+x.offer+')':''),{id:x.id,status:v,offer:x.offer||''},true); }
+  else if(a==='dopen'){ S.dsel=S.dsel===b.dataset.id?null:b.dataset.id; render(); const x=S.dsel&&drops().find(y=>y.id===S.dsel); if(x&&x.hasPhoto&&!DEMO&&!(S.dph||{})[x.id]){ try{ const j=await apiRaw('dropphoto',{id:x.id}); S.dph=S.dph||{}; if(j.photo) S.dph[x.id]='data:image/jpeg;base64,'+j.photo; if(S.dsel===x.id) render(); }catch(e){} } }
+  else if(a==='dzoom'){ const x=drops().find(y=>y.id===b.dataset.id), src=x&&(x.photoData||(S.dph||{})[x.id]); if(src){ const o=document.createElement('div'); o.className='dzoom'; o.innerHTML='<img alt="Drop-off photo" src="'+esc(src)+'">'; o.addEventListener('click',()=>o.remove()); document.getElementById('screen').appendChild(o); } }
+  else if(a==='dleftdone'){ await dAct('leftdone',b.dataset.id); }
+  else if(a==='dundo'){ await dAct('undo',b.dataset.id); }
+  else if(a==='dreview'){ const o=(document.getElementById('doffer')||{}).value||''; if(!/^\d{1,6}(\.\d{1,2})?$/.test(o.trim())||!(parseFloat(o)>0)){ toast('Enter the offer, like 85'); return; } S.dconf={id:b.dataset.id,kind:'offer',amount:parseFloat(o)}; render(); }
+  else if(a==='dsend'){ const c=S.dconf; if(c&&c.kind==='offer') await dAct('offer',b.dataset.id,{amount:c.amount}); }
+  else if(a==='dcard'){ S.dconf={id:b.dataset.id,kind:'card'}; render(); }
+  else if(a==='dissue'){ await dAct('credit',b.dataset.id); }
+  else if(a==='dcancel'){ S.dconf=null; render(); }
+  else if(a==='dstep'){ await dAct(b.dataset.v,b.dataset.id); }
   else if(a==='rlist'){ S.view='recvlist'; render(); }
   else if(a==='rrec'){ await rqLoad(); if(DEMO||await rLoad()){ S.rwarn=null; S.rhold=[]; rEnter(); focusScan(); } }
   else if(a==='rpick'){ S.rorder=b.dataset.id; const sv=LS.get(RK(),{})||{}; S.rhist=sv.hist||[]; S.rhold=[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); focusScan(); }
@@ -2544,6 +2629,9 @@ document.addEventListener('click', async ev=>{
   else if(a==='rqyes'){ S.rq=false; rDoFinish(true); }
   else if(a==='rqno'){ S.rq=false; rDoFinish(false); }
   else if(a==='rqcancel'){ S.rq=false; render(); }
+  else if(a==='rqpick'){ const r=(rs().shown||[])[+b.dataset.i]; if(r) rChoose(r.artist,r.album); }
+  else if(a==='rtyped'){ const u=usplit(rs().q); if(u.artist&&u.album) rChoose(u.artist,u.album); }
+  else if(a==='rclear'){ rChoose('',''); }
   else if(a==='tdpick'){ const r=(S.td.shown||[])[+b.dataset.i]; if(r){ S.td.artist=r.artist; S.td.album=r.album; S.td.genre=r.genre||''; S.td.q=''; S.td.res=null; S.td.picked=true; tdRefreshList(); const set=(id,v)=>{ const e=document.getElementById(id); if(e){ e.value=v; e.dispatchEvent(new Event('input',{bubbles:true})); } }; set('aartist',r.artist); set('aalbum',r.album); const q=document.getElementById('tdq'); if(q) q.value=''; if(r.genre) set('agenre',r.genre); else { try{ let g=''; if(r.mid){ const m=await dget('masters/'+r.mid); g=ugenre(m.genres); } else if(r.rid){ const x=await dget('releases/'+r.rid); g=ugenre(x.genres); } if(g){ S.td.genre=g; set('agenre',g); } }catch(e){} } toast('Filled in from Discogs'); const pe=document.getElementById('aprice'); if(pe) pe.focus(); } }
   else if(a==='atype'){ S.td=tdFresh(); S.atype=b.dataset.v; S.aprint=true; S.alisted={}; S.acond=null; render(); }
   else if(a==='kgtab'){ S.kv=b.dataset.v; render(); }
@@ -2654,16 +2742,16 @@ document.addEventListener('click', async ev=>{
   else if(a==='freqq'){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre={artist:(S.fq||'').trim(),album:''}; go('request'); }
   else if(a==='freq'){ const r=(S.fres||[])[+b.dataset.i]; if(r){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre={artist:r.a,album:r.t}; go('request'); } }
   else if(a==='radd'||a==='rdel'){
-    S.rc={name:val('rname'),phone:val('rphone'),email:val('remail')}; S.rpre=null;
+    S.rc={name:val('rname'),phone:val('rphone'),email:val('remail')}; S.rpre=null; S.rs=null;
     if(a==='radd'){ S.ritems.push({artist:tcase(val('rartist')),album:tcase(val('ralbum')),format:S.rfmt,notes:val('rnotes')}); S.rfmt='Vinyl'; }
     else S.ritems.splice(+b.dataset.i,1);
-    render(); const e=document.getElementById('rartist'); if(e) e.focus();
+    render(); const e=document.getElementById('rq'); if(e) e.focus();
   }
   else if(a==='saverequest'){
     const items=S.ritems.slice();
     if(val('rartist')&&val('ralbum')) items.push({artist:tcase(val('rartist')),album:tcase(val('ralbum')),format:S.rfmt,notes:val('rnotes')});
     const nm=val('rname'), ph=val('rphone'), em=val('remail').trim(), mail=em?Object.assign({to:em},reqEmail(val('rname'),items)):null;
-    submit('request','Request: '+items.map(r=>r.artist+' - '+r.album).join('; ')+(mail?'. Confirmation emailed to '+em+'.':''),{name:val('rname'),phone:val('rphone'),email:em,items,autoEmail:mail},false,mail?'Logged ✓ Confirmation emailed to '+em:'Logged ✓').then(async ok=>{ if(ok){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; await rqLoad(); } });
+    submit('request','Request: '+items.map(r=>r.artist+' - '+r.album).join('; ')+(mail?'. Confirmation emailed to '+em+'.':''),{name:val('rname'),phone:val('rphone'),email:em,items,autoEmail:mail},false,mail?'Logged ✓ Confirmation emailed to '+em:'Logged ✓').then(async ok=>{ if(ok){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; S.rs=null; await rqLoad(); } });
   }
   else if(a==='kscandone'){ S.rkDone=null; S.iphoto=null; go('home'); }
   else if(a==='kundoscan'){ const d=S.rkDone; if(d){ const L=kegs().filter(k=>!(k.scanId===d.id)); LS.set(KEGK,L); } S.rkDone=null; S.iphoto=null; S.rk=[]; render(); toast('Undone'); }
@@ -2686,8 +2774,8 @@ document.addEventListener('click', async ev=>{
   }
   else if(a==='savedrop'){
     const n='';
-    const dr={id:'d'+Date.now(),ts:new Date().toISOString(),who:S.who,name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),pay:S.dpay,left:S.dleft,status:'New',hist:[]};
-    submit('dropoff','Drop-off ('+S.dpay+'; unwanted: '+S.dleft.toLowerCase()+')',{payment:S.dpay,unwanted:S.dleft,name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),count:'',photo:S.iphoto?S.iphoto.split(',')[1]:''}).then(ok=>{ if(ok){ const L=drops(); L.unshift(dr); dSave(L); } });
+    const dr={id:'d'+Date.now(),ts:new Date().toISOString(),who:S.who,name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),pay:S.dpay,left:S.dleft,status:'New',hist:[],photoData:S.iphoto||'',hasPhoto:!!S.iphoto};
+    submit('dropoff','Drop-off ('+S.dpay+'; unwanted: '+S.dleft.toLowerCase()+')',{payment:S.dpay,unwanted:S.dleft,name:val('cname'),phone:val('cphone'),email:val('cemail'),items:val('citems'),count:'',photo:S.iphoto?S.iphoto.split(',')[1]:''}).then(ok=>{ if(ok){ if(DEMO){ const L=drops(); L.unshift(dr); dSave(L); } else dLoad(); } });
   }
 });
 
@@ -2724,7 +2812,7 @@ setInterval(async()=>{ if(S.view==='home'&&S.who){ await refreshFeed(); if(S.vie
 
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) pauseCheck(); });
 setInterval(pauseCheck,30000);
-(async function(){ loadLogoJpg(); await pauseCheck(); if(C.TEST_SKIP&&DEMO&&!S.who){ S.who=((C.STAFF||[])[0]||{}).name||'Adam'; S.role=/[?&]role=staff/.test(location.search)?'staff':'manager'; S.view='home'; } if(S.who){ if(!S.role){ try{ const j=await apiRaw('login',{pin:S.pin}); S.role=j.role||'staff'; }catch(e){} } await refreshFeed(); await rqLoad(); } render(); })();
+(async function(){ loadLogoJpg(); await pauseCheck(); if(C.TEST_SKIP&&DEMO&&!S.who){ S.who=((C.STAFF||[])[0]||{}).name||'Adam'; S.role=/[?&]role=staff/.test(location.search)?'staff':'manager'; S.view='home'; } if(S.who){ if(!S.role){ try{ const j=await apiRaw('login',{pin:S.pin}); S.role=j.role||'staff'; }catch(e){} } await refreshFeed(); await rqLoad(); await dLoad(); } render(); })();
 })();
 </script>
 </body>

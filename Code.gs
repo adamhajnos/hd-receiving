@@ -26,8 +26,9 @@ var TABS = {
   Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted', 'Unit cost'],
   UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
-  DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records'],
+  DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records', 'ID', 'Status', 'Pay', 'Unwanted', 'Offer', 'Offer sent', 'Status changed', 'Last action by', 'Leftovers done', 'History', 'Card', 'Card issued', 'Photo', 'Shop'],
   Requests: ['ID', 'Created', 'Source', 'Shop', 'Name', 'Phone', 'Email', 'Artist', 'Album', 'Format', 'Notes', 'Status', 'Status changed', 'Quote', 'Quote note', 'Last action by', 'Hold until', 'Closed reason', 'Reminded'],
+  Covers: ['Key', 'URL', 'Updated'],
   SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #', 'Unit cost']
 };
 
@@ -55,7 +56,11 @@ function doPost(e) {
     if (req.action === 'login') out = { ok: true, name: who, role: AUTH_ROLE_ };
     else if (req.action === 'reqlist') out = { ok: true, requests: reqList_(req) };
     else if (req.action === 'requpdate') out = { ok: true, updated: reqUpdate_(req, who) };
-    else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_() }; }
+    else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_(), covers: coversMap_() }; }
+    else if (req.action === 'droplist') out = { ok: true, drops: dropList_() };
+    else if (req.action === 'dropphoto') out = { ok: true, photo: dropPhoto_(req) };
+    else if (req.action === 'dropupdate') out = { ok: true, drop: dropUpdate_(req, who) };
+    else if (req.action === 'coverset') out = { ok: true, saved: coverSet_(req.entries) };
     else if (req.action === 'registerlog') { if (AUTH_ROLE_ !== 'manager') throw new Error('Managers only'); out = { ok: true, counts: registerLog_() }; }
     else if (req.action === 'supplystate') out = { ok: true, state: supplyState_() };
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
@@ -257,13 +262,22 @@ function logEntry_(req, who) {
     } else if (task === 'reqstatus' || task === 'dropstatus' || task === 'feature' || task === 'supplies' || task === 'keg' || task === 'kegrecv' || task === 'stockrecv') {
       // Logged to the Log tab above. Nothing else to write yet.
     } else if (task === 'dropoff') {
-      if (!clean_(d.name) || !(clean_(d.phone) || clean_(d.email)) || !clean_(d.items)) throw new Error('Missing drop-off details');
-      sheet_(ss, 'DropOffs').appendRow([now, who, clean_(d.name), clean_(d.phone), clean_(d.email), clean_(d.items), Number(d.count) || '']);
+      var dem = clean_(d.email), dpay = clean_(d.payment), dleft = clean_(d.unwanted);
+      if (!clean_(d.name) || !clean_(d.items) || ['Cash', 'Store credit'].indexOf(dpay) < 0 || ['Donate', 'Return'].indexOf(dleft) < 0) throw new Error('Missing drop-off details');
+      if (!EMAIL_RE_.test(dem)) throw new Error('A valid email is required'); // offers and store credit go by email
+      var dsh = dropSheet_(), drow = new Array(DR_W).fill('');
+      drow[DR.TS] = now; drow[DR.WHO] = who; drow[DR.NAME] = clean_(d.name); drow[DR.PHONE] = phoneFmt_(d.phone); drow[DR.EMAIL] = dem; drow[DR.ITEMS] = clean_(d.items);
+      drow[DR.COUNT] = Number(d.count) || ''; drow[DR.ID] = 'D' + Utilities.getUuid().replace(/-/g, '').slice(0, 7).toUpperCase(); drow[DR.STATUS] = 'New';
+      drow[DR.PAY] = dpay; drow[DR.LEFT] = dleft; drow[DR.CHANGED] = now; drow[DR.BY] = who; drow[DR.HIST] = '[]';
+      drow[DR.PHOTO] = d.photo ? saveIssuePhoto_(String(d.photo), now, tz) : ''; drow[DR.SHOP] = myShop_();
+      dsh.getRange(dsh.getLastRow() + 1, 1, 1, DR_W).setValues([drow]);
+      result.drop = drow;
     }
   } finally {
     lock.releaseLock();
   }
   if (clean_(d.type) === 'Trove') { try { troveSquareSync_(false); } catch (e) { /* the TroveSync tab shows what is pending; re-run troveSquareRun */ } }
+  if (result.drop) { try { dropAlert_(result.drop); } catch (e) { /* the drop-off is saved; a mail problem must never block it */ } }
   if (task === 'receive') { try { squareSync(); } catch (e) { /* stays queued in SquareSync; the hourly retry picks it up */ } }
   if (d.autoEmail) sendAutoEmail_(d.autoEmail, task, who);
   return result;
@@ -288,7 +302,7 @@ function sendAutoEmail_(m, task, who) {
   var n = Number(cache.get(key) || 0);
   if (n >= 60) throw new Error('Daily email limit reached');
   cache.put(key, String(n + 1), 86400);
-  var opts = { name: 'Hunky Dory Records' };
+  var opts = { name: task === 'dropoff' ? 'HD ' + myShop_() : 'Hunky Dory Records' };
   var reply = props.getProperty('SHOP_EMAIL') || String(m.replyTo || '').trim();
   if (reply && /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(reply)) opts.replyTo = reply;
   MailApp.sendEmail(to, subject, body, opts);
@@ -377,6 +391,20 @@ function registerLog_() {
     if (isNaN(amt) && r[3] === '') return;
     out.push({ ts: new Date(r[0]).toISOString(), who: String(r[1]), kind: String(r[5] || 'Count'), amount: isNaN(amt) ? '' : amt, deposit: r[3] === '' ? '' : parseFloat(r[3]), note: String(r[4] || ''), src: String(r[6] || '') });
   });
+  // The old register sheet is the record for the days it covers: drop live Opening/Closing rows on a day that has an imported row of the same kind.
+  var tz = ss.getSpreadsheetTimeZone(), day = function (iso) { return Utilities.formatDate(new Date(iso), tz, 'yyyy-MM-dd'); }, imported = {};
+  out.forEach(function (c) { if (c.src === 'Import') imported[c.kind + day(c.ts)] = true; });
+  out = out.filter(function (c) { return c.src === 'Import' || c.src === 'Cash' || !imported[c.kind + day(c.ts)] || c.kind === 'Count'; });
+  // The history is one Open and one Close per day: the first open and the last close. Mid-day counts are not part of it.
+  out.sort(function (a, b) { return a.ts < b.ts ? -1 : 1; });
+  var keep = {}, kept = [];
+  out.forEach(function (c) {
+    if (c.kind !== 'Open' && c.kind !== 'Close') return;
+    var k = c.kind + day(c.ts);
+    if (c.kind === 'Open') { if (keep[k] === undefined) { keep[k] = kept.length; kept.push(c); } }
+    else { if (keep[k] === undefined) keep[k] = kept.length; kept[keep[k]] = c; }
+  });
+  out = kept;
   out.sort(function (a, b) { return a.ts < b.ts ? 1 : -1; });
   return out.slice(0, 600);
 }
@@ -1139,4 +1167,177 @@ function requestsDaily() {
 function installRequestsTrigger() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'requestsDaily') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('requestsDaily').timeBased().everyDays(1).atHour(9).create();
+}
+
+
+/* =====================================================================================
+ * CUSTOMER DROP-OFFS: one shared queue Bell works from.
+ * Status: New > Offer made > Accepted | Declined > Paid > Done. Rows with no Status are old history (shown as Done, never changed).
+ * Everyone signed in sees a trimmed list (no phone, email or amounts). Managers (Bell) see everything and make the offer, record the answer,
+ * pay cash, or issue store credit as a Square gift card (once per drop-off, even if tapped twice).
+ * Script Properties: DROPOFF_ALERT_TO (who is emailed about each new drop-off; falls back to REGISTER_ALERT_TO, then the script owner),
+ * SQUARE_TOKEN (needs gift card write permission) for store credit.
+ * ===================================================================================== */
+var DR = { TS: 0, WHO: 1, NAME: 2, PHONE: 3, EMAIL: 4, ITEMS: 5, COUNT: 6, ID: 7, STATUS: 8, PAY: 9, LEFT: 10, OFFER: 11, SENT: 12, CHANGED: 13, BY: 14,
+           LEFTDONE: 15, HIST: 16, CARD: 17, CARDOK: 18, PHOTO: 19, SHOP: 20 };
+var DR_W = 21;
+
+function dropSheet_() {
+  var sh = sheet_(ss_(), 'DropOffs');
+  if (sh.getMaxColumns() < DR_W) sh.insertColumnsAfter(sh.getMaxColumns(), DR_W - sh.getMaxColumns());
+  if (String(sh.getRange(1, DR.ID + 1).getValue()) !== TABS.DropOffs[DR.ID]) sh.getRange(1, 1, 1, DR_W).setValues([TABS.DropOffs]).setFontWeight('bold');
+  return sh;
+}
+
+function dropHist_(v) { try { var a = JSON.parse(String(v || '[]')); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+
+function dropObj_(row, n, mgr) {
+  var iso = function (v) { return v instanceof Date ? v.toISOString() : String(v || ''); };
+  var legacy = !row[DR.STATUS];
+  var o = { id: String(row[DR.ID] || 'L' + n), ts: iso(row[DR.TS]), who: String(row[DR.WHO]), name: String(row[DR.NAME]), items: String(row[DR.ITEMS]),
+    pay: String(row[DR.PAY] || ''), left: String(row[DR.LEFT] || ''), status: legacy ? 'Done' : String(row[DR.STATUS]),
+    sts: iso(row[DR.CHANGED] || row[DR.TS]), leftDone: row[DR.LEFTDONE] === 'Yes', legacy: legacy, hasCard: !!row[DR.CARD], hasPhoto: !!row[DR.PHOTO] };
+  if (mgr) {
+    o.phone = String(row[DR.PHONE] || ''); o.email = String(row[DR.EMAIL] || ''); o.offer = row[DR.OFFER] === '' ? '' : String(Number(row[DR.OFFER]));
+    o.sent = iso(row[DR.SENT]); o.hist = dropHist_(row[DR.HIST]); o.photo = String(row[DR.PHOTO] || ''); o.cardOk = !!row[DR.CARDOK];
+  }
+  return o;
+}
+
+function dropList_() {
+  var mgr = AUTH_ROLE_ === 'manager', sh = dropSheet_(), last = sh.getLastRow();
+  if (last < 2) return [];
+  var from = Math.max(2, last - 799), vals = sh.getRange(from, 1, last - from + 1, DR_W).getValues();
+  var me = myShop_();
+  return vals.map(function (r, i) { return [r, i]; }).filter(function (p) { return p[0][DR.NAME] && (!p[0][DR.SHOP] || p[0][DR.SHOP] === me); }).map(function (p) { return dropObj_(p[0], from + p[1], mgr); });
+}
+
+function dropAlert_(r) {
+  var to = PropertiesService.getScriptProperties().getProperty('DROPOFF_ALERT_TO') || PropertiesService.getScriptProperties().getProperty('REGISTER_ALERT_TO') || Session.getEffectiveUser().getEmail();
+  var body = 'A customer dropped off records at HD ' + myShop_() + '.\n\n' +
+    'Customer: ' + r[DR.NAME] + '\nEmail: ' + r[DR.EMAIL] + '\nPhone: ' + (r[DR.PHONE] || 'none') + '\nWhat they dropped off: ' + r[DR.ITEMS] + '\n' +
+    'Wants to be paid in: ' + r[DR.PAY] + '\nRecords we do not want: ' + String(r[DR.LEFT]).toLowerCase() + '\nLogged by: ' + r[DR.WHO] + '\n' + (r[DR.PHOTO] ? 'Photo: ' + r[DR.PHOTO] + '\n' : '') +
+    '\nMake the offer under Drop-off list in HD Backstage.';
+  MailApp.sendEmail(to, 'New drop-off: ' + r[DR.NAME], body, { name: 'HD ' + myShop_() });
+}
+
+/** The photo staff took at drop-off, as a base64 JPEG (any signed-in user). */
+function dropPhoto_(req) {
+  var id = clean_(req.id), sh = dropSheet_(), last = sh.getLastRow();
+  var vals = last > 1 ? sh.getRange(2, 1, last - 1, DR_W).getValues() : [];
+  for (var i = 0; i < vals.length; i++) if (String(vals[i][DR.ID]) === id) {
+    var m = /[-\w]{25,}/.exec(String(vals[i][DR.PHOTO] || ''));
+    if (!m) return '';
+    return Utilities.base64Encode(DriveApp.getFileById(m[0]).getBlob().getBytes());
+  }
+  throw new Error('Drop-off not found');
+}
+
+/** {id, op, amount}. Managers: offer, accepted, declined, paid (cash), credit (store credit gift card), undo. Any staff: leftdone, done. Returns the changed drop-off. */
+function dropUpdate_(req, who) {
+  var op = clean_(req.op), id = clean_(req.id);
+  if (['offer', 'accepted', 'declined', 'paid', 'credit', 'undo'].indexOf(op) >= 0) requireManager_();
+  else if (['leftdone', 'done'].indexOf(op) < 0) throw new Error('Unknown drop-off action');
+  var amount = Math.round(Number(req.amount) * 100) / 100;
+  if (op === 'offer' && !(amount > 0 && amount < 100000)) throw new Error('Enter the offer amount');
+  var FROM = { offer: ['New', 'Offer made'], accepted: ['Offer made'], declined: ['Offer made'], paid: ['Accepted'], credit: ['Accepted'], leftdone: ['Paid', 'Declined'], done: ['Paid', 'Declined'] };
+  var lock = LockService.getScriptLock(); lock.waitLock(15000);
+  var row, rowNum, now = new Date(), mail = null, card = null;
+  try {
+    var ss = ss_(), sh = dropSheet_(), last = sh.getLastRow();
+    var vals = last > 1 ? sh.getRange(2, 1, last - 1, DR_W).getValues() : [];
+    for (var i = 0; i < vals.length; i++) if (String(vals[i][DR.ID]) === id) { row = vals[i]; rowNum = i + 2; break; }
+    if (!row) throw new Error('Drop-off not found');
+    var st = String(row[DR.STATUS]);
+    if (!st) throw new Error('That is an old record and cannot be changed');
+    var hist = dropHist_(row[DR.HIST]);
+    if (op === 'undo') {
+      if (!hist.length || st === 'New') throw new Error('Nothing to undo');
+      if (row[DR.CARD]) throw new Error('A gift card was already issued, so this cannot be undone');
+      row[DR.STATUS] = hist.pop(); row[DR.LEFTDONE] = '';
+    } else if (op === 'leftdone') {
+      if (FROM.leftdone.indexOf(st) < 0) throw new Error('Not ready for that step');
+      row[DR.LEFTDONE] = row[DR.LEFTDONE] === 'Yes' ? '' : 'Yes';
+    } else {
+      if (FROM[op].indexOf(st) < 0) throw new Error('This drop-off is ' + st + ', so that step is not allowed');
+      var ns = { offer: 'Offer made', accepted: 'Accepted', declined: 'Declined', paid: 'Paid', credit: 'Paid', done: 'Done' }[op];
+      if (op === 'paid' && row[DR.PAY] !== 'Cash') throw new Error('This customer chose store credit');
+      if (op === 'credit' && row[DR.PAY] !== 'Store credit') throw new Error('This customer chose cash');
+      if (op === 'done' && st === 'Paid' && row[DR.LEFTDONE] !== 'Yes') throw new Error('Handle the leftover records first');
+      if (op === 'offer') { row[DR.OFFER] = amount; row[DR.SENT] = now; mail = 'offer'; }
+      if (op === 'credit') {
+        try { card = dropIssueCard_(row, id); } catch (e) { sh.getRange(rowNum, 1, 1, DR_W).setValues([row]); throw e; } // keep the card id if only the activation failed
+        mail = 'card';
+      }
+      if (st !== ns) hist.push(st);
+      row[DR.STATUS] = ns;
+    }
+    row[DR.HIST] = JSON.stringify(hist.slice(-12)); row[DR.CHANGED] = now; row[DR.BY] = who;
+    sh.getRange(rowNum, 1, 1, DR_W).setValues([row]);
+    sheet_(ss, 'Log').appendRow([now, Utilities.formatDate(now, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd'), who, 'dropstatus', 'Drop-off ' + row[DR.ID] + ': ' + row[DR.STATUS], JSON.stringify({ id: id, op: op })]);
+  } finally { lock.releaseLock(); }
+  try { if (mail === 'offer') sendDropOffer_(row); else if (mail === 'card') sendDropCard_(row, card); } catch (e) { /* the step is saved; the customer email can be resent by hand */ }
+  return dropObj_(row, rowNum, true);
+}
+
+/** Creates and loads a Square digital gift card for the accepted offer. Safe to call twice: the card id is saved before loading, and both Square calls carry fixed idempotency keys. */
+function dropIssueCard_(row, id) {
+  var cents = Math.round(Number(row[DR.OFFER]) * 100);
+  if (!(cents > 0)) throw new Error('No offer amount on this drop-off');
+  var gid = '', gan = '';
+  if (row[DR.CARD]) { var p = String(row[DR.CARD]).split('|'); gid = p[0]; gan = p[1] || ''; }
+  else {
+    var c = sq_('POST', '/v2/gift-cards', { idempotency_key: 'hd-drop-' + id, location_id: SQ.loc, gift_card: { type: 'DIGITAL' } }).gift_card || {};
+    if (!c.id) throw new Error('Square did not create the gift card');
+    gid = c.id; gan = c.gan || ''; row[DR.CARD] = gid + '|' + gan;
+  }
+  if (!row[DR.CARDOK]) {
+    sq_('POST', '/v2/gift-cards/activities', { idempotency_key: 'hd-drop-act-' + id, gift_card_activity: { type: 'ACTIVATE', location_id: SQ.loc, gift_card_id: gid,
+      activate_activity_details: { amount_money: { amount: cents, currency: 'USD' }, buyer_payment_instrument_ids: ['hd-dropoff-' + id], reference_id: id } } });
+    row[DR.CARDOK] = new Date();
+  }
+  return { gid: gid, gan: gan, amount: cents / 100 };
+}
+
+function dropMoney_(n) { return '$' + Number(n).toFixed(2); }
+
+function sendDropOffer_(row) {
+  var cash = row[DR.PAY] === 'Cash', shop = myShop_();
+  sendAutoEmail_({ to: row[DR.EMAIL], subject: 'Your offer from HD ' + shop,
+    body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nThanks for bringing your records in to HD ' + shop + '. We looked through them and can offer you ' + dropMoney_(row[DR.OFFER]) +
+      (cash ? ' in cash' : ' in store credit') + ' for the records we are keeping.\n\n' +
+      (row[DR.LEFT] === 'Donate' ? 'The records we are not buying will be donated.' : 'The records we are not buying are ours to hold for you. You can pick them up at the shop.') +
+      '\n\nReply to this email to accept or decline. If we do not hear back within 10 days, we may donate or dispose of your records, as in the drop-off terms you agreed to.' +
+      (cash ? '' : '\n\nStore credit is sent to this email address as a gift card.') + '\n\nHD ' + myShop_() + '' }, 'dropoff', 'Backstage');
+}
+
+function sendDropCard_(row, card) {
+  var gan = String(card.gan || '').replace(/(\d{4})(?=\d)/g, '$1 ');
+  sendAutoEmail_({ to: row[DR.EMAIL], subject: 'Your HD ' + myShop_() + ' store credit: ' + dropMoney_(card.amount),
+    body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nYour store credit is ready: ' + dropMoney_(card.amount) + ' at HD ' + myShop_() + '.\n\nGift card number: ' + gan +
+      '\n\nGive this number to us at the register and we will take it off your total. Keep this email; it is your gift card.\n\nHD ' + myShop_() + '' }, 'dropoff', 'Backstage');
+}
+
+/** Shared album-cover links so every iPad looks a cover up once, ever. */
+function coversSheet_() {
+  var ss = ss_(), sh = ss.getSheetByName('Covers');
+  if (!sh) { sh = ss.insertSheet('Covers'); sh.getRange(1, 1, 1, 3).setValues([TABS.Covers]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  return sh;
+}
+function coversMap_() {
+  var sh = coversSheet_(), n = sh.getLastRow(), out = {};
+  if (n < 2) return out;
+  sh.getRange(2, 1, n - 1, 2).getValues().forEach(function (r) { if (r[0] && r[1]) out[String(r[0])] = String(r[1]); });
+  return out;
+}
+function coverSet_(entries) {
+  if (!Array.isArray(entries)) return 0;
+  var have = coversMap_(), rows = [], now = new Date();
+  entries.slice(0, 200).forEach(function (e) {
+    var k = String(e && e.k || '').slice(0, 200), u = String(e && e.u || '').trim();
+    if (!k || have[k] || !/^https:\/\/[^\s]{4,400}$/.test(u)) return;
+    have[k] = u; rows.push([clean_(k), u, now]);
+  });
+  if (rows.length) { var sh = coversSheet_(); sh.getRange(sh.getLastRow() + 1, 1, rows.length, 3).setValues(rows); }
+  return rows.length;
 }
