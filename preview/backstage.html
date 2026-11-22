@@ -863,9 +863,18 @@ async function covFetch(el){
     }
     if(!url&&fail){ _covStop=Date.now()+30000; return; } // lookup errored: try again later, don't remember as "no cover"
     COV[k]=url;
-    LS.set(COVKEY,COV);
+    LS.set(COVKEY,COV); if(url) covShare(k,url);
     if(COV[k]) document.querySelectorAll('.cov.ph').forEach(n=>{ if(n.dataset.k===k){ const im=document.createElement('img'); im.className='cov'; im.alt=''; im.src=COV[k]; im.dataset.ph=n.textContent; n.replaceWith(im); } });
   }catch(e){ _covStop=Date.now()+60000; }
+}
+let _covPush=[], _covPt=null;
+function covShare(k,u){ if(DEMO||!k||!u) return; _covPush.push({k,u}); clearTimeout(_covPt); _covPt=setTimeout(async()=>{ const b=_covPush.splice(0,200); if(!b.length) return; try{ await api('coverset',{entries:b}); }catch(e){ _covPush=b.concat(_covPush); } },4000); }
+function covMerge(srv){ // shared covers fill what this iPad lacks; this iPad's finds that the sheet lacks go up once
+  if(DEMO||!srv) return; let ch=false;
+  Object.keys(srv).forEach(k=>{ if(COV[k]!==srv[k]){ COV[k]=srv[k]; ch=true; } });
+  if(ch) LS.set(COVKEY,COV);
+  const up=Object.keys(COV).filter(k=>COV[k]&&!srv[k]).slice(0,200).map(k=>({k,u:COV[k]}));
+  if(up.length) api('coverset',{entries:up}).catch(()=>{});
 }
 async function covPump(){
   if(_covBusy) return; _covBusy=true;
@@ -2454,7 +2463,7 @@ document.addEventListener('click', async ev=>{
     const t=a.slice(3);
     if(t==='opening'||t==='closing'){ S.flow=t; go('opening'); }
     else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='dropoff'||t==='request') S.tagree=false; if(t==='dropoff'){ S.iphoto=null; S.dpay=null; S.dleft=null; } if(t==='request'){ S.rs=null; S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ await rqLoad(); if(DEMO||await rLoad()) rEnter(); return; }
-    if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
+    if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); covMerge(j.covers); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
     if(t==='kegs'){ S.kv='taps'; S.ks=null; }
     if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqcol=isMgr()?{quoted:1,ordered:1,wait:1,done:1}:{}; S.rqq=''; S.rqshop='All'; rqLoad().then(()=>{ if(S.view==='reqlist') render(); }); }
     if(t==='credit'){ S.crq=''; S.crsel=null; }
@@ -2470,7 +2479,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='tcheck'){ S.tstand=true; S.flow='opening'; S.tfound=LS.get('hd.trove.s.'+today(),{}); S.tskip=LS.get('hd.trove.s.'+today()+'.skip',{}); S.tq=''; S.tonly=false; S.tscan=false; S.tmsg=null; S.tbad={}; S.tshow=false; S.tconfirm=false; S.view='trove'; render(); }
   else if(a==='otrove'){ S.tstand=false;
     S.tfound=LS.get(KT(),{}); S.tskip=LS.get(tskipKey(),{}); S.tq=''; S.tonly=false; S.tscan=false; S.tmsg=null; S.tbad={}; S.tshow=false; S.tconfirm=false; S.view='trove'; S.tload=true; render();
-    try{ const j=await api('trove'); setTrove(j.items); S.err=''; }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; }
+    try{ const j=await api('trove'); covMerge(j.covers); setTrove(j.items); S.err=''; }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; }
     S.tload=false; render();
   }
   else if(a==='tstart'){ S.tscan=true; S.tshow=true; S.tmsg=null; S.tconfirm=false; beep('ok'); render(); }
