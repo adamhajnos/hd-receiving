@@ -1602,7 +1602,7 @@ function rlogHTML(){
   rows.reverse().forEach(r=>{ const d=new Date(r.ts), day=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
     const notes=[r.on?(r.cn?'Open: ':'')+r.on:'',r.cn?(r.on?'Close: ':'')+r.cn:''].filter(Boolean).join(' \u00b7 ');
     const who=[...new Set([r.ow,r.cw].filter(Boolean))].join(' / ');
-    out+='<div class="rlrow"><span class="rld">'+day+'</span><span class="rla'+(r.bad?' rlbad':'')+'">'+$(r.open)+(r.bad?'<small>expected '+$(r.exp)+'</small>':'')+'</span><span class="rla">'+$(r.close)+'</span><span class="rla">'+(r.close===undefined?$(null):$(r.dep||0))+'</span><span class="rla">'+$(r.rem)+'</span><span class="rln">'+esc(notes)+'</span></div>'; });
+    out+='<div class="rlrow"><span class="rld">'+day+'</span><span class="rla'+(r.bad?' rlbad':'')+'">'+$(r.open)+(r.bad?'<small>expected '+$(r.exp)+'</small>':'')+'</span><span class="rla">'+$(r.close)+'</span><span class="rla">'+(r.close===undefined?$(null):$(r.dep||0))+'</span><span class="rla">'+$(r.rem)+'</span><span class="rlw">'+esc(who)+'</span><span class="rln">'+esc(notes)+'</span></div>'; });
   return out;
 }
 function rlogLoad(){
