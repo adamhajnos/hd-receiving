@@ -1200,12 +1200,14 @@ function vRequest(){
   const f=['Vinyl','CD','Cassette','Other'], c=S.rc||{};
   const added=S.ritems.map((r,k)=>'<div class="radded"><span><b>'+esc(r.artist)+'</b> \u00b7 '+esc(r.album)+' <span class="o">'+esc(r.format)+'</span></span><button class="btn ghost" data-act="rdel" data-i="'+k+'">Remove</button></div>').join('');
   return topHTML('Customer request','home','<button class="btn go reqbtn" data-act="go:reqlist">'+ic('list')+'<span>'+(isMgr()?'Request list':'Pickups')+'</span>'+(rqBadge()?'<span class="dcnt">'+rqBadge()+'</span>':'')+'</button>')+bannerHTML()+
-  '<div class="form"><label>Name<input id="rname" autocomplete="off" value="'+esc(c.name||'')+'"></label>'+
+  '<div class="form dform"><div class="dgrid"><div class="dcol dl"><label>Name<input id="rname" autocomplete="off" value="'+esc(c.name||'')+'"></label>'+
   '<div class="pair"><label>Phone<input id="rphone" type="tel" autocomplete="off" value="'+esc(c.phone||'')+'"><p class="eerr" id="perr" hidden>That phone number needs 10 digits, like (919) 555-1212.</p></label><label>Email<input id="remail" type="email" autocomplete="off" value="'+esc(c.email||'')+'"><p class="eerr" id="eerr" hidden>That doesn\u2019t look like an email address. Check it, like name@example.com.</p><p class="esug" id="esug" hidden></p><p class="ehint" id="ehint" hidden>We’ll email them a confirmation that this is a request, not a guarantee.</p></label></div>'+
+  '</div><div class="dcol">'+
   added+(S.rpre&&dupNote(S.rpre.artist,S.rpre.album)?'<p class="dupn">'+esc(dupNote(S.rpre.artist,S.rpre.album))+'. Adding yours puts you on the same order.</p>':'')+
   '<div class="pair"><label>Artist<input id="rartist" autocomplete="off" value="'+esc((S.rpre||{}).artist||'')+'"></label><label>Album<input id="ralbum" autocomplete="off" value="'+esc((S.rpre||{}).album||'')+'"></label></div>'+
   '<div><label>Format</label><div class="fmts" style="margin-top:8px">'+f.map(x=>'<button data-act="rfmt" data-v="'+x+'" class="'+(S.rfmt===x?'on':'')+'">'+x+'</button>').join('')+'</div></div>'+
   '<label>Notes <span class="o">(optional)</span><input id="rnotes" autocomplete="off"></label>'+
+  '</div></div>'+
   termsRow('req')+
   '<div style="display:flex;gap:14px;align-items:center"><button class="btn ghost" id="radd" data-act="radd" disabled>+ Add another request</button><button class="btn go" id="sub" data-act="saverequest" disabled>Send</button></div></div>';
 }
