@@ -302,7 +302,7 @@ function sendAutoEmail_(m, task, who) {
   var n = Number(cache.get(key) || 0);
   if (n >= 60) throw new Error('Daily email limit reached');
   cache.put(key, String(n + 1), 86400);
-  var opts = { name: 'Hunky Dory Records' };
+  var opts = { name: task === 'dropoff' ? 'HD ' + myShop_() : 'Hunky Dory Records' };
   var reply = props.getProperty('SHOP_EMAIL') || String(m.replyTo || '').trim();
   if (reply && /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(reply)) opts.replyTo = reply;
   MailApp.sendEmail(to, subject, body, opts);
@@ -1217,7 +1217,7 @@ function dropAlert_(r) {
     'Customer: ' + r[DR.NAME] + '\nEmail: ' + r[DR.EMAIL] + '\nPhone: ' + (r[DR.PHONE] || 'none') + '\nWhat they dropped off: ' + r[DR.ITEMS] + '\n' +
     'Wants to be paid in: ' + r[DR.PAY] + '\nRecords we do not want: ' + String(r[DR.LEFT]).toLowerCase() + '\nLogged by: ' + r[DR.WHO] + '\n' + (r[DR.PHOTO] ? 'Photo: ' + r[DR.PHOTO] + '\n' : '') +
     '\nMake the offer under Drop-off list in HD Backstage.';
-  MailApp.sendEmail(to, 'New drop-off: ' + r[DR.NAME], body, { name: 'Hunky Dory Records' });
+  MailApp.sendEmail(to, 'New drop-off: ' + r[DR.NAME], body, { name: 'HD ' + myShop_() });
 }
 
 /** The photo staff took at drop-off, as a base64 JPEG (any signed-in user). */
