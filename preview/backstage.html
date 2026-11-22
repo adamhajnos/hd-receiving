@@ -1598,7 +1598,7 @@ function rlogHTML(){
   L.forEach(c=>{ const d=new Date(c.ts), k=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); const r=days[k]||(days[k]={k,ts:c.ts}); if(c.kind==='Open'){ r.open=c.amount; r.on=c.note; r.ow=c.who; } else if(c.kind==='Close'){ r.close=c.amount; r.dep=c.deposit; r.cn=c.note; r.cw=c.who; } });
   const rows=Object.values(days).sort((x,y)=>x.k-y.k); let prev=null;
   rows.forEach(r=>{ r.rem=(r.close===undefined||r.close==='')?null:Number(r.close)-(Number(r.dep)||0); r.exp=prev; r.bad=prev!==null&&r.open!==undefined&&r.open!==''&&Math.abs(Number(r.open)-prev)>=0.005; if(r.rem!==null) prev=r.rem; });
-  let out='<div class="rlhead rlrow"><span>Date</span><span class="rla">Register open</span><span class="rla">Register close</span><span class="rla">Deposit</span><span class="rla">Remaining</span><span>Who</span><span>Notes</span></div>';
+  let out='<div class="rlhead rlrow"><span>Date</span><span class="rla">Open</span><span class="rla">Close</span><span class="rla">Deposit</span><span class="rla">Remaining</span><span>Who</span><span>Notes</span></div>';
   rows.reverse().forEach(r=>{ const d=new Date(r.ts), day=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     const notes=[r.on?(r.cn?'Open: ':'')+r.on:'',r.cn?(r.on?'Close: ':'')+r.cn:''].filter(Boolean).join(' \u00b7 ');
     const who=[...new Set([r.ow,r.cw].filter(Boolean))].join(' / ');
