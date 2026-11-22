@@ -113,7 +113,7 @@ input.money{font:500 34px var(--mono);min-height:72px}
 .rlast{display:flex;align-items:baseline;gap:18px;padding:12px 18px;border-radius:14px;background:var(--panel);border:1px solid var(--ok);font-size:22px}.rlast b{font:700 30px var(--mono);color:var(--ok);margin-left:auto}
 .row2{display:flex;align-items:center;gap:18px}.calc{font:600 28px var(--mono)}
 select{font:500 25px var(--display);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:0 16px;min-height:64px;width:100%}
-.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}.dform{max-width:none}.dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:32px;align-items:start}.dcol{display:flex;flex-direction:column;gap:18px}.dl .pair{grid-template-columns:1fr}.dform .cbox{max-width:none}.rchip{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px;border:1px solid var(--line);border-radius:14px;background:#fff;font-size:21px}.rchip b{flex:1}.dform textarea{min-height:110px}.dform .fmts{flex-wrap:nowrap}.dform .fmts button{padding:0 20px;white-space:nowrap}@media (max-width:860px){.dgrid{grid-template-columns:1fr}}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}.dform{max-width:none}.dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:32px;align-items:start}.dcol{display:flex;flex-direction:column;gap:18px}.dl .pair{grid-template-columns:1fr}.dform .cbox{max-width:none}.rchip{display:flex;align-items:center;gap:12px;padding:12px 14px 12px 18px;border:1px solid var(--line);border-radius:14px;background:#fff;font-size:21px}.rchip b{flex:1}.dform textarea{min-height:110px}.dform .fmts,.dcol .fmts{flex-wrap:nowrap}.dcol .fmts button{padding:0 18px}.dform .fmts button{padding:0 20px;white-space:nowrap}@media (max-width:860px){.dgrid{grid-template-columns:1fr}}
 /* opening gate */
 .openbig{width:100%;min-height:380px;border-radius:24px;border:1.5px solid var(--warn);background:var(--warn-bg);font:800 72px var(--display);color:var(--warn-fg)}
 .openbig:active{background:var(--warn);color:#1d1604}
@@ -1265,7 +1265,8 @@ function vAddRec(){
   }
   const L=S.alast||{}, sel=(arr,cur,ph)=>(ph?'<option value="">'+ph+'</option>':'')+arr.map(x=>'<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>').join('');
   const fmt='<label>Format<select id="aformat">'+(t==='CD'?sel(['CD'],'CD'):sel(['Vinyl','Tape','CD','45'],L.format))+'</select></label>';
-  let body=((t==='Trove'||t==='CD')?'<div><label>Find the album</label><input id="tdq" class="pqs" placeholder="Scan the UPC, or type artist and album" autocomplete="off" autocapitalize="off" value="'+esc((S.td||{}).q||'')+'"><div id="tdlist">'+tdListHTML()+'</div></div>':'')+'<div class="pair"><label>Artist<input id="aartist" autocomplete="off" value="'+esc((S.td||{}).artist||'')+'"></label><label>Album<input id="aalbum" autocomplete="off" value="'+esc((S.td||{}).album||'')+'"></label></div>'+
+  let body='<div class="dgrid"><div class="dcol dl">'+((t==='Trove'||t==='CD')?'<div><label>Find the album</label><input id="tdq" class="pqs" placeholder="Scan the UPC, or type artist and album" autocomplete="off" autocapitalize="off" value="'+esc((S.td||{}).q||'')+'"><div id="tdlist">'+tdListHTML()+'</div></div>':'')+'<div class="pair"><label>Artist<input id="aartist" autocomplete="off" value="'+esc((S.td||{}).artist||'')+'"></label><label>Album<input id="aalbum" autocomplete="off" value="'+esc((S.td||{}).album||'')+'"></label></div>'+
+    '</div><div class="dcol">'+
     '<div class="pair"><label>Genre<select id="agenre">'+sel(C.GENRES,(S.td&&S.td.genre)||L.genre,'Choose a genre')+'</select></label>'+fmt+'</div>';
   if(t==='Used'||t==='CD'){
     const CO=['Mint','NM','VG+','VG','G'];
@@ -1280,7 +1281,7 @@ function vAddRec(){
       '<div></div></div>';
   }
   body+='<label><span>Notes <span class="o">(optional'+(t==='Used'||t==='CD'?', e.g. cracked case':', e.g. blue special original pressing')+')</span></span><input id="anotes" autocomplete="off"></label>'+
-    '<div><button class="btn go" id="sub" data-act="saveaddrec" disabled>'+'Add record'+'</button></div>';
+    '<div><button class="btn go" id="sub" data-act="saveaddrec" disabled>'+'Add record'+'</button></div></div></div>';
   return topHTML(t==='Used'?'Add a used record':t==='CD'?'Add a CD':'Add a Trove record','addback')+bannerHTML()+'<div class="form tight" style="max-width:none">'+body+'</div>';
 }
 /* ---------- add a used record: scan or search, Discogs names, no duplicate items ---------- */
