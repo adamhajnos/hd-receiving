@@ -234,7 +234,7 @@ div.tile.done{cursor:default}
 .plwrap{display:grid;grid-template-columns:1fr 430px;gap:22px;align-items:start}.plleft,.plright{min-width:0}
 .plh{display:flex;align-items:center;gap:12px;margin:0 0 8px}.plh b{font-size:24px}.plh .o{color:var(--muted);font-size:17px}
 .pqs{width:100%;min-height:58px;font-size:22px;margin-bottom:8px}
-#ulist{max-height:calc(100vh - 230px);overflow:auto;-webkit-overflow-scrolling:touch}
+#ulist{max-height:calc(100vh - 190px);overflow:auto;-webkit-overflow-scrolling:touch}
 .hgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}.hcard{padding:16px 20px;border-radius:16px;border:1px solid var(--line);background:#fff}.hcard.warn{border-color:#E8A317;background:#FFF8E8}.hcard h3{margin:0 0 8px;font-size:20px}.hbody{margin:0;font-size:22px}.hnone{margin:0;color:var(--muted);font-size:20px}.hl{margin:0;padding-left:20px;font-size:21px;line-height:1.5}.hl.two{columns:2}.hl .late{color:var(--bad);font-weight:700}.hbtns{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.featlnk{position:absolute;left:18px;bottom:6px;z-index:1;background:none;border:0;padding:6px 8px;font:inherit;font-size:15px;color:var(--muted);text-decoration:underline;cursor:pointer}.rundo{align-self:flex-start;min-height:56px}.rholdw{display:flex;flex-direction:column;gap:10px;padding:0}.rnext{align-self:flex-start}.rhold{display:flex;align-items:center;flex-wrap:wrap;gap:14px;padding:16px 20px;border-radius:14px;background:#FFF1D6;border:2px solid #E8A317;font-size:22px}.rhold b{letter-spacing:.06em}.hbig{font-size:46px;font-weight:800;letter-spacing:-.02em}.hbig svg{width:44px;height:44px}.hsub{margin:-4px 0 18px;font-size:20px;color:var(--muted)}.dsub{margin:0 4px 10px;font-size:18px;color:var(--muted)}.rhl{margin:0;padding-left:20px;flex-basis:100%;font-size:21px}.uh{font-weight:700;color:var(--muted);margin:12px 0 6px;font-size:18px}.urow{display:flex;align-items:center;gap:14px;width:100%;min-height:76px;padding:8px 14px;margin-bottom:8px;border-radius:14px;border:1px solid var(--line);background:var(--panel);text-align:left;color:inherit;font:inherit}.urow.sel{margin-bottom:14px}.urow .tx{flex:1;min-width:0}.urow .tx b{display:block;font-size:22px}.urow .s{display:block;color:var(--muted);font-size:17px}.urow .rt{font:500 17px var(--mono);color:var(--muted);text-align:right}.urow .cov.ph{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:var(--muted)}
 .uchips{display:flex;gap:8px;flex-wrap:wrap}.uchips button{min-height:60px;padding:6px 16px;border-radius:12px;border:1px solid var(--line);background:none;color:inherit;display:flex;flex-direction:column;align-items:flex-start;gap:2px}.uchips small{color:var(--muted);font-size:14px}.uchips b{font:600 22px var(--mono)}
 .uconf{padding:18px 22px;border-radius:16px;border:1px solid var(--line);background:var(--panel)}.uconf h3{margin:0 0 8px;font-size:26px}.uconf ol{margin:0 0 6px;padding-left:24px;font-size:21px;line-height:1.5}
@@ -796,7 +796,7 @@ function vHome(){
     cat('Inventory',tile('go:addrecord','Add records','New, Trove or used','addrec')+tile('go:addcd','Add a CD','Type it in, print a label','disc')+tile('go:trove','Trove Inventory','List and shelf check','trove')+tile('go:labels','Print labels','Print the sticker sheet','labels'))+
     cat('Beer/THC',tile('go:kegs','Beer inventory','Kick a keg, change a price, put one on tap','beer')+tile('go:rstock','Receive stock','Kegs or cans, with the invoice photo','keg'))+
     cat('Customers',tile('go:dropoff','Customer drop&#8209;off','Log records a customer left'+(dr?' \u00b7 '+dr+' today':''),'dropoff')+tile('go:request','Customer request','Record what a customer is looking for','request')+tile('go:drops','Drop-off list','Offers and what happens next','list'))+
-    cat('Shop',tile('go:note','Note for next shift','Leave a heads-up for whoever opens','note')+tile('go:supplies','Supplies','Mark what is low or out','bag')+tile('go:cash','Register count',isMgr()?'Log a count, see the running log':'Log a count','cash')+tile('go:issue','Report an issue','Flag a problem for the manager','issue')+tile('feat','Request a feature','Or report a bug in Backstage','bulb'))+'</div>';
+    cat('Shop',tile('go:note','Note for next shift','Leave a heads-up for whoever opens','note')+tile('go:supplies','Supplies','Mark what is low or out','bag')+(isMgr()?tile('go:cash','Register count','History of open and close counts','cash'):'')+tile('go:issue','Report an issue','Flag a problem for the manager','issue')+tile('feat','Request a feature','Or report a bug in Backstage','bulb'))+'</div>';
 }
 function topHTML(t,act,right,nohome){ return '<div class="top"><button class="btn ghost" data-act="'+(act||'home')+'">\u2039 Back</button><h2>'+ic(TOPIC[t]||'')+'<span>'+t+'</span></h2>'+(right||'')+'</div>'; }
 
@@ -1605,14 +1605,9 @@ function rlogLoad(){
   apiRaw('registerlog',{pin:S.pin}).then(j=>{ S.rlog=j.counts||[]; },()=>{ S.rlog=false; }).then(()=>{ const e=document.getElementById('rlog'); if(S.view==='cash'&&e) e.innerHTML=rlogHTML(); });
 }
 function vCash(){
-  const mg=isMgr();
-  const form='<div class="form regf">'+
-  '<label>Count<div class="pre"><b>$</b><input class="money" id="drawer" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label>'+
-  '<label><span>Deposit <span class="o oi">(optional)</span></span><div class="pre"><b>$</b><input class="money" id="deposit" inputmode="decimal" autocomplete="off" placeholder="0.00"></div></label>'+
-  '<label><span>Note <span class="o oi">(optional)</span></span><input id="note" autocomplete="off"></label>'+
-  '<div><button class="btn go" id="sub" data-act="savecash" disabled style="width:100%">Log it</button></div></div>';
+  if(!isMgr()) return topHTML('Register count')+bannerHTML()+'<p class="o">The register history is for managers.</p>';
   return topHTML('Register count')+bannerHTML()+
-  '<div class="regv'+(mg?'':' solo')+'">'+form+(mg?'<div class="regl"><div class="reglh"><h3 class="cat" style="margin:0">Running log</h3><span class="o">Open and close counts, plus every count logged here. Newest first.</span></div><div class="rlog" id="rlog">'+rlogHTML()+'</div></div>':'')+'</div>';
+  '<div class="regl"><p class="o" style="margin:0 0 12px">History of the register: every open and close count, with deposits and notes. Newest first.</p><div class="rlog" id="rlog">'+rlogHTML()+'</div></div>';
 }
 function vDrop(){
   return topHTML('Customer drop&#8209;off')+bannerHTML()+
