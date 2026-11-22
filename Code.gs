@@ -381,15 +381,16 @@ function registerLog_() {
   var tz = ss.getSpreadsheetTimeZone(), day = function (iso) { return Utilities.formatDate(new Date(iso), tz, 'yyyy-MM-dd'); }, imported = {};
   out.forEach(function (c) { if (c.src === 'Import') imported[c.kind + day(c.ts)] = true; });
   out = out.filter(function (c) { return c.src === 'Import' || c.src === 'Cash' || !imported[c.kind + day(c.ts)] || c.kind === 'Count'; });
-  // A double-tap on Finish logs the same open/close several times: keep the first of identical rows within two minutes.
+  // The history is one Open and one Close per day: the first open and the last close. Mid-day counts are not part of it.
   out.sort(function (a, b) { return a.ts < b.ts ? -1 : 1; });
-  var seen = {};
-  out = out.filter(function (c) {
-    if (c.kind === 'Count' || c.src === 'Import') return true;
-    var k = c.kind + '|' + c.who + '|' + c.amount, t = new Date(c.ts).getTime();
-    if (seen[k] && t - seen[k] < 120000) return false;
-    seen[k] = t; return true;
+  var keep = {}, kept = [];
+  out.forEach(function (c) {
+    if (c.kind !== 'Open' && c.kind !== 'Close') return;
+    var k = c.kind + day(c.ts);
+    if (c.kind === 'Open') { if (keep[k] === undefined) { keep[k] = kept.length; kept.push(c); } }
+    else { if (keep[k] === undefined) keep[k] = kept.length; kept[keep[k]] = c; }
   });
+  out = kept;
   out.sort(function (a, b) { return a.ts < b.ts ? 1 : -1; });
   return out.slice(0, 600);
 }
