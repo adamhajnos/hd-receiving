@@ -57,6 +57,7 @@ function doPost(e) {
     else if (req.action === 'requpdate') out = { ok: true, updated: reqUpdate_(req, who) };
     else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_() }; }
     else if (req.action === 'registerlog') { if (AUTH_ROLE_ !== 'manager') throw new Error('Managers only'); out = { ok: true, counts: registerLog_() }; }
+    else if (req.action === 'supplystate') out = { ok: true, state: supplyState_() };
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
     else if (req.action === 'log') { var res = logEntry_(req, who) || {}; out = { ok: true, code: res.code || '' }; }
     else if (req.action === 'expected') out = { ok: true, lines: expectedLines_(), map: upcMap_() };
@@ -350,6 +351,23 @@ function registerLog_() {
   });
   out.sort(function (a, b) { return a.ts < b.ts ? 1 : -1; });
   return out.slice(0, 600);
+}
+
+/** Open supply restock requests, from the Log: newest event per item wins (a "Restocked" line clears it). Looks back through the last 1500 log rows. */
+function supplyState_() {
+  var ss = ss_(), sh = sheet_(ss, 'Log'), last = sh.getLastRow(), state = {};
+  if (last < 2) return state;
+  var from = Math.max(2, last - 1499);
+  sh.getRange(from, 1, last - from + 1, 6).getValues().forEach(function (r) {
+    if (r[3] !== 'supplies') return;
+    var d = {};
+    try { d = JSON.parse(r[5] || '{}'); } catch (e) { return; }
+    var name = clean_(d.item);
+    if (!name) return;
+    if (d.cancelled) delete state[name];
+    else if (d.request) state[name] = { need: d.need || [], ts: new Date(r[0]).toISOString() };
+  });
+  return state;
 }
 
 function todayEntries_() {

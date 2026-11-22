@@ -1394,6 +1394,12 @@ const SUPDEF={
 };
 function sups(){ let L=LS.get(SUPK,null); if(!L){ L=[]; SUPCATS.forEach(c=>SUPDEF[c].forEach(x=>{ L.push({n:x[0],k:c,t:'r',r:false}); })); LS.set(SUPK,L); } return L; }
 function supSave(L){ LS.set(SUPK,L); }
+async function supSync(){
+  if(DEMO) return;
+  try{ const j=await apiRaw('supplystate',{pin:S.pin}), st=j.state||{}, L=sups(); let ch=false;
+    L.forEach(x=>{ if(x.t!=='r') return; const s=st[x.n]; if(!!x.r!==!!s||(s&&x.rts!==s.ts)){ x.r=!!s; x.need=s?s.need:null; x.rts=s?s.ts:''; ch=true; } });
+    if(ch){ supSave(L); if(S.view==='supplies'&&!S.sden) render(); } }catch(e){}
+}
 const SUPOPT={'Cash':['1s','5s','10s','20s'],'Record cleaner ingredients':['Isopropyl alcohol','Dawn','Distilled water']};
 const supD=x=>SUPOPT[x.n]||null;
 const supLow=x=>x.t==='r'?!!x.r:x.c<=x.m;
@@ -1403,9 +1409,9 @@ function vSupplies(){
   const row=(x,i)=>{ const lo=supLow(x);
     const ctl=x.t==='c'
       ? '<span class="rbs"><button class="rb" data-act="scnt" data-i="'+i+'" data-d="-1" aria-label="One less">−</button><span class="snum1"><b>'+x.c+'</b> '+esc(x.u||'left')+'</span><button class="rb" data-act="scnt" data-i="'+i+'" data-d="1" aria-label="One more">+</button></span>'
-      : '<button class="btn '+(x.r?'go':'ghost')+'" data-act="sreq" data-i="'+i+'">'+(x.r?'Restocked':'Request restock')+'</button>';
+      : '<button class="btn '+(x.r?'go':'ghost')+'" data-act="sreq" data-i="'+i+'">'+(x.r?'Restock':'Request restock')+'</button>';
     const pick=S.sden&&S.sden.i===i&&!x.r ? '<div class="sdn"><b>What do we need?</b><div class="fmts">'+supD(x).map(d=>'<button data-act="sden" data-v="'+d+'" class="'+(S.sden.sel.includes(d)?'on':'')+'">'+d+'</button>').join('')+'</div><button class="btn go" data-act="sdsend"'+(S.sden.sel.length?'':' disabled')+'>Send request</button><button class="lnk" data-act="sdcancel">Cancel</button></div>' : '';
-    return '<div class="sli'+(lo?' lo':'')+'"><span class="sn">'+esc(x.n)+'</span><span>'+(lo?'<span class="chip">'+(x.t==='c'?'Reorder':'Requested'+(x.need&&x.need.length?': '+x.need.join(', '):''))+'</span>':'')+'</span>'+ctl+'</div>'+pick; };
+    return '<div class="sli'+(lo?' lo':'')+'"><span class="sn">'+esc(x.n)+'</span><span>'+(lo?'<span class="chip">'+(x.t==='c'?'Reorder':'Requested'+(x.rts?' '+dShort(x.rts):'')+(x.need&&x.need.length?': '+x.need.join(', '):''))+'</span>':'')+'</span>'+ctl+'</div>'+pick; };
   let out='';
   SUPCATS.forEach(c=>{ const items=L.map((x,i)=>[x,i]).filter(p=>p[0].k===c&&(f==='all'||supLow(p[0])));
     if(items.length) out+='<div class="shead">'+c+'</div>'+items.map(p=>row(p[0],p[1])).join(''); });
@@ -2419,7 +2425,7 @@ document.addEventListener('click', async ev=>{
     if(t==='labels'){ S.pqs=''; S.pprinted=false; }
     if(t==='cash'&&isMgr()) S.rlog=null;
     if(t==='addcd'){ S.adone=null; S.td=tdFresh(); S.atype='CD'; S.alisted={}; S.aprint=true; S.acond=null; go('addrec'); setTimeout(()=>{ const e=document.getElementById('tdq'); if(e) e.focus(); },80); return; }
-    if(t==='addrecord'){ S.adone=null; S.atype=null; S.alisted={}; S.aprint=true; S.acond=null; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',kegs:'kegs',rkeg:'rkeg',labels:'labels',note:'note',issue:'issue',find:'find',supplies:'supplies',drops:'drops',reqlist:'reqlist',credit:'credit',rstock:'rstock',rcans:'rcans',rsnacks:'rcans',rother:'rcans'}[t]); if(t==='cash'&&isMgr()) rlogLoad(); }
+    if(t==='addrecord'){ S.adone=null; S.atype=null; S.alisted={}; S.aprint=true; S.acond=null; } go({cash:'cash',dropoff:'drop',request:'request',addrecord:'addrec',kegs:'kegs',rkeg:'rkeg',labels:'labels',note:'note',issue:'issue',find:'find',supplies:'supplies',drops:'drops',reqlist:'reqlist',credit:'credit',rstock:'rstock',rcans:'rcans',rsnacks:'rcans',rother:'rcans'}[t]); if(t==='cash'&&isMgr()) rlogLoad(); if(t==='supplies') supSync(); }
   }
   else if(a==='go:trove'){}
   else if(a==='tseg'){ S.tseg=b.dataset.v; render(); }
