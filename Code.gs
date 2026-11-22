@@ -302,7 +302,7 @@ function sendAutoEmail_(m, task, who) {
   var n = Number(cache.get(key) || 0);
   if (n >= 60) throw new Error('Daily email limit reached');
   cache.put(key, String(n + 1), 86400);
-  var opts = { name: task === 'dropoff' ? 'HD ' + myShop_() : 'Hunky Dory Records' };
+  var opts = { name: task === 'dropoff' ? 'HD ' + (m.shop || myShop_()) : 'Hunky Dory Records' };
   var reply = props.getProperty('SHOP_EMAIL') || String(m.replyTo || '').trim();
   if (reply && /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(reply)) opts.replyTo = reply;
   MailApp.sendEmail(to, subject, body, opts);
@@ -1196,7 +1196,7 @@ function dropObj_(row, n, mgr) {
   var legacy = !row[DR.STATUS];
   var o = { id: String(row[DR.ID] || 'L' + n), ts: iso(row[DR.TS]), who: String(row[DR.WHO]), name: String(row[DR.NAME]), items: String(row[DR.ITEMS]),
     pay: String(row[DR.PAY] || ''), left: String(row[DR.LEFT] || ''), status: legacy ? 'Done' : String(row[DR.STATUS]),
-    sts: iso(row[DR.CHANGED] || row[DR.TS]), leftDone: row[DR.LEFTDONE] === 'Yes', legacy: legacy, hasCard: !!row[DR.CARD], hasPhoto: !!row[DR.PHOTO] };
+    sts: iso(row[DR.CHANGED] || row[DR.TS]), leftDone: row[DR.LEFTDONE] === 'Yes', legacy: legacy, hasCard: !!row[DR.CARD], hasPhoto: !!row[DR.PHOTO], shop: String(row[DR.SHOP] || '') };
   if (mgr) {
     o.phone = String(row[DR.PHONE] || ''); o.email = String(row[DR.EMAIL] || ''); o.offer = row[DR.OFFER] === '' ? '' : String(Number(row[DR.OFFER]));
     o.sent = iso(row[DR.SENT]); o.hist = dropHist_(row[DR.HIST]); o.photo = String(row[DR.PHOTO] || ''); o.cardOk = !!row[DR.CARDOK];
@@ -1209,7 +1209,7 @@ function dropList_() {
   if (last < 2) return [];
   var from = Math.max(2, last - 799), vals = sh.getRange(from, 1, last - from + 1, DR_W).getValues();
   var me = myShop_();
-  return vals.map(function (r, i) { return [r, i]; }).filter(function (p) { return p[0][DR.NAME] && (!p[0][DR.SHOP] || p[0][DR.SHOP] === me); }).map(function (p) { return dropObj_(p[0], from + p[1], mgr); });
+  return vals.map(function (r, i) { return [r, i]; }).filter(function (p) { return p[0][DR.NAME] && (mgr || !p[0][DR.SHOP] || p[0][DR.SHOP] === me); }).map(function (p) { return dropObj_(p[0], from + p[1], mgr); });
 }
 
 function dropAlert_(r) {
@@ -1302,20 +1302,20 @@ function dropIssueCard_(row, id) {
 function dropMoney_(n) { return '$' + Number(n).toFixed(2); }
 
 function sendDropOffer_(row) {
-  var cash = row[DR.PAY] === 'Cash', shop = myShop_();
-  sendAutoEmail_({ to: row[DR.EMAIL], subject: 'Your offer from HD ' + shop,
+  var cash = row[DR.PAY] === 'Cash', shop = row[DR.SHOP] || myShop_();
+  sendAutoEmail_({ shop: shop, to: row[DR.EMAIL], subject: 'Your offer from HD ' + shop,
     body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nThanks for bringing your records in to HD ' + shop + '. We looked through them and can offer you ' + dropMoney_(row[DR.OFFER]) +
       (cash ? ' in cash' : ' in store credit') + ' for the records we are keeping.\n\n' +
       (row[DR.LEFT] === 'Donate' ? 'The records we are not buying will be donated.' : 'The records we are not buying are ours to hold for you. You can pick them up at the shop.') +
       '\n\nReply to this email to accept or decline. If we do not hear back within 10 days, we may donate or dispose of your records, as in the drop-off terms you agreed to.' +
-      (cash ? '' : '\n\nStore credit is sent to this email address as a gift card.') + '\n\nHD ' + myShop_() + '' }, 'dropoff', 'Backstage');
+      (cash ? '' : '\n\nStore credit is sent to this email address as a gift card.') + '\n\nHD ' + shop + '' }, 'dropoff', 'Backstage');
 }
 
 function sendDropCard_(row, card) {
-  var gan = String(card.gan || '').replace(/(\d{4})(?=\d)/g, '$1 ');
-  sendAutoEmail_({ to: row[DR.EMAIL], subject: 'Your HD ' + myShop_() + ' store credit: ' + dropMoney_(card.amount),
-    body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nYour store credit is ready: ' + dropMoney_(card.amount) + ' at HD ' + myShop_() + '.\n\nGift card number: ' + gan +
-      '\n\nGive this number to us at the register and we will take it off your total. Keep this email; it is your gift card.\n\nHD ' + myShop_() + '' }, 'dropoff', 'Backstage');
+  var gan = String(card.gan || '').replace(/(\d{4})(?=\d)/g, '$1 '), shop = row[DR.SHOP] || myShop_();
+  sendAutoEmail_({ shop: shop, to: row[DR.EMAIL], subject: 'Your HD ' + shop + ' store credit: ' + dropMoney_(card.amount),
+    body: 'Hi ' + firstName_(row[DR.NAME]) + ',\n\nYour store credit is ready: ' + dropMoney_(card.amount) + ' at HD ' + shop + '.\n\nGift card number: ' + gan +
+      '\n\nGive this number to us at the register and we will take it off your total. Keep this email; it is your gift card.\n\nHD ' + shop + '' }, 'dropoff', 'Backstage');
 }
 
 /** Shared album-cover links so every iPad looks a cover up once, ever. */

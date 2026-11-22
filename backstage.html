@@ -1498,7 +1498,7 @@ async function dAct(op,id,extra){
 function dRow(x){
   const open=S.dsel===x.id, a=dAge(x), st=dStale(x);
   return '<div class="drow'+(open?' open':'')+(st?' stale':'')+'"><button class="dhead" data-act="dopen" data-id="'+x.id+'"><b class="dnm">'+esc(x.name)+'</b><span class="di">'+esc(x.items)+'</span>'+
-    (x.status==='Done'?'':'<span class="dchips">'+(x.offer&&x.status!=='New'?'<span class="dof">$'+esc(x.offer)+'</span>':'')+'<span class="chip age'+(st?' late':'')+'">'+dChip(x)+'</span></span>')+'</button>'+(open?dDetail(x):'')+'</div>';
+    (x.status==='Done'?'':'<span class="dchips">'+(x.shop&&x.shop!==SHOPN()?'<span class="chip">'+esc(x.shop)+'</span>':'')+(x.offer&&x.status!=='New'?'<span class="dof">$'+esc(x.offer)+'</span>':'')+'<span class="chip age'+(st?' late':'')+'">'+dChip(x)+'</span></span>')+'</button>'+(open?dDetail(x):'')+'</div>';
 }
 
 /* ---------- store credit (demo; real version = Square gift cards + Loyalty) ---------- */
