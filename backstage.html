@@ -78,7 +78,7 @@ h2{margin:0;font:400 30px var(--big);letter-spacing:-.015em;display:flex;align-i
 .tile.pill{min-height:64px;min-width:230px;padding:8px 18px;gap:2px;justify-content:center}.tile.pill .t{font-size:28px}.tile.pill .s{font-size:17px}.lnk{background:none;border:0;padding:6px 0;font:inherit;color:var(--fg);text-decoration:underline;min-height:44px}
 .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}.col{display:flex;flex-direction:column;gap:10px;min-width:0}.col .tile{min-height:118px;padding:14px 18px}.col .tile .t{font-size:26px}.cat{margin:6px 0 2px;font:800 15px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.dphoto{display:block;max-width:100%;max-height:260px;border-radius:12px;margin:0 0 12px;object-fit:cover}
+.dthumb{float:right;width:88px;height:88px;padding:0;margin:0 0 8px 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}.dthumb img{width:100%;height:100%;object-fit:cover;display:block}.dthumb.ld{background:#eee}.dzoom{position:absolute;inset:0;z-index:9000;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:24px}.dzoom img{max-width:100%;max-height:100%;border-radius:12px}
 .nbadge{position:absolute;top:-9px;right:-9px;min-width:30px;height:30px;padding:0 8px;box-sizing:border-box;border-radius:15px;background:#E5322D;color:#fff;font:800 16px/30px var(--mono,sans-serif);text-align:center;box-shadow:0 0 0 3px var(--bg,#f6f6f4),0 2px 6px rgba(0,0,0,.25);pointer-events:none}
 .tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:150px;padding:18px 20px;text-align:left;border-radius:16px;border:1px solid var(--line);background:var(--panel)}
 .tile .t{font-weight:800;font-size:28px;line-height:1.15;display:flex;align-items:center;gap:10px}.tile .t svg{flex:none;width:28px;height:28px;color:var(--accent)}.tile.done .t svg{color:var(--ok)}.tile.todo .t svg{color:var(--warn-fg)}.tile:not(.soon){box-shadow:0 1px 0 rgba(20,17,13,.04),0 8px 18px -12px rgba(20,17,13,.3)}
@@ -1547,7 +1547,7 @@ function dDetail(x){
   else if(st==='Declined') act='<span class="hint">Declined. Records go back to the customer.</span><button class="btn go" data-act="dstep" data-v="done" data-id="'+x.id+'">Done</button>';
   else act='<span class="hint">Finished.</span>';
   const undo=(mgr&&!cf&&x.hist&&x.hist.length&&st!=='Done'&&!x.hasCard)?'<button class="lnk" data-act="dundo" data-id="'+x.id+'">Undo last step</button>':'';
-  const ph=x.photoData||(S.dph||{})[x.id]; const photo=ph?'<img class="dphoto" alt="Photo taken at drop-off" src="'+esc(ph)+'">':(x.hasPhoto?'<p class="hint">Loading photo\u2026</p>':'');
+  const ph=x.photoData||(S.dph||{})[x.id]; const photo=ph?'<button class="dthumb" data-act="dzoom" data-id="'+x.id+'" aria-label="Enlarge the drop-off photo"><img alt="Photo taken at drop-off" src="'+esc(ph)+'"></button>':(x.hasPhoto?'<span class="dthumb ld"></span>':'');
   return '<div class="ddet">'+photo+'<p class="o">Dropped off '+esc(dWhen(x.ts))+' by '+esc(x.who)+'. Paid in <b>'+esc(pay)+'</b>. Unwanted records: <b>'+esc(x.left==='Donate'?'donate':'return')+'</b>.</p>'+contact+'<div class="dact">'+act+undo+'</div></div>';
 }
 /* ---------- receive records ---------- */
@@ -2600,6 +2600,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='rundo'){ const h=(S.rhist||[]).pop(); if(h){ if(h.u){ S.rscan[h.u]=Math.max(0,(S.rscan[h.u]||0)-1); } else if(h.x){ const e=(S.rextra||[]).find(z=>z.upc===h.x); if(e){ e.qty=(e.qty||1)-1; if(e.qty<=0) S.rextra=S.rextra.filter(z=>z!==e); } } else if(h.b){ S.rbad[h.b]=(S.rbad[h.b]||1)-1; if(S.rbad[h.b]<=0) delete S.rbad[h.b]; } const p=S.rhist[S.rhist.length-1]; S.rlast=p&&p.u?p.u:null; S.rhold=[]; rSave(); render(); toast('Removed that scan'); focusScan(); } }
   else if(a==='rnext'){ rqAside(rHeld()); S.rhold=[]; render(); focusScan(); }
   else if(a==='dopen'){ S.dsel=S.dsel===b.dataset.id?null:b.dataset.id; render(); const x=S.dsel&&drops().find(y=>y.id===S.dsel); if(x&&x.hasPhoto&&!DEMO&&!(S.dph||{})[x.id]){ try{ const j=await apiRaw('dropphoto',{id:x.id}); S.dph=S.dph||{}; if(j.photo) S.dph[x.id]='data:image/jpeg;base64,'+j.photo; if(S.dsel===x.id) render(); }catch(e){} } }
+  else if(a==='dzoom'){ const x=drops().find(y=>y.id===b.dataset.id), src=x&&(x.photoData||(S.dph||{})[x.id]); if(src){ const o=document.createElement('div'); o.className='dzoom'; o.innerHTML='<img alt="Drop-off photo" src="'+esc(src)+'">'; o.addEventListener('click',()=>o.remove()); document.getElementById('screen').appendChild(o); } }
   else if(a==='dleftdone'){ await dAct('leftdone',b.dataset.id); }
   else if(a==='dundo'){ await dAct('undo',b.dataset.id); }
   else if(a==='dreview'){ const o=(document.getElementById('doffer')||{}).value||''; if(!/^\d{1,6}(\.\d{1,2})?$/.test(o.trim())||!(parseFloat(o)>0)){ toast('Enter the offer, like 85'); return; } S.dconf={id:b.dataset.id,kind:'offer',amount:parseFloat(o)}; render(); }
