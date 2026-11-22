@@ -28,6 +28,7 @@ var TABS = {
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
   DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records'],
   Requests: ['ID', 'Created', 'Source', 'Shop', 'Name', 'Phone', 'Email', 'Artist', 'Album', 'Format', 'Notes', 'Status', 'Status changed', 'Quote', 'Quote note', 'Last action by', 'Hold until', 'Closed reason', 'Reminded'],
+  Covers: ['Key', 'URL', 'Updated'],
   SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #', 'Unit cost']
 };
 
@@ -55,7 +56,8 @@ function doPost(e) {
     if (req.action === 'login') out = { ok: true, name: who, role: AUTH_ROLE_ };
     else if (req.action === 'reqlist') out = { ok: true, requests: reqList_(req) };
     else if (req.action === 'requpdate') out = { ok: true, updated: reqUpdate_(req, who) };
-    else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_() }; }
+    else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_(), covers: coversMap_() }; }
+    else if (req.action === 'coverset') out = { ok: true, saved: coverSet_(req.entries) };
     else if (req.action === 'registerlog') { if (AUTH_ROLE_ !== 'manager') throw new Error('Managers only'); out = { ok: true, counts: registerLog_() }; }
     else if (req.action === 'supplystate') out = { ok: true, state: supplyState_() };
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
@@ -1153,4 +1155,29 @@ function requestsDaily() {
 function installRequestsTrigger() {
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'requestsDaily') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('requestsDaily').timeBased().everyDays(1).atHour(9).create();
+}
+
+
+/** Shared album-cover links so every iPad looks a cover up once, ever. */
+function coversSheet_() {
+  var ss = ss_(), sh = ss.getSheetByName('Covers');
+  if (!sh) { sh = ss.insertSheet('Covers'); sh.getRange(1, 1, 1, 3).setValues([TABS.Covers]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  return sh;
+}
+function coversMap_() {
+  var sh = coversSheet_(), n = sh.getLastRow(), out = {};
+  if (n < 2) return out;
+  sh.getRange(2, 1, n - 1, 2).getValues().forEach(function (r) { if (r[0] && r[1]) out[String(r[0])] = String(r[1]); });
+  return out;
+}
+function coverSet_(entries) {
+  if (!Array.isArray(entries)) return 0;
+  var have = coversMap_(), rows = [], now = new Date();
+  entries.slice(0, 200).forEach(function (e) {
+    var k = String(e && e.k || '').slice(0, 200), u = String(e && e.u || '').trim();
+    if (!k || have[k] || !/^https:\/\/[^\s]{4,400}$/.test(u)) return;
+    have[k] = u; rows.push([clean_(k), u, now]);
+  });
+  if (rows.length) { var sh = coversSheet_(); sh.getRange(sh.getLastRow() + 1, 1, rows.length, 3).setValues(rows); }
+  return rows.length;
 }
