@@ -302,6 +302,48 @@ function requestEntry_(d, who, now, tz) {
   addRequests_(ss_(), 'Store', shop, who, d, now, false);
 }
 
+function saveIssuePhoto_(b64, now, tz) {
+  if (b64.length > 4000000) throw new Error('Photo too large');
+  var it = DriveApp.getFoldersByName('HD Ops Photos');
+  var folder = it.hasNext() ? it.next() : DriveApp.createFolder('HD Ops Photos');
+  var name = 'issue-' + Utilities.formatDate(now, tz, 'yyyy-MM-dd-HHmmss') + '.jpg';
+  return folder.createFile(Utilities.newBlob(Utilities.base64Decode(b64), 'image/jpeg', name)).getUrl();
+}
+
+/** The newest shift note from the last 36 hours, or null. */
+function latestNote_() {
+  var sh = sheet_(ss_(), 'Log');
+  var last = sh.getLastRow();
+  if (last < 2) return null;
+  var from = Math.max(2, last - 199);
+  var rows = sh.getRange(from, 1, last - from + 1, 5).getValues();
+  for (var i = rows.length - 1; i >= 0; i--) {
+    if (rows[i][3] === 'note' && Date.now() - new Date(rows[i][0]).getTime() < 36 * 3600 * 1000) {
+      return { ts: new Date(rows[i][0]).toISOString(), who: rows[i][2], text: String(rows[i][4]) };
+    }
+  }
+  return null;
+}
+
+/** Today's log, summaries only. No amounts, names or contact info. */
+function todayEntries_() {
+  var ss = ss_();
+  var tz = ss.getSpreadsheetTimeZone();
+  var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  var sh = sheet_(ss, 'Log');
+  var last = sh.getLastRow();
+  if (last < 2) return [];
+  var from = Math.max(2, last - 199); // newest 200 rows is plenty for one day
+  var rows = sh.getRange(from, 1, last - from + 1, 5).getValues();
+  return rows.filter(function (r) {
+    var rd = r[1] instanceof Date ? Utilities.formatDate(r[1], tz, 'yyyy-MM-dd') : String(r[1]);
+    return rd === today;
+  }).map(function (r) {
+    return { ts: new Date(r[0]).toISOString(), who: r[2], task: r[3], summary: safeSummary_(r[3], r[4]) };
+  });
+}
+
+
 function safeSummary_(task, summary) { return String(summary).slice(0, 300); }
 
 function sheet_(ss, name) {
