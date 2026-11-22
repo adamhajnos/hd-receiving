@@ -232,6 +232,7 @@ function logEntry_(req, who) {
       var amounts = Object.keys(d.amounts || {}).map(function (k) { return clean_(k) + ': ' + money_(d.amounts[k]); }).join('; ');
       sheet_(ss, task === 'opening' ? 'Opening' : 'Closing').appendRow([now, who, amounts, (d.done || []).length,
         (d.cant || []).map(function (c) { return clean_(c.step) + ': ' + clean_(c.reason); }).join('; '), clean_(d.regnote)]);
+      if (task === 'opening') { try { registerMismatch_(who, now, d.amounts); } catch (e) { /* an alert problem must never block opening */ } }
     } else if (task === 'note') {
       if (!summary) throw new Error('Empty note');
     } else if (task === 'issue') {
@@ -328,6 +329,33 @@ function latestNote_() {
 }
 
 /** Today's log, summaries only. No amounts, names or contact info. */
+/**
+ * Emails Bell right away when this morning's opening count is not what the last close left behind
+ * (last close count minus the cash moved to the deposit). Recipient: Script Property REGISTER_ALERT_TO, else the script owner.
+ */
+function registerMismatch_(who, now, amounts) {
+  var m = /^\s*\$?(-?[\d,.]+)/.exec(String((amounts || {})['Count the register'] || ''));
+  if (!m) return;
+  var opened = parseFloat(m[1].replace(/,/g, ''));
+  var prev = null, log = registerLog_();
+  for (var i = 0; i < log.length; i++) {
+    if (log[i].kind === 'Close' && log[i].amount !== '' && new Date(log[i].ts) < now) { prev = log[i]; break; }
+  }
+  if (!prev) return;
+  var dep = prev.deposit === '' ? 0 : prev.deposit, expected = Math.round((prev.amount - dep) * 100) / 100, diff = Math.round((opened - expected) * 100) / 100;
+  if (Math.abs(diff) < 0.005) return;
+  var tz = ss_().getSpreadsheetTimeZone(), fmt = function (n) { return (n < 0 ? '-$' : '$') + Math.abs(n).toFixed(2); };
+  var to = PropertiesService.getScriptProperties().getProperty('REGISTER_ALERT_TO') || Session.getEffectiveUser().getEmail();
+  var body = 'The register does not match between the last close and this morning\'s open.\n\n' +
+    'Last close: ' + fmt(prev.amount) + ' (' + prev.who + ', ' + Utilities.formatDate(new Date(prev.ts), tz, 'EEE MMM d') + ')\n' +
+    'Moved to deposit: ' + fmt(dep) + '\n' +
+    'Expected opening: ' + fmt(expected) + '\n' +
+    'Counted at open: ' + fmt(opened) + ' (' + who + ', ' + Utilities.formatDate(now, tz, 'EEE MMM d, h:mm a') + ')\n' +
+    'Difference: ' + (diff > 0 ? '+' : '') + fmt(diff) + (prev.note ? '\n\nNote on last close: ' + prev.note : '') +
+    '\n\nThe full history is under Register count in HD Backstage.';
+  MailApp.sendEmail(to, 'Hunky Dory Raleigh: register is off by ' + fmt(diff), body, { name: 'Hunky Dory Records' });
+}
+
 /** Running register-count log for managers: opening and closing "Count the register" amounts plus counts logged from the Register count tile. Newest first, max 600. */
 function registerLog_() {
   var ss = ss_(), out = [];
