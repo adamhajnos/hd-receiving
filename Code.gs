@@ -15,7 +15,7 @@ var SHEET_ID = '';
 function ss_() { return SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActive(); }
 
 var TABS = {
-  Staff:    ['Name', 'PIN'],
+  Staff:    ['Name', 'PIN', 'Role'],
   Trove:    ['Artist', 'Title', 'Location', 'Price', 'Cover URL', 'Code', 'Genre', 'Status', 'Listed'],
   Log:      ['Timestamp', 'Date', 'Who', 'Task', 'Summary', 'Data (JSON)'],
   Opening:  ['Timestamp', 'Who', 'Amounts', 'Steps done', 'Could not do (step: reason)'],
@@ -27,6 +27,7 @@ var TABS = {
   UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
   DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records'],
+  Requests: ['ID', 'Created', 'Source', 'Shop', 'Name', 'Phone', 'Email', 'Artist', 'Album', 'Format', 'Notes', 'Status', 'Status changed', 'Quote', 'Quote note', 'Last action by', 'Hold until', 'Closed reason', 'Reminded'],
   SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #', 'Unit cost']
 };
 
@@ -49,8 +50,11 @@ function doPost(e) {
   var out;
   try {
     var req = JSON.parse(e.postData.contents);
+    if (req.action === 'webrequest') return json_(webRequest_(req)); // public website form: no PIN, strict checks inside
     var who = authenticate_(req.pin);
-    if (req.action === 'login') out = { ok: true, name: who };
+    if (req.action === 'login') out = { ok: true, name: who, role: AUTH_ROLE_ };
+    else if (req.action === 'reqlist') out = { ok: true, requests: reqList_(req) };
+    else if (req.action === 'requpdate') out = { ok: true, updated: reqUpdate_(req, who) };
     else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_() }; }
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
     else if (req.action === 'log') { var res = logEntry_(req, who) || {}; out = { ok: true, code: res.code || '' }; }
@@ -62,8 +66,9 @@ function doPost(e) {
   } catch (err) {
     out = { ok: false, error: String(err.message || err) };
   }
-  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+  return json_(out);
 }
+function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 /**
  * Reads a keg invoice photo with the Google Gemini API (free tier) and returns {supplier, invoice, kegs:[{brewery,beer,size,cost}]}.
@@ -113,6 +118,7 @@ function itemsPrompt_(mode) {
 }
 
 /** Returns the staff name for a PIN, or throws. Locks guessing after 8 misses in 5 minutes. */
+var AUTH_ROLE_ = 'staff';
 function authenticate_(pin) {
   var cache = CacheService.getScriptCache();
   var fails = Number(cache.get('fails') || 0);
@@ -120,9 +126,12 @@ function authenticate_(pin) {
   var p = String(pin == null ? '' : pin).trim();
   var sh = ss_().getSheetByName('Staff');
   if (!sh) throw new Error('Run setup() first');
-  var rows = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 2).getDisplayValues() : [];
+  var rows = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 3).getDisplayValues() : [];
   for (var i = 0; i < rows.length; i++) {
-    if (p && String(rows[i][1]).trim() === p && String(rows[i][0]).trim()) return String(rows[i][0]).trim();
+    if (p && String(rows[i][1]).trim() === p && String(rows[i][0]).trim()) {
+      AUTH_ROLE_ = String(rows[i][2] || '').trim().toLowerCase() === 'manager' ? 'manager' : 'staff';
+      return String(rows[i][0]).trim();
+    }
   }
   cache.put('fails', String(fails + 1), 300);
   throw new Error('Wrong PIN');
@@ -287,74 +296,12 @@ function testEmail() {
   MailApp.sendEmail(Session.getActiveUser().getEmail(), 'HD Backstage test', 'If you can read this, the shop can send emails.', { name: 'Hunky Dory Records' });
 }
 
-/**
- * Customer requests go into the website's "Hunky Dory Order Requests" sheet (tab "Orders"),
- * in the same columns the website form uses, so staff see one list.
- * Needs Script Properties: ORDER_SHEET_ID (the sheet's ID) and optionally SHOP (default Raleigh).
- * The store's Google account must have edit access to that sheet.
- */
+/** In-store requests (Customer request tile) go to the shared Requests tab, same as the website form. */
 function requestEntry_(d, who, now, tz) {
-  var props = PropertiesService.getScriptProperties();
-  var id = props.getProperty('ORDER_SHEET_ID');
-  if (!id) return; // website order sheet not linked yet: the request is still in the Log tab
-  var name = clean_(d.name), phone = clean_(d.phone), email = clean_(d.email);
-  var items = (d.items && d.items.length ? d.items : [d]).slice(0, 10);
-  if (!name || !(phone || email)) throw new Error('Missing request details');
-  var sh = SpreadsheetApp.openById(id).getSheetByName('Orders');
-  if (!sh) throw new Error('Orders tab not found');
-  var date = Utilities.formatDate(now, tz, 'M/d/yyyy');
-  var shop = props.getProperty('SHOP') || 'Raleigh';
-  var rows = items.map(function (it) {
-    var artist = clean_(it.artist), album = clean_(it.album);
-    if (!artist || !album) throw new Error('Missing request details');
-    var notes = (clean_(it.notes) ? clean_(it.notes) + ' ' : '') + '[In store: ' + who + ']';
-    return ['Pending', date, shop, name, email, phone, artist, album, clean_(it.format) || 'Vinyl', notes, date];
-  });
-  sh.getRange(sh.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+  var shop = PropertiesService.getScriptProperties().getProperty('SHOP') || 'Raleigh';
+  addRequests_(ss_(), 'Store', shop, who, d, now, false);
 }
 
-function saveIssuePhoto_(b64, now, tz) {
-  if (b64.length > 4000000) throw new Error('Photo too large');
-  var it = DriveApp.getFoldersByName('HD Ops Photos');
-  var folder = it.hasNext() ? it.next() : DriveApp.createFolder('HD Ops Photos');
-  var name = 'issue-' + Utilities.formatDate(now, tz, 'yyyy-MM-dd-HHmmss') + '.jpg';
-  return folder.createFile(Utilities.newBlob(Utilities.base64Decode(b64), 'image/jpeg', name)).getUrl();
-}
-
-/** The newest shift note from the last 36 hours, or null. */
-function latestNote_() {
-  var sh = sheet_(ss_(), 'Log');
-  var last = sh.getLastRow();
-  if (last < 2) return null;
-  var from = Math.max(2, last - 199);
-  var rows = sh.getRange(from, 1, last - from + 1, 5).getValues();
-  for (var i = rows.length - 1; i >= 0; i--) {
-    if (rows[i][3] === 'note' && Date.now() - new Date(rows[i][0]).getTime() < 36 * 3600 * 1000) {
-      return { ts: new Date(rows[i][0]).toISOString(), who: rows[i][2], text: String(rows[i][4]) };
-    }
-  }
-  return null;
-}
-
-/** Today's log, summaries only. No amounts, names or contact info. */
-function todayEntries_() {
-  var ss = ss_();
-  var tz = ss.getSpreadsheetTimeZone();
-  var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
-  var sh = sheet_(ss, 'Log');
-  var last = sh.getLastRow();
-  if (last < 2) return [];
-  var from = Math.max(2, last - 199); // newest 200 rows is plenty for one day
-  var rows = sh.getRange(from, 1, last - from + 1, 5).getValues();
-  return rows.filter(function (r) {
-    var rd = r[1] instanceof Date ? Utilities.formatDate(r[1], tz, 'yyyy-MM-dd') : String(r[1]);
-    return rd === today;
-  }).map(function (r) {
-    return { ts: new Date(r[0]).toISOString(), who: r[2], task: r[3], summary: safeSummary_(r[3], r[4]) };
-  });
-}
-
-// Opening summaries list skipped step names, which is fine; cash/drop-off summaries are generic by design.
 function safeSummary_(task, summary) { return String(summary).slice(0, 300); }
 
 function sheet_(ss, name) {
@@ -862,3 +809,214 @@ function troveSoldSync_(force) {
 }
 /** Run once by hand to check right now. */
 function troveSoldNow() { Logger.log(troveSoldSync_(true) + ' records marked Sold'); }
+
+/* =====================================================================================
+ * CUSTOMER REQUESTS: one shared list (Requests tab) for the website's Request Line and the in-store tile.
+ * Flow: New > Quoted (price entered; Forrest contacts the customer himself) > Ordered (customer said yes)
+ *       > Waiting for pickup (arrived; held 10 days) > Picked up.   Closed = declined, can't get it, or no reply in 14 days.
+ * Every shop's requests are stored (Shop column); a manager PIN only sees and changes the shop set in Script Property SHOP (default Raleigh).
+ * Managers are rows in the Staff tab with Role = manager (third column).
+ * ===================================================================================== */
+var SHOPS = ['Raleigh', 'Cary', 'Durham', 'Apex'];
+var QUOTE_EXPIRE_DAYS = 14, HOLD_DAYS = 10, HOLD_REMIND_DAY = 8;
+var RQ = { ID: 0, CREATED: 1, SOURCE: 2, SHOP: 3, NAME: 4, PHONE: 5, EMAIL: 6, ARTIST: 7, ALBUM: 8, FORMAT: 9, NOTES: 10, STATUS: 11,
+           CHANGED: 12, QUOTE: 13, QNOTE: 14, BY: 15, HOLD: 16, REASON: 17, REMINDED: 18 };
+var EMAIL_RE_ = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;
+
+function myShop_() { return PropertiesService.getScriptProperties().getProperty('SHOP') || 'Raleigh'; }
+function phoneFmt_(v) {
+  var dg = String(v || '').replace(/\D/g, '');
+  if (dg.length === 11 && dg.charAt(0) === '1') dg = dg.slice(1);
+  return dg.length === 10 ? '(' + dg.slice(0, 3) + ') ' + dg.slice(3, 6) + '-' + dg.slice(6) : clean_(v);
+}
+function firstName_(n) { return String(n || '').trim().split(/\s+/)[0] || 'there'; }
+
+/** Appends one row per record. web=true applies the website's stricter rules (phone and email both required, terms ticked). */
+function addRequests_(ss, source, shop, who, d, now, web) {
+  var name = clean_(d.name), phone = clean_(d.phone), email = clean_(d.email);
+  if (SHOPS.indexOf(shop) < 0) throw new Error('Pick a shop');
+  if (!name) throw new Error('Name is required');
+  if (web) {
+    if (String(phone).replace(/\D/g, '').length < 10) throw new Error('A 10-digit phone number is required');
+    if (!EMAIL_RE_.test(email)) throw new Error('A valid email is required');
+    if (d.terms !== true) throw new Error('Please agree to the request terms');
+  } else {
+    if (!(phone || email)) throw new Error('Phone or email is required');
+    if (email && !EMAIL_RE_.test(email)) throw new Error('That email does not look right');
+  }
+  var items = (d.items && d.items.length ? d.items : [d]).slice(0, 10);
+  var sh = sheet_(ss, 'Requests');
+  var rows = items.map(function (it) {
+    var artist = clean_(it.artist), album = clean_(it.album);
+    if (!artist || !album) throw new Error('Artist and album are required');
+    var row = new Array(19).fill('');
+    row[RQ.ID] = 'R' + Utilities.getUuid().replace(/-/g, '').slice(0, 7).toUpperCase();
+    row[RQ.CREATED] = now; row[RQ.SOURCE] = source; row[RQ.SHOP] = shop; row[RQ.NAME] = name;
+    row[RQ.PHONE] = phoneFmt_(phone); row[RQ.EMAIL] = email; row[RQ.ARTIST] = artist; row[RQ.ALBUM] = album;
+    row[RQ.FORMAT] = ['Vinyl', 'CD', 'Cassette', 'Tape', 'Other'].indexOf(clean_(it.format)) >= 0 ? clean_(it.format) : 'Vinyl';
+    row[RQ.NOTES] = clean_(it.notes); row[RQ.STATUS] = 'New'; row[RQ.CHANGED] = now; row[RQ.BY] = who;
+    return row;
+  });
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+  return rows;
+}
+
+/** Website Request Line posts here with no PIN: {action:'webrequest', shop, name, phone, email, terms, items:[{artist,album,format,notes}], hp}. */
+function webRequest_(req) {
+  if (clean_(req.hp)) return { ok: true }; // honeypot ("leave this empty") filled in: a bot. Pretend it worked, save nothing.
+  var cache = CacheService.getScriptCache();
+  var day = 'webreq-' + Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd');
+  var n = Number(cache.get(day) || 0);
+  if (n >= 100) return { ok: false, error: 'Too many requests today. Please stop by the shop.' };
+  var em = clean_(req.email).toLowerCase(), ek = 'webmail-' + em;
+  if (Number(cache.get(ek) || 0) >= 5) return { ok: false, error: 'Too many requests from this email today.' };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  var rows;
+  try {
+    rows = addRequests_(ss_(), 'Web', clean_(req.shop), 'Website', req, new Date(), true);
+    cache.put(day, String(n + 1), 86400); cache.put(ek, String(Number(cache.get(ek) || 0) + 1), 86400);
+  } catch (err) {
+    return { ok: false, error: String(err.message || err) };
+  } finally {
+    lock.releaseLock();
+  }
+  try { sendRequestConfirmation_(rows); } catch (err) { /* the request is saved even if the email fails */ }
+  return { ok: true, count: rows.length };
+}
+
+function sendRequestConfirmation_(rows) {
+  var r = rows[0], to = String(r[RQ.EMAIL] || '');
+  if (!EMAIL_RE_.test(to)) return;
+  var list = rows.map(function (x) { return '  • ' + x[RQ.ARTIST] + ', ' + x[RQ.ALBUM] + ' (' + x[RQ.FORMAT] + ')'; }).join('\n');
+  sendAutoEmail_({
+    to: to,
+    subject: 'We got your request' + (rows.length > 1 ? 's' : '') + ': Hunky Dory Records ' + r[RQ.SHOP],
+    body: 'Hi ' + firstName_(r[RQ.NAME]) + ',\n\nThanks for your request at Hunky Dory Records ' + r[RQ.SHOP] + ':\n\n' + list +
+      '\n\nWe will contact you with a price quote. We do not order anything until you say yes. This is a request, not a guarantee.\n\nReply to this email if you have questions.\n\nHunky Dory Records'
+  }, 'request', 'Website');
+}
+
+function requireManager_() { if (AUTH_ROLE_ !== 'manager') throw new Error('Managers only'); }
+
+function reqObj_(row, rowNum) {
+  var iso = function (v) { return v instanceof Date ? v.toISOString() : String(v || ''); };
+  return { id: row[RQ.ID], row: rowNum, created: iso(row[RQ.CREATED]), source: row[RQ.SOURCE], shop: row[RQ.SHOP], name: row[RQ.NAME], phone: row[RQ.PHONE],
+    email: row[RQ.EMAIL], artist: row[RQ.ARTIST], album: row[RQ.ALBUM], format: row[RQ.FORMAT], notes: row[RQ.NOTES], status: row[RQ.STATUS],
+    changed: iso(row[RQ.CHANGED]), quote: row[RQ.QUOTE] === '' ? null : Number(row[RQ.QUOTE]), quoteNote: row[RQ.QNOTE], by: row[RQ.BY],
+    holdUntil: iso(row[RQ.HOLD]), reason: row[RQ.REASON] };
+}
+function reqKey_(r) { return (String(r.artist) + '|' + String(r.album)).toLowerCase().replace(/[^a-z0-9|]/g, ''); }
+
+/** Managers get EVERY request: all shops, every status, no date cutoff. Staff get only Ordered and Waiting for pickup for this shop, trimmed (name, record,
+ *  price, hold date; phone only when there is no email on file, so they can call) so they can check people off at the counter. "asked" = open requests for the same record. */
+function reqList_(req) {
+  var isMgr = AUTH_ROLE_ === 'manager';
+  var shop = myShop_(), sh = sheet_(ss_(), 'Requests');
+  var vals = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 19).getValues() : [];
+  var out = [], open = {};
+  vals.forEach(function (row, i) {
+    var o = reqObj_(row, i + 2), closed = ['Picked up', 'Closed'].indexOf(o.status) >= 0;
+    if (!isMgr) {
+      if (row[RQ.SHOP] !== shop || ['Ordered', 'Waiting for pickup'].indexOf(o.status) < 0) return;
+      var hasEmail = EMAIL_RE_.test(String(o.email));
+      o = { id: o.id, shop: o.shop, name: o.name, artist: o.artist, album: o.album, format: o.format, status: o.status, quote: o.quote,
+            holdUntil: o.holdUntil, changed: o.changed, hasEmail: hasEmail, phone: hasEmail ? '' : o.phone };
+    }
+    if (!closed) open[o.shop + '|' + reqKey_(o)] = (open[o.shop + '|' + reqKey_(o)] || 0) + 1;
+    out.push(o);
+  });
+  out.forEach(function (o) { o.asked = open[o.shop + '|' + reqKey_(o)] || 0; });
+  return out;
+}
+
+var REQ_MOVES_ = { // action: [from statuses, new status]
+  quote:    [['New', 'Quoted'], 'Quoted'],
+  accepted: [['Quoted'], 'Ordered'],
+  declined: [['Quoted'], 'Closed'],
+  cantget:  [['New', 'Quoted', 'Ordered'], 'Closed'],
+  arrived:  [['Ordered'], 'Waiting for pickup'],
+  pickedup: [['Waiting for pickup'], 'Picked up']
+};
+
+/** Staff may only mark Picked up and Arrived (receiving); managers can do every step. {ids:[...], op:'quote'|'accepted'|'declined'|'cantget'|'arrived'|'pickedup', price, note}. Several ids = the same record asked for by several people. */
+function reqUpdate_(req, who) {
+  var op = clean_(req.op), mv = REQ_MOVES_[op];
+  if (AUTH_ROLE_ !== 'manager' && op !== 'pickedup' && op !== 'arrived') throw new Error('Managers only'); // staff: check people off, and mark arrivals from receiving
+  if (!mv) throw new Error('Unknown request action');
+  var ids = (req.ids || []).map(String).slice(0, 25);
+  if (!ids.length) throw new Error('No request chosen');
+  var price = Number(req.price);
+  if (op === 'quote' && !(price > 0)) throw new Error('Enter the quoted price');
+  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  var changed = [], shop = myShop_(), now = new Date(), mails = [];
+  try {
+    var ss = ss_(), sh = sheet_(ss, 'Requests');
+    var vals = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 19).getValues() : [];
+    vals.forEach(function (row, i) {
+      if (ids.indexOf(String(row[RQ.ID])) < 0) return;
+      if (row[RQ.SHOP] !== shop) throw new Error('That request belongs to another shop');
+      if (mv[0].indexOf(row[RQ.STATUS]) < 0) throw new Error(row[RQ.ARTIST] + ' is ' + row[RQ.STATUS] + ', so that step is not allowed');
+      row[RQ.STATUS] = mv[1]; row[RQ.CHANGED] = now; row[RQ.BY] = who;
+      if (op === 'quote') { row[RQ.QUOTE] = price; row[RQ.QNOTE] = clean_(req.note); }
+      if (op === 'declined') row[RQ.REASON] = 'Customer declined the quote';
+      if (op === 'cantget') row[RQ.REASON] = "Can't get it";
+      if (op === 'arrived') { var h = new Date(now.getTime() + HOLD_DAYS * 86400000); row[RQ.HOLD] = h; row[RQ.REMINDED] = ''; }
+      sh.getRange(i + 2, 1, 1, 19).setValues([row]);
+      changed.push(row);
+      sheet_(ss, 'Log').appendRow([now, Utilities.formatDate(now, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd'), who, 'reqstatus',
+        'Request ' + row[RQ.NAME] + ' (' + row[RQ.ARTIST] + ' - ' + row[RQ.ALBUM] + '): ' + mv[1], JSON.stringify({ id: row[RQ.ID], op: op })]);
+    });
+    if (!changed.length) throw new Error('Request not found');
+  } finally { lock.releaseLock(); }
+  if (op === 'arrived' || op === 'cantget') {
+    var byCust = {};
+    changed.forEach(function (r) { if (EMAIL_RE_.test(String(r[RQ.EMAIL]))) (byCust[r[RQ.EMAIL]] = byCust[r[RQ.EMAIL]] || []).push(r); });
+    Object.keys(byCust).forEach(function (em) { try { (op === 'arrived' ? sendArrival_ : sendCantGet_)(byCust[em]); } catch (e) { /* status already saved */ } });
+  }
+  return changed.map(function (r) { return { id: r[RQ.ID], status: r[RQ.STATUS] }; });
+}
+
+function dateLong_(d) { return Utilities.formatDate(d, 'America/New_York', 'EEEE, MMMM d'); }
+function sendArrival_(rows) {
+  var r = rows[0], one = rows.length === 1, hold = rows[0][RQ.HOLD] instanceof Date ? rows[0][RQ.HOLD] : new Date(rows[0][RQ.HOLD]);
+  var list = rows.map(function (x) { return '  • ' + x[RQ.ARTIST] + ', ' + x[RQ.ALBUM]; }).join('\n');
+  sendAutoEmail_({ to: r[RQ.EMAIL],
+    subject: one ? "It's in: " + r[RQ.ARTIST] + ', ' + r[RQ.ALBUM] : 'Your ' + rows.length + ' records are in',
+    body: 'Hi ' + firstName_(r[RQ.NAME]) + ',\n\n' + (one ? 'Your record is' : 'Your records are') + ' in at Hunky Dory Records ' + r[RQ.SHOP] + ':\n\n' + list +
+      '\n\nWe will hold ' + (one ? 'it' : 'them') + ' for you through ' + dateLong_(hold) + '. Reply to this email if you would like to cancel.\n\nHunky Dory Records' }, 'request', 'Backstage');
+}
+function sendCantGet_(rows) {
+  var r = rows[0];
+  rows.forEach(function (x) {
+    sendAutoEmail_({ to: x[RQ.EMAIL], subject: 'Update on your record request: ' + x[RQ.ARTIST] + ', ' + x[RQ.ALBUM],
+      body: 'Hi ' + firstName_(x[RQ.NAME]) + ',\n\nThanks for asking about ' + x[RQ.ARTIST] + ', ' + x[RQ.ALBUM] + '. It is currently out of stock or backordered and we are not able to get it.\n\nHunky Dory Records' }, 'request', 'Backstage');
+  });
+}
+
+/** Daily: quotes with no answer after 14 days close themselves; held records get a reminder on day 8. Run installRequestsTrigger() once. */
+function requestsDaily() {
+  var ss = ss_(), sh = sheet_(ss, 'Requests');
+  if (sh.getLastRow() < 2) return;
+  var vals = sh.getRange(2, 1, sh.getLastRow() - 1, 19).getValues(), now = new Date(), closed = 0, reminded = 0;
+  vals.forEach(function (row, i) {
+    var changed = new Date(row[RQ.CHANGED]).getTime(), dirty = false;
+    if (row[RQ.STATUS] === 'Quoted' && now.getTime() - changed >= QUOTE_EXPIRE_DAYS * 86400000) {
+      row[RQ.STATUS] = 'Closed'; row[RQ.REASON] = 'No response to quote (auto-closed)'; row[RQ.CHANGED] = now; row[RQ.BY] = 'Auto'; dirty = true; closed++;
+    } else if (row[RQ.STATUS] === 'Waiting for pickup' && !row[RQ.REMINDED] && now.getTime() - changed >= HOLD_REMIND_DAY * 86400000 && EMAIL_RE_.test(String(row[RQ.EMAIL]))) {
+      try {
+        var hold = row[RQ.HOLD] instanceof Date ? row[RQ.HOLD] : new Date(row[RQ.HOLD]);
+        sendAutoEmail_({ to: row[RQ.EMAIL], subject: 'Reminder: ' + row[RQ.ARTIST] + ', ' + row[RQ.ALBUM] + ' is waiting for you',
+          body: 'Hi ' + firstName_(row[RQ.NAME]) + ',\n\nA reminder that ' + row[RQ.ARTIST] + ', ' + row[RQ.ALBUM] + ' is being held for you at Hunky Dory Records ' + row[RQ.SHOP] +
+            ' through ' + dateLong_(hold) + '. Reply to this email if you would like to cancel.\n\nHunky Dory Records' }, 'request', 'Backstage');
+        row[RQ.REMINDED] = now; dirty = true; reminded++;
+      } catch (e) { /* tries again tomorrow */ }
+    }
+    if (dirty) sh.getRange(i + 2, 1, 1, 19).setValues([row]);
+  });
+  Logger.log(closed + ' quotes auto-closed, ' + reminded + ' pickup reminders sent');
+}
+function installRequestsTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'requestsDaily') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('requestsDaily').timeBased().everyDays(1).atHour(9).create();
+}
