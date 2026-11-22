@@ -21,7 +21,7 @@ var TABS = {
   Opening:  ['Timestamp', 'Who', 'Amounts', 'Steps done', 'Could not do (step: reason)'],
   Closing:  ['Timestamp', 'Who', 'Amounts', 'Steps done', 'Could not do (step: reason)'],
   Issues:   ['Timestamp', 'Who', 'Type', 'Details', 'Photo', 'Status'],
-  Cash:     ['Timestamp', 'Who', 'Drawer count', 'Deposit', 'Note'],
+  Cash:     ['Timestamp', 'Who', 'Drawer count', 'Deposit', 'Note', 'Type', 'Source'],
   Records: ['Timestamp', 'Who', 'Type', 'Artist', 'Album', 'Genre', 'Format', 'Barcode', 'MSRP', 'Price', 'Status', 'Location', 'Listed on', 'Label queued', 'Notes'],
   Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted', 'Unit cost'],
   UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
@@ -56,6 +56,7 @@ function doPost(e) {
     else if (req.action === 'reqlist') out = { ok: true, requests: reqList_(req) };
     else if (req.action === 'requpdate') out = { ok: true, updated: reqUpdate_(req, who) };
     else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_() }; }
+    else if (req.action === 'registerlog') { if (AUTH_ROLE_ !== 'manager') throw new Error('Managers only'); out = { ok: true, counts: registerLog_() }; }
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
     else if (req.action === 'log') { var res = logEntry_(req, who) || {}; out = { ok: true, code: res.code || '' }; }
     else if (req.action === 'expected') out = { ok: true, lines: expectedLines_(), map: upcMap_() };
@@ -236,7 +237,7 @@ function logEntry_(req, who) {
       var url = d.photo ? saveIssuePhoto_(String(d.photo), now, tz) : '';
       sheet_(ss, 'Issues').appendRow([now, who, clean_(d.type), clean_(d.details), url, 'Open']);
     } else if (task === 'cash') {
-      sheet_(ss, 'Cash').appendRow([now, who, money_(d.drawer), money_(d.deposit), clean_(d.note)]);
+      sheet_(ss, 'Cash').appendRow([now, who, money_(d.drawer), money_(d.deposit), clean_(d.note), 'Count', '']);
     } else if (task === 'request') {
       requestEntry_(d, who, now, tz);
     } else if (task === 'receive') {
@@ -326,6 +327,31 @@ function latestNote_() {
 }
 
 /** Today's log, summaries only. No amounts, names or contact info. */
+/** Running register-count log for managers: opening and closing "Count the register" amounts plus counts logged from the Register count tile. Newest first, max 600. */
+function registerLog_() {
+  var ss = ss_(), out = [];
+  function tail_(name, cols, n) {
+    var sh = ss.getSheetByName(name), last = sh ? sh.getLastRow() : 0;
+    if (last < 2) return [];
+    var from = Math.max(2, last - ((n || 200) - 1));
+    return sh.getRange(from, 1, last - from + 1, cols).getValues();
+  }
+  ['Opening', 'Closing'].forEach(function (n) {
+    tail_(n, 3).forEach(function (r) {
+      var m = /Count the register:\s*\$?(-?[\d,.]+)/i.exec(String(r[2] || ''));
+      if (m && r[0]) out.push({ ts: new Date(r[0]).toISOString(), who: String(r[1]), kind: n === 'Opening' ? 'Open' : 'Close', amount: parseFloat(m[1].replace(/,/g, '')), deposit: '', note: '' });
+    });
+  });
+  tail_('Cash', 7, 700).forEach(function (r) {
+    if (!r[0]) return;
+    var amt = r[2] === '' ? NaN : parseFloat(r[2]);
+    if (isNaN(amt) && r[3] === '') return;
+    out.push({ ts: new Date(r[0]).toISOString(), who: String(r[1]), kind: String(r[5] || 'Count'), amount: isNaN(amt) ? '' : amt, deposit: r[3] === '' ? '' : parseFloat(r[3]), note: String(r[4] || ''), src: String(r[6] || '') });
+  });
+  out.sort(function (a, b) { return a.ts < b.ts ? 1 : -1; });
+  return out.slice(0, 600);
+}
+
 function todayEntries_() {
   var ss = ss_();
   var tz = ss.getSpreadsheetTimeZone();
