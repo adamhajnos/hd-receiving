@@ -364,7 +364,7 @@ window.HD_CONFIG = {
     { t: "Pull the beer plugs and put them in the cleaner" },
     { t: "Fill the water tanks" },
     { t: "Put the sign, speaker and dog outside" },
-    { t: "Count the register", amount: true },
+    { t: "Count the register", amount: true, note: true },
     { t: "Scan the Trove", trove: true },
     { t: "Turn on the open sign" }
   ],
@@ -402,7 +402,8 @@ window.HD_CONFIG = {
   CLOSING: [
     { t: "Turn off the open sign" },
     { t: "Bring in the sign, speaker and dog" },
-    { t: "Count the register", amount: true },
+    { t: "Count the register", amount: true, note: true },
+    { t: "Cash moved to the deposit (enter 0 if none)", amount: true },
     { t: "Scan the Trove", trove: true },
     { t: "Plug the beer taps" },
     { t: "Sweep the floor" },
@@ -1065,7 +1066,7 @@ function vOpening(){
   const rows=L.map((s,i)=>{
     const st=S.open[i]||{}, cls=st.s==='done'?'d':st.s==='cant'?'c':'';
     let extra='';
-    if(s.amount && st.s!=='cant') extra='<div class="pre"><b>$</b><input class="oin money" data-i="'+i+'" data-f="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="'+esc(st.amount||'')+'"></div>';
+    if(s.amount && st.s!=='cant') extra='<div class="pre"><b>$</b><input class="oin money" data-i="'+i+'" data-f="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="'+esc(st.amount||'')+'"></div>'+(s.note?'<input class="oin" style="margin-top:8px" data-i="'+i+'" data-f="note" autocomplete="off" maxlength="200" placeholder="Register note (optional), like traded coins for $1" value="'+esc(st.note||'')+'">':'');
     if(st.s==='cant') extra='<input class="oin" data-i="'+i+'" data-f="reason" autocomplete="off" placeholder="Why not?" value="'+esc(st.reason||'')+'">';
     const btns = s.trove
       ? '<button class="ob" style="min-width:180px" data-act="otrove">'+(st.s?'Review list':'Open list')+'</button>'
@@ -2469,11 +2470,11 @@ document.addEventListener('click', async ev=>{
     if(want==='cant'){ const f=document.querySelector('.oin[data-i="'+i+'"]'); if(f) f.focus(); }
   }
   else if(a==='finishopen'){
-    const L=steps_(), done=[], cant=[], amounts={}, closing=S.flow==='closing';
-    L.forEach((s,i)=>{ const st=S.open[i]; if(st.s==='done'){ done.push(s.t); if(s.amount) amounts[s.t]=st.amount.trim(); } else cant.push({step:s.t,reason:st.reason.trim()}); });
+    const L=steps_(), done=[], cant=[], amounts={}, closing=S.flow==='closing', regnote=[];
+    L.forEach((s,i)=>{ const st=S.open[i]; if(st.s==='done'){ done.push(s.t); if(s.amount) amounts[s.t]=st.amount.trim(); if(s.note&&(st.note||'').trim()) regnote.push(st.note.trim()); } else cant.push({step:s.t,reason:st.reason.trim()}); });
     const w=closing?'Closed':'Opened';
     const summary = cant.length ? w+'. Couldn\u2019t: '+cant.map(c=>c.step+' ('+c.reason+')').join('; ') : w;
-    submit(closing?'closing':'opening', summary, {amounts,done,cant});
+    submit(closing?'closing':'opening', summary, {amounts,done,cant,regnote:regnote.join('; ')});
   }
   else if(a==='efix'){ const e=document.getElementById(b.dataset.id); if(e){ e.value=b.dataset.v; if(S.recheck) S.recheck(); } }
   else if(a==='dpay'||a==='dleft'){ const k=a==='dpay'?'dpay':'dleft'; S[k]=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(a==='dpay'){ const cb=document.getElementById('cbox'); if(cb) cb.hidden=S.dpay!=='Store credit'; } if(S.recheck) S.recheck(); }

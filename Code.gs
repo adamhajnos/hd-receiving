@@ -18,8 +18,8 @@ var TABS = {
   Staff:    ['Name', 'PIN', 'Role'],
   Trove:    ['Artist', 'Title', 'Location', 'Price', 'Cover URL', 'Code', 'Genre', 'Status', 'Listed'],
   Log:      ['Timestamp', 'Date', 'Who', 'Task', 'Summary', 'Data (JSON)'],
-  Opening:  ['Timestamp', 'Who', 'Amounts', 'Steps done', 'Could not do (step: reason)'],
-  Closing:  ['Timestamp', 'Who', 'Amounts', 'Steps done', 'Could not do (step: reason)'],
+  Opening:  ['Timestamp', 'Who', 'Amounts', 'Steps done', 'Could not do (step: reason)', 'Register note'],
+  Closing:  ['Timestamp', 'Who', 'Amounts', 'Steps done', 'Could not do (step: reason)', 'Register note'],
   Issues:   ['Timestamp', 'Who', 'Type', 'Details', 'Photo', 'Status'],
   Cash:     ['Timestamp', 'Who', 'Drawer count', 'Deposit', 'Note', 'Type', 'Source'],
   Records: ['Timestamp', 'Who', 'Type', 'Artist', 'Album', 'Genre', 'Format', 'Barcode', 'MSRP', 'Price', 'Status', 'Location', 'Listed on', 'Label queued', 'Notes'],
@@ -231,7 +231,7 @@ function logEntry_(req, who) {
     if (task === 'opening' || task === 'closing') {
       var amounts = Object.keys(d.amounts || {}).map(function (k) { return clean_(k) + ': ' + money_(d.amounts[k]); }).join('; ');
       sheet_(ss, task === 'opening' ? 'Opening' : 'Closing').appendRow([now, who, amounts, (d.done || []).length,
-        (d.cant || []).map(function (c) { return clean_(c.step) + ': ' + clean_(c.reason); }).join('; ')]);
+        (d.cant || []).map(function (c) { return clean_(c.step) + ': ' + clean_(c.reason); }).join('; '), clean_(d.regnote)]);
     } else if (task === 'note') {
       if (!summary) throw new Error('Empty note');
     } else if (task === 'issue') {
@@ -338,9 +338,9 @@ function registerLog_() {
     return sh.getRange(from, 1, last - from + 1, cols).getValues();
   }
   ['Opening', 'Closing'].forEach(function (n) {
-    tail_(n, 3).forEach(function (r) {
-      var m = /Count the register:\s*\$?(-?[\d,.]+)/i.exec(String(r[2] || ''));
-      if (m && r[0]) out.push({ ts: new Date(r[0]).toISOString(), who: String(r[1]), kind: n === 'Opening' ? 'Open' : 'Close', amount: parseFloat(m[1].replace(/,/g, '')), deposit: '', note: '' });
+    tail_(n, 6).forEach(function (r) {
+      var m = /Count the register:\s*\$?(-?[\d,.]+)/i.exec(String(r[2] || '')), dp = /Cash moved to the deposit[^:]*:\s*\$?(-?[\d,.]+)/i.exec(String(r[2] || ''));
+      if (m && r[0]) out.push({ ts: new Date(r[0]).toISOString(), who: String(r[1]), kind: n === 'Opening' ? 'Open' : 'Close', amount: parseFloat(m[1].replace(/,/g, '')), deposit: dp ? parseFloat(dp[1].replace(/,/g, '')) : '', note: String(r[5] || '') });
     });
   });
   tail_('Cash', 7, 700).forEach(function (r) {
