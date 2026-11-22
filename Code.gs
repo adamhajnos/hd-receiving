@@ -58,6 +58,7 @@ function doPost(e) {
     else if (req.action === 'requpdate') out = { ok: true, updated: reqUpdate_(req, who) };
     else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_(), covers: coversMap_() }; }
     else if (req.action === 'droplist') out = { ok: true, drops: dropList_() };
+    else if (req.action === 'dropphoto') out = { ok: true, photo: dropPhoto_(req) };
     else if (req.action === 'dropupdate') out = { ok: true, drop: dropUpdate_(req, who) };
     else if (req.action === 'coverset') out = { ok: true, saved: coverSet_(req.entries) };
     else if (req.action === 'registerlog') { if (AUTH_ROLE_ !== 'manager') throw new Error('Managers only'); out = { ok: true, counts: registerLog_() }; }
@@ -1195,7 +1196,7 @@ function dropObj_(row, n, mgr) {
   var legacy = !row[DR.STATUS];
   var o = { id: String(row[DR.ID] || 'L' + n), ts: iso(row[DR.TS]), who: String(row[DR.WHO]), name: String(row[DR.NAME]), items: String(row[DR.ITEMS]),
     pay: String(row[DR.PAY] || ''), left: String(row[DR.LEFT] || ''), status: legacy ? 'Done' : String(row[DR.STATUS]),
-    sts: iso(row[DR.CHANGED] || row[DR.TS]), leftDone: row[DR.LEFTDONE] === 'Yes', legacy: legacy, hasCard: !!row[DR.CARD] };
+    sts: iso(row[DR.CHANGED] || row[DR.TS]), leftDone: row[DR.LEFTDONE] === 'Yes', legacy: legacy, hasCard: !!row[DR.CARD], hasPhoto: !!row[DR.PHOTO] };
   if (mgr) {
     o.phone = String(row[DR.PHONE] || ''); o.email = String(row[DR.EMAIL] || ''); o.offer = row[DR.OFFER] === '' ? '' : String(Number(row[DR.OFFER]));
     o.sent = iso(row[DR.SENT]); o.hist = dropHist_(row[DR.HIST]); o.photo = String(row[DR.PHOTO] || ''); o.cardOk = !!row[DR.CARDOK];
@@ -1217,6 +1218,18 @@ function dropAlert_(r) {
     'Wants to be paid in: ' + r[DR.PAY] + '\nRecords we do not want: ' + String(r[DR.LEFT]).toLowerCase() + '\nLogged by: ' + r[DR.WHO] + '\n' + (r[DR.PHOTO] ? 'Photo: ' + r[DR.PHOTO] + '\n' : '') +
     '\nMake the offer under Drop-off list in HD Backstage.';
   MailApp.sendEmail(to, 'New drop-off: ' + r[DR.NAME], body, { name: 'Hunky Dory Records' });
+}
+
+/** The photo staff took at drop-off, as a base64 JPEG (any signed-in user). */
+function dropPhoto_(req) {
+  var id = clean_(req.id), sh = dropSheet_(), last = sh.getLastRow();
+  var vals = last > 1 ? sh.getRange(2, 1, last - 1, DR_W).getValues() : [];
+  for (var i = 0; i < vals.length; i++) if (String(vals[i][DR.ID]) === id) {
+    var m = /[-\w]{25,}/.exec(String(vals[i][DR.PHOTO] || ''));
+    if (!m) return '';
+    return Utilities.base64Encode(DriveApp.getFileById(m[0]).getBlob().getBytes());
+  }
+  throw new Error('Drop-off not found');
 }
 
 /** {id, op, amount}. Managers: offer, accepted, declined, paid (cash), credit (store credit gift card), undo. Any staff: leftdone, done. Returns the changed drop-off. */
