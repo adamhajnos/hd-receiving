@@ -238,6 +238,7 @@ function logEntry_(req, who) {
       sheet_(ss, task === 'opening' ? 'Opening' : 'Closing').appendRow([now, who, amounts, (d.done || []).length,
         (d.cant || []).map(function (c) { return clean_(c.step) + ': ' + clean_(c.reason); }).join('; '), clean_(d.regnote)]);
       if (task === 'opening') { try { registerMismatch_(who, now, d.amounts); } catch (e) { /* an alert problem must never block opening */ } }
+      if ((d.cant || []).length) { try { skipEmail_(task, who, now, tz, d.cant); } catch (e) { /* an alert problem must never block open/close */ } }
     } else if (task === 'note') {
       if (!summary) throw new Error('Empty note');
     } else if (task === 'issue') {
@@ -324,6 +325,22 @@ function issueEmail_(who, now, tz, d, url) {
     (url ? 'Photo: ' + url + '\n' : '') +
     '\nIt is also logged in the Issues tab of the HD Ops sheet.';
   MailApp.sendEmail(to, 'HD Backstage issue: ' + type + ' (' + who + ')', body, { name: 'HD Backstage' });
+}
+
+/**
+ * Emails managers when someone marks a task "Can't" on the Open or Close checklist.
+ * Recipients: Script Property SKIP_ALERT_TO (comma separated), else REGISTER_ALERT_TO, else the script owner.
+ */
+function skipEmail_(task, who, now, tz, cant) {
+  var props = PropertiesService.getScriptProperties();
+  var to = props.getProperty('SKIP_ALERT_TO') || props.getProperty('REGISTER_ALERT_TO') || Session.getEffectiveUser().getEmail();
+  if (!to) return;
+  var what = task === 'closing' ? 'close' : 'open';
+  var lines = cant.map(function (c) { return '- ' + clean_(c.step) + ': ' + (clean_(c.reason) || '(no reason)'); }).join('\n');
+  var body = who + ' skipped ' + cant.length + ' task' + (cant.length === 1 ? '' : 's') + ' at ' + what + ', ' + myShop_() + ', ' +
+    Utilities.formatDate(now, tz, 'EEE MMM d, h:mm a') + '.\n\n' + lines +
+    '\n\nIt is also logged in the ' + (task === 'closing' ? 'Closing' : 'Opening') + ' tab of the HD Ops sheet.';
+  MailApp.sendEmail(to, 'Hunky Dory ' + myShop_() + ': ' + cant.length + ' skipped at ' + what + ' (' + who + ')', body, { name: 'HD Backstage' });
 }
 
 /** Run once from the editor to test: sends a sample email to this account. */

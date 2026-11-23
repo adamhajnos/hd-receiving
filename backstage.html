@@ -1090,7 +1090,7 @@ function vOpening(){
 }
 
 /* ---------- terms customers read and agree to ---------- */
-const TD={offer:14,pickup:30,hold:10}; // days. Edit these to change every place they appear.
+const TD={offer:10,pickup:30,hold:10}; // days. Edit these to change every place they appear.
 const TERMS={
   drop:{h:'Drop-off terms',l:[
     'Dropping records off is not a sale. We look through them and make an offer, and we can decline any or all of them.',
@@ -1475,7 +1475,7 @@ const DSTALE=3; // days before a waiting drop-off turns red
 function dAge(x){ const ms=Date.now()-new Date(x.sts||x.ts).getTime(), h=ms/36e5; return {h, txt:h<1?'just now':h<24?Math.floor(h)+'h':Math.floor(h/24)+(Math.floor(h/24)===1?' day':' days')}; }
 function dDays(x){ return Math.floor((Date.now()-new Date(x.sent||x.sts||x.ts).getTime())/864e5); }
 function dStale(x){ const h=dAge(x).h; return x.status==='New'?h>=24:x.status==='Offer made'?dDays(x)>=10:(x.status!=='Done'&&h>=DSTALE*24); }
-function dChip(x){ if(x.status==='Offer made'){ const d=dDays(x); return d>=10?'Past due, day '+d:d<1?'Sent today':'Day '+d+' of 10'; } return dAge(x).txt; }
+function dChip(x){ if(x.status==='Offer made'){ const d=dDays(x); return d>=TD.offer?'Past due, day '+d:d<1?'Sent today':'Day '+d+' of '+TD.offer; } return dAge(x).txt; }
 const DLBL={offer:'Offer made',accepted:'Accepted',declined:'Declined',paid:'Paid',credit:'Paid',done:'Done'};
 async function dAct(op,id,extra){
   if(S.dbusy) return false; S.dbusy=true;
@@ -2180,7 +2180,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r71';
+const BUILD='r72';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
