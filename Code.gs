@@ -243,6 +243,7 @@ function logEntry_(req, who) {
     } else if (task === 'issue') {
       var url = d.photo ? saveIssuePhoto_(String(d.photo), now, tz) : '';
       sheet_(ss, 'Issues').appendRow([now, who, clean_(d.type), clean_(d.details), url, 'Open']);
+      try { issueEmail_(who, now, tz, d, url); } catch (e) { /* an email problem must never block a report */ }
     } else if (task === 'cash') {
       sheet_(ss, 'Cash').appendRow([now, who, money_(d.drawer), money_(d.deposit), clean_(d.note), 'Count', '']);
     } else if (task === 'request') {
@@ -306,6 +307,23 @@ function sendAutoEmail_(m, task, who) {
   var reply = props.getProperty('SHOP_EMAIL') || String(m.replyTo || '').trim();
   if (reply && /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(reply)) opts.replyTo = reply;
   MailApp.sendEmail(to, subject, body, opts);
+}
+
+/**
+ * Emails each "Report an issue" to Adam (IT for Backstage).
+ * Recipient: Script Property ISSUE_EMAIL, else FEATURE_EMAIL, else the script owner.
+ */
+function issueEmail_(who, now, tz, d, url) {
+  var props = PropertiesService.getScriptProperties();
+  var to = props.getProperty('ISSUE_EMAIL') || props.getProperty('FEATURE_EMAIL') || Session.getEffectiveUser().getEmail();
+  if (!to) return;
+  var type = clean_(d.type) || 'Other', details = clean_(d.details) || '(no details)';
+  var body = who + ' reported an issue at ' + myShop_() + ', ' + Utilities.formatDate(now, tz, 'EEE MMM d, h:mm a') + '.\n\n' +
+    'Type: ' + type + '\n' +
+    'What\'s wrong: ' + details + '\n' +
+    (url ? 'Photo: ' + url + '\n' : '') +
+    '\nIt is also logged in the Issues tab of the HD Ops sheet.';
+  MailApp.sendEmail(to, 'HD Backstage issue: ' + type + ' (' + who + ')', body, { name: 'HD Backstage' });
 }
 
 /** Run once from the editor to test: sends a sample email to this account. */
