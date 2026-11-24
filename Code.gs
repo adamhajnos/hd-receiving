@@ -69,6 +69,7 @@ function doPost(e) {
     else if (req.action === 'learnupc') out = { ok: true, saved: learnUpc_(req, who) };
     else if (req.action === 'scaninvoice') out = { ok: true, result: scanInvoice_(req) };
     else if (req.action === 'trovedel') out = { ok: true, removed: deleteTrove_(req, who) };
+    else if (req.action === 'trovemove') out = { ok: true, moved: moveTrove_(req, who) };
     else throw new Error('Unknown action');
   } catch (err) {
     out = { ok: false, error: String(err.message || err) };
@@ -543,6 +544,25 @@ function syncAdamTrove() {
 
 
 /** Deletes one Trove row by code (falls back to artist + title). A copy goes to the 'Trove Deleted' tab first. */
+/** Moves one Trove record (by code) to another shelf section: sets its Location in the Trove tab. */
+function moveTrove_(req, who) {
+  var code = String(req.code || '').trim(), loc = String(req.location || '').trim();
+  if (!code || !loc) throw new Error('Missing code or location');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sh = sheet_(ss_(), 'Trove');
+    if (sh.getLastRow() < 2) return 0;
+    var codes = sh.getRange(2, 6, sh.getLastRow() - 1, 1).getValues();
+    for (var i = 0; i < codes.length; i++) {
+      if (String(codes[i][0]).trim() === code) { sh.getRange(i + 2, 3).setValue(loc); return 1; }
+    }
+    return 0;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function deleteTrove_(req, who) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -946,7 +966,7 @@ function backfillCosts() {
 
 /* ---------- Trove: mark sold records ----------
  * Looks up every Active Trove record in Square by its TT code (SKU). If the Square item exists but has no stock left,
- * the record sold at the register: its Status in the Trove tab becomes "Sold" and it drops off the scan list.
+ * (or the item is archived), the record is gone: its Status in the Trove tab becomes "Sold" and it drops off the scan list.
  * Runs when the app loads the Trove list (at most once every 5 minutes). Never writes to Square. */
 function troveSoldSync_(force) {
   var cache = CacheService.getScriptCache();
@@ -959,10 +979,11 @@ function troveSoldSync_(force) {
     var code = String(r[5] || '').trim(), st = String(r[7] || 'Active');
     if (code && /^(active|)$/i.test(st.trim())) { idx[code] = n; codes.push(code); }
   });
-  var varId = {};
+  var varId = {}, varItem = {}, archived = {};
   for (var i = 0; i < codes.length; i += 50) {
-    var res = sq_('post', '/v2/catalog/search', { object_types: ['ITEM_VARIATION'], query: { set_query: { attribute_name: 'sku', attribute_values: codes.slice(i, i + 50) } } });
-    (res.objects || []).forEach(function (o) { varId[o.id] = o.item_variation_data.sku; });
+    var res = sq_('post', '/v2/catalog/search', { object_types: ['ITEM_VARIATION'], include_related_objects: true, query: { set_query: { attribute_name: 'sku', attribute_values: codes.slice(i, i + 50) } } });
+    (res.related_objects || []).forEach(function (o) { if (o.type === 'ITEM' && o.item_data && o.item_data.is_archived) archived[o.id] = true; });
+    (res.objects || []).forEach(function (o) { varId[o.id] = o.item_variation_data.sku; varItem[o.id] = o.item_variation_data.item_id; });
   }
   var ids = Object.keys(varId), inStock = {};
   for (var j = 0; j < ids.length; j += 100) {
@@ -976,7 +997,7 @@ function troveSoldSync_(force) {
   }
   var sold = 0;
   ids.forEach(function (id) {
-    if (inStock[id]) return;
+    if (inStock[id] && !archived[varItem[id]]) return; // archived in Square counts as gone
     var n = idx[varId[id]];
     if (n === undefined) return;
     sh.getRange(n + 2, 8).setValue('Sold'); sold++;

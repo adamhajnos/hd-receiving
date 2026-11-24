@@ -362,6 +362,7 @@ window.HD_CONFIG = {
   OPENING: [
     { t: "Clock in with Square" },
     { t: "Turn on the lights and lamps" },
+    { t: "Turn on the beer menu screen" },
     { t: "Take out the trash" },
     { t: "Pull the beer plugs and put them in the cleaner" },
     { t: "Fill the water tanks" },
@@ -814,7 +815,9 @@ function resolved_(i){
 }
 const tkey=i=>i.artist+'|'+i.title;
 const ORDKEY='hd.trove.order2';
-function setTrove(L){ const o=LS.get(ORDKEY,null); L=(L||[]).filter(i=>!/sold/i.test(i.status||'')).slice(); if(o&&o.length){ const ix={}; o.forEach((c,n)=>ix[c]=n); const big=1e6; L=L.map((it,n)=>[it,n]).sort((a,b)=>((ix[a[0].code]??big)-(ix[b[0].code]??big))||(a[1]-b[1])).map(x=>x[0]); } S.troveList=L.map(it=>Object.assign({},it,{genre:troveGenre(it)})); }
+function tloadTop(){ return S.tload?'<div class="tload"><span class="spin"></span><div><b>Loading the Trove\u2026</b><span class="sub">Pulling the latest list. One moment.</span></div></div>':''; }
+const LOCKEY='hd.trove.loc';
+function setTrove(L){ const o=LS.get(ORDKEY,null), ov=LS.get(LOCKEY,{}); L=(L||[]).filter(i=>!/sold/i.test(i.status||'')).map(it=>ov[it.code]&&ov[it.code]!==it.location?Object.assign({},it,{location:ov[it.code]}):it); if(o&&o.length){ const ix={}; o.forEach((c,n)=>ix[c]=n); const big=1e6; L=L.map((it,n)=>[it,n]).sort((a,b)=>((ix[a[0].code]??big)-(ix[b[0].code]??big))||(a[1]-b[1])).map(x=>x[0]); } S.troveList=L.map(it=>Object.assign({},it,{genre:troveGenre(it)})); }
 const DGEN={"hank mobley|roll call":"Jazz","harbinger|second coming":"Rock","afi|the blood album":"Rock","phish|picture of nectar":"Rock","roy haynes|cymbalism":"Jazz","metallica|jump in the fire":"Hard Rock/Punk","tash sultana|flow state":"Indie/Pop","khruangbin|the universe smiles upon you":"Rock","sky ferreira|night time, my time":"Indie/Pop","my bloody valentine|loveless":"Indie/Pop","pink floyd|live (boot)":"Rock","2 live crew|move somethin'":"Hip Hop","desire|cry at the sky":"Hard Rock/Punk","umphrey's mcgee|hall of fame":"Rock","the monzas|hey! i know you":"Soul/R&B","bruce springsteen|born to run (promo 45)":"Rock","air|music for museum":"Electronic","jimmy buffett|down to earth":"Rock","alberta cross|broken side of time":"Rock","bobby hutcherson|enjoy the view":"Jazz","byard lancaster|it's not up to us":"Jazz","chet baker|let's get lost st":"Jazz","tinariwen|aman iman":"Rock","major lazer|peace is the mission (sealed)":"Electronic","sister hazel|20 stages":"Rock","de la soul|3 feet high and rising":"Hip Hop","status quo|messages from the status quo":"Rock","smyrna|harvest song":"Indie/Pop","curtis mayfield|curtis":"Soul/R&B","mc 900|hell with the lid off":"Electronic","kiss|love gun (promo)":"Hard Rock/Punk","beastie boys|paul's boutique":"Hip Hop","de la soul|say no go":"Electronic","2 live crew|is what we are":"Hip Hop","2 live crew|as nasty as they wanna be":"Hip Hop","schoolly d|saturday night the album":"Hip Hop","joni mitchell|lennie and dom songs (boot)":"Country/Folk","jimmy smith|the sounds of jimmy smith":"Jazz","thomas chapin|spirits rebellious":"Jazz","the fall|extricate":"Indie/Pop","the smiths|meat is murder":"Indie/Pop","joy division|1977-1980":"Hard Rock/Punk","dead kennedys|fresh fruit for rotting vegetables":"Hard Rock/Punk","güngör|ghosts upon the earth":"Rock","ben e. king|don't play that song":"Rock","blue magic|magic #":"Soul/R&B","black ivory|don't turn around":"Soul/R&B","big boi|boomiverse":"Hip Hop","max roach|4 plays":"Jazz","ed sheeran|you need me":"Rock","robert ashley|perfect lives":"Rock","billy bragg & wilco|mermaid avenue vol. 2":"Rock","embers|roll":"Rock","mountain|burgundy":"Rock","nico|desertshore":"Rock","sam phillips|martinis & bikinis":"Rock","the pretenders|live @ santa monica civic":"Rock","starflyer 59|dial m":"Indie/Pop","tiny habits|all for something":"Indie/Pop","miniature tigers|fortress":"Indie/Pop","onerepublic|native":"Rock","montaigne|complex (red)":"Indie/Pop","ed sheeran|songs i wrote with amy":"Indie/Pop","strfkr|miracle mile":"Indie/Pop","cannibal corpse|red before black":"Hard Rock/Punk","white fence|growing faith":"Indie/Pop","big black|atomizer":"Hard Rock/Punk","first strike|only for you (signed)":"Hard Rock/Punk","living death|vengeance of hell":"Hard Rock/Punk","osker|idle will kill":"Hard Rock/Punk","the saints|eternally yours":"Hard Rock/Punk","scratch acid|berserker":"Hard Rock/Punk","stormwitch|tales of terror":"Hard Rock/Punk","thor|only the strong":"Hard Rock/Punk","upright citizens|open eyes open ears":"Hard Rock/Punk","aesop rock|float":"Hip Hop","eagle-eye cherry|save tonight":"Rock","alunageorge|body music":"Electronic","the herbaliser|blow your headphones":"Electronic","hke|hk":"Electronic","lewis|l'amour":"Rock","lizzy mercier descloux|press color":"Rock","shpongle|codex vi":"Electronic","whitehouse|great white death":"Electronic","darrell banks|is here":"Soul/R&B","james brown|shout and shimmy":"Soul/R&B","the impressions|the never ending":"Soul/R&B","garnet mimms|cry baby":"Soul/R&B","wilson pickett|the midnight mover":"Soul/R&B","the strikers|the strikers":"Electronic","wilson williams|up the down stairs":"Soul/R&B","val anthony|what can i say":"Jazz","brian blade|landmarks":"Jazz","sonny clark|cool struttin (09 blue note 45 ltd)":"Jazz","ahmad jamal|73":"Jazz","jackie mclean|fat jazz":"Jazz","gabor szabo|dreams":"Jazz","larry young|young blues":"Jazz","scotty mccreery|seasons change":"Country/Folk","satyajit ray|goopy gyne & bagha byne":"Country/Folk","inezita barroso|vamos falar de brasil, novamente…":"Country/Folk","*45* the green slime|far beyond":"Rock","apples in stereo|fun trick noisemaker":"Indie/Pop","cliff jordan|blowing in from chicago":"Jazz","george duke|no rhyme, no reason":"Jazz","forrest frank|child of god":"Hip Hop","paul hibbets|childhood dream":"Rock","andrew hill|judgement!":"Jazz","albert hash|whitetop":"Country/Folk","frantic|conception (sealed)":"Hard Rock/Punk","juju|a message from mozambique":"Jazz","45\" the annuals|hungry / once in a lifetime":"Soul/R&B","soft rock|soft rock":"Rock","the wrens|the meadowlands":"Indie/Pop","the pyramids|lalibela":"Jazz","wild sugar|bring it here":"Soul/R&B","65daysofstatic|no man's sky st":"Rock","*45* moon kim|i'm dingy dongy over you":"Rock","*45* music machine|the eagle never hunts the fly":"Rock","lee konitz|live from harvard square":"Jazz","afi|decemberunderground (7\" box)":"Hard Rock/Punk","helen merrill|s/t":"Jazz","jay jay johnson|the eminent jjj":"Jazz","alien|s/t":"Electronic","*45* black lips/ke$ha tp|\"they's a person of the world\"":"Hard Rock/Punk","fetti|roma":"Hip Hop","gene barber and cavaliers 45|i need a love":"Soul/R&B","afi (45)|december underground 45 box":"Hard Rock/Punk","the wedding present|":"Indie/Pop","tommy flanagan trio|moodville":"Jazz","drive like jehu|headhunter":"Hard Rock/Punk","republic|new world order":"Hard Rock/Punk","bob dylan|":"Country/Folk","young family|series 5":"Rock","julie driscoll|":"Rock","tree fox|rough trade":"Hard Rock/Punk","dragnet|the fall":"Hard Rock/Punk","xtrmst|s/t (signed)":"Hard Rock/Punk","mr. twin sister|":"Electronic","shelly manne|at the blackhawk":"Jazz","harry partch|":"Classical","tom macdonald|exposed":"Hip Hop","sly johnson|complete mythology":"Hip Hop","ronald ingraham concert choir|saturday morning with ricc":"Soul/R&B","taj mahal|present awakening":"Rock","drive like jehu|s/t":"Hard Rock/Punk","eli's|s/t":"Soul/R&B","*45* richie sings|dream lover":"Soul/R&B","the overtones|rustic (45)":"Rock","sam gendel and sam wilkes|music for saxophone and bass guitar":"Electronic","*45* chevells|pretty little girl":"Soul/R&B","hotline miami|st":"Soundtrack","under the skin|mondo st":"Soundtrack","red hot + cool|stolen moments":"Jazz","richard pryor|i hope i'm funny":"Spoken Word/Comedy"};
 const GENFIX={'indie pop':'Indie/Pop','hard rock/punk/metal':'Hard Rock/Punk','hiphop':'Hip Hop','hip hop':'Hip Hop','soul/r&b/funk/disco':'Soul/R&B','world/latin/reggae':'World'};
 const troveGenre=i=>{ const g=String(i.genre||'').trim(), k=g.toLowerCase(); if(g&&!/^(discogs|ebay)/i.test(g)) return GENFIX[k]||g; return DGEN[(i.artist+'|'+i.title).toLowerCase()]||''; };
@@ -908,7 +911,7 @@ function troveListHTML(){
   const q=S.tq.trim().toLowerCase();
   let L=S.troveList.filter(i=>!q||(i.artist+' '+i.title+' '+i.location).toLowerCase().includes(q));
   if(S.tonly) L=L.filter(i=>!S.tfound[tkey(i)]);
-  if(!L.length) return S.tload?'<div class="tload"><span class="spin"></span><div><b>Loading the Trove\u2026</b><span class="sub">Pulling the latest list. One moment.</span></div></div>':'<p class="hint" style="margin-top:20px">Nothing here.</p>';
+  if(!L.length) return S.tload?'':'<p class="hint" style="margin-top:20px">Nothing here.</p>';
   let out='', loc=null;
   L.forEach(i=>{
     if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span></div>'; }
@@ -973,14 +976,14 @@ function tbrowseFiltered(){
 }
 function tbrowseListHTML(){
   const q=(S.tbq||'').trim(), L=tbrowseFiltered();
-  if(!L.length) return S.tload?'<div class="tload"><span class="spin"></span><div><b>Loading the Trove\u2026</b><span class="sub">Pulling the latest list. One moment.</span></div></div>':'<p class="hint" style="margin-top:20px">Nothing found.</p>';
+  if(!L.length) return S.tload?'':'<p class="hint" style="margin-top:20px">Nothing found.</p>';
   const cnt={}; L.forEach(i=>cnt[i.location]=(cnt[i.location]||0)+1);
   const canDrag=S.tseg!=='back'&&!q.length;
   const left=L.filter(i=>!pqCount(i)).length;
-  let out=(S.tload?'<div class="tload slim"><span class="spin"></span><b>Updating the list\u2026</b></div>':'')+'<div class="pqall"><button class="btn ghost" data-act="tpqall"'+(left?'':' disabled')+'>'+(left?'Add all '+(q?'these ':'')+left+' to print queue':'\u2713 All in print queue')+'</button></div>', loc=null;
+  let out='<div class="pqall"><button class="btn ghost" data-act="tpqall"'+(left?'':' disabled')+'>'+(left?'Add all '+(q?'these ':'')+left+' to print queue':'\u2713 All in print queue')+'</button></div>', loc=null;
   L.forEach(i=>{
     if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span><span class="n">'+cnt[loc]+' records</span></div>'; }
-    out+='<div class="trow ro" data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span>'+pqBtn(i)+(i.code?'<button class="tmore" data-act="tsw" aria-label="More">\u22ef</button>':'')+(i.code?'<button class="tdelb" data-act="tdel" data-code="'+esc(i.code)+'">Delete</button>':'')+'</div>';
+    out+='<div class="trow ro"'+(S.tseg!=='back'&&i.code?' data-act="tmvpick"':'')+' data-code="'+esc(i.code||'')+'" data-loc="'+esc(i.location||'')+'">'+(canDrag?'<span class="grip" aria-label="Drag to reorder">\u2261</span>':'')+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span>'+(i.genre?'<span class="gpill">'+esc(i.genre)+'</span>':'')+'<span class="pr">'+priceFmt(i.price)+'</span>'+pqBtn(i)+(i.code?'<button class="tmore" data-act="tsw" aria-label="More">\u22ef</button>':'')+(i.code?'<button class="tdelb" data-act="tdel" data-code="'+esc(i.code)+'">Delete</button>':'')+'</div>';
   });
   return out;
 }
@@ -990,17 +993,36 @@ function pqBtn(i){ const n=pqCount(i); return '<button class="pqb'+(n?' on':'')+
 function pqChip(){ const n=pqGet().length; return n?'<button class="btn ghost pqchip" data-act="go:labels" style="margin-left:auto">Print queue ('+n+') \u203a</button>':''; }
 function vTBrowse(){
   const nf=(S.troveList||[]).length, nb=(C.DEMO_BACKFILL||[]).length, seg=(k,t)=>'<button class="tchip '+(S.tseg===k?'on':'')+'" data-act="tseg" data-v="'+k+'">'+t+'</button>';
-  return topHTML('Trove Inventory','home',pqChip(),true)+bannerHTML()+
+  return topHTML('Trove Inventory','home',pqChip(),true)+tloadTop()+bannerHTML()+
   '<div class="tact"><button class="btn go" data-act="tcheck">'+bi('scan','Run a Trove check','Scan every record on the floor to see what\u2019s missing')+'</button>'+
   '<button class="btn ghost" data-act="addtrove">'+bi('addrec','Add a Trove record','Log a new record and print its label')+'</button></div>'+
   ((LS.get('hd.discogs',null)||(C.DISCOGS_KEY&&C.DISCOGS_SECRET))?'':'<div class="dtok"><b>Get more album covers</b><span>Paste your Discogs token once. It stays on this iPad.</span><input id="dtk" placeholder="Discogs token" autocomplete="off"><button class="btn ghost" data-act="dtoksave">Save</button></div>')+
   '<div class="tbar"><input id="tbq" placeholder="Search or scan: artist, title, genre, shelf, barcode" autocomplete="off" value="'+esc(S.tbq||'')+'">'+seg('floor','On the floor ('+nf+')')+seg('back','Backfill ('+nb+')')+'</div>'+
-  '<p class="hint" style="margin:10px 0 0">'+(S.tseg==='back'?'Backfill records. Not part of the shelf check.':'Drag \u2261 to reorder. The Trove check follows this order.')+'</p><div id="tblist">'+tbrowseListHTML()+'</div>';
+  '<p class="hint" style="margin:10px 0 0">'+(S.tseg==='back'?'Backfill records. Not part of the shelf check.':'Tap a record to move it to another section. Drag \u2261 to reorder, or drop it in another section. The Trove check follows this order.')+'</p><div id="tblist">'+tbrowseListHTML()+'</div>'+troveMoveSheet();
+}
+function troveLocs(){ const s=[]; (S.troveList||[]).forEach(i=>{ if(i.location&&s.indexOf(i.location)<0) s.push(i.location); }); return s; }
+function troveMoveSheet(){
+  const it=S.tmv&&(S.troveList||[]).find(x=>x.code===S.tmv); if(!it) return '';
+  return '<div class="kscrim" data-act="tmvclose"><div class="ksheet" role="dialog" aria-modal="true"><div><h2>Move to a section</h2><p class="hint" style="margin:6px 0 0">'+esc(it.artist)+' \u00b7 '+esc(it.title)+'</p></div><div class="kpick">'+troveLocs().map(l=>'<button data-act="tmvto" data-v="'+esc(l)+'"'+(l===it.location?' disabled':'')+'><b>'+esc(l)+'</b><span>'+(l===it.location?'Here now':'')+'</span></button>').join('')+'</div><div class="krow"><button class="btn ghost" data-act="tmvclose">Cancel</button></div></div></div>';
+}
+function rkeep(){ const sc=document.getElementById('scroll'), st=sc?sc.scrollTop:0; render(); const s2=document.getElementById('scroll'); if(s2) s2.scrollTop=st; }
+function troveMove(code,loc,ref,after){
+  const L=(S.troveList||[]).slice(), it=L.find(x=>x.code===code); if(!it||!loc) return;
+  const old=it.location; L.splice(L.indexOf(it),1);
+  const mv=Object.assign({},it,{location:loc}); let i;
+  if(ref){ const r=L.findIndex(x=>x.code===ref); i=r<0?L.length:r+(after?1:0); }
+  else { let last=-1; L.forEach((x,n)=>{ if(x.location===loc) last=n; }); i=last<0?L.length:last+1; }
+  L.splice(i,0,mv); S.troveList=L; LS.set(ORDKEY,L.map(x=>x.code));
+  if(loc!==old){
+    const ov=LS.get(LOCKEY,{}); ov[code]=loc; LS.set(LOCKEY,ov); toast('Moved to '+loc);
+    api('trovemove',{code,location:loc}).then(()=>{ const o2=LS.get(LOCKEY,{}); delete o2[code]; LS.set(LOCKEY,o2); }).catch(()=>{});
+  }
+  rkeep();
 }
 function troveCounts(){ const n=S.troveList.length, f=S.troveList.filter(i=>S.tfound[tkey(i)]).length; return {n,f,nf:n-f}; }
 function troveDoneLabel(){ const c=troveCounts(); return c.nf?'Done ('+c.nf+' not found)':'Done'; }
 function vTrove(){
-  const c=troveCounts(), top=topHTML('Trove check','oback','<span class="chip" id="tcount" style="margin-left:auto">'+c.f+' / '+c.n+'</span>')+bannerHTML();
+  const c=troveCounts(), top=topHTML('Trove check','oback','<span class="chip" id="tcount" style="margin-left:auto">'+c.f+' / '+c.n+'</span>')+tloadTop()+bannerHTML();
   if(!S.tscan) return top+tstartHTML();
   return top+tpanelHTML()+
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px"><button class="tchip" data-act="tshow">'+(S.tshow?'Hide the list':'Check off by hand')+'</button>'+
@@ -2180,7 +2202,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r72';
+const BUILD='r73';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2303,18 +2325,27 @@ function go(view){
 }
 const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
 
+const PINKEY='hd.pins';
+async function pinHash(p){ try{ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('hd-backstage:'+p)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ return null; } }
+function loginOK(name,role,pin){ S.who=name; S.pin=pin; S.role=role||'staff'; S.entry=''; S.err=''; LS.set('hd.shift',{who:S.who,pin:S.pin,start:Date.now()}); S.view='home'; render(); }
+function noteCheck(){ const ack=LS.get('hd.noteack',{}); S.notePop=!!(S.note&&S.note.who!==S.who&&ack[S.who]!==S.note.ts); }
+function loginLoad(){ Promise.all([refreshFeed(),rqLoad(),dLoad()]).then(()=>{ noteCheck(); if(S.who) render(); }); }
 async function tryLogin(){
-  const pin=S.entry;
+  const pin=S.entry, h=await pinHash(pin), cache=LS.get(PINKEY,{}), known=h&&cache[h];
+  if(known&&known.name){
+    loginOK(known.name,known.role,pin); loginLoad();
+    api('login',{pin}).then(j=>{ if(j&&j.name){ cache[h]={name:j.name,role:j.role||'staff'}; LS.set(PINKEY,cache); if(j.role&&j.role!==S.role){ S.role=j.role; render(); } } })
+      .catch(e=>{ if(/PIN/.test(e.message)){ delete cache[h]; LS.set(PINKEY,cache); logout(); } });
+    return;
+  }
   try{
     const j=await api('login',{pin});
-    S.who=j.name; S.pin=pin; S.role=j.role||'staff'; S.entry=''; S.err='';
-    LS.set('hd.shift',{who:S.who,pin:S.pin,start:Date.now()});
-    await refreshFeed(); await rqLoad(); await dLoad(); S.view='home';
-    const ack=LS.get('hd.noteack',{}); S.notePop = !!(S.note && S.note.who!==S.who && ack[S.who]!==S.note.ts);
+    if(h){ cache[h]={name:j.name,role:j.role||'staff'}; LS.set(PINKEY,cache); }
+    loginOK(j.name,j.role,pin); loginLoad();
   }catch(e){
     S.entry=''; S.err = /PIN|tries/i.test(e.message) ? e.message+'.' : 'Can\u2019t reach the server. Check the wifi and try again.';
+    render();
   }
-  render();
 }
 function logout(){ if(C.TEST_SKIP&&DEMO){ S.view='home'; render(); return; } S.who=null; S.pin=''; S.entry=''; S.feed=[]; LS.set('hd.shift',null); S.view='login'; render(); }
 document.addEventListener('input',ev=>{
@@ -2402,38 +2433,27 @@ function kdEnd(){
 }
 document.addEventListener('pointerup',kdEnd); document.addEventListener('pointercancel',kdEnd);
 let _drag=null;
+const tdClear=()=>document.querySelectorAll('#tblist .kdrop-b,#tblist .kdrop-a').forEach(x=>x.classList.remove('kdrop-b','kdrop-a'));
 document.addEventListener('pointerdown',ev=>{
   const g=ev.target.closest&&ev.target.closest('.trow.ro .grip'); if(!g) return;
-  ev.preventDefault(); const row=g.closest('.trow'), sc=document.getElementById('scroll'); g.setPointerCapture(ev.pointerId);
-  const items=[...row.parentNode.querySelectorAll('.trow.ro')].filter(x=>x.dataset.loc===row.dataset.loc), st=sc.scrollTop;
-  const tops=items.map(x=>x.getBoundingClientRect().top+st), idx0=items.indexOf(row), r=row.getBoundingClientRect();
-  const step=items.length>1?(tops[items.length-1]-tops[0])/(items.length-1):r.height+8;
-  items.forEach(x=>{ if(x!==row){ x.style.willChange='transform'; x.style.transition='transform .2s cubic-bezier(.2,.8,.2,1)'; } });
-  row.style.transition='none'; row.style.willChange='transform'; row.classList.add('drag');
-  _drag={row,items,tops,idx0,cur:idx0,step,off:ev.clientY+st-tops[idx0],sc,y:ev.clientY};
+  ev.preventDefault(); _drag={row:g.closest('.trow'),x:ev.clientX,y:ev.clientY,on:false};
 });
 document.addEventListener('pointermove',ev=>{
-  const d=_drag; if(!d) return; const sc=d.sc, r=sc.getBoundingClientRect(), y=ev.clientY;
-  if(y<r.top+110) sc.scrollTop-=14; else if(y>r.bottom-90) sc.scrollTop+=14;
-  const cy=y+sc.scrollTop-d.off;
-  d.row.style.transform='translate3d(0,'+(cy-d.tops[d.idx0])+'px,0)';
-  let n=Math.round((cy-d.tops[0])/d.step); n=Math.max(0,Math.min(d.items.length-1,n));
-  if(n===d.cur) return; d.cur=n;
-  d.items.forEach((x,j)=>{ if(x===d.row) return;
-    const sh=(d.idx0<n&&j>d.idx0&&j<=n)?-d.step:(n<d.idx0&&j>=n&&j<d.idx0)?d.step:0;
-    x.style.transform=sh?'translate3d(0,'+sh+'px,0)':''; });
-});
+  const d=_drag; if(!d) return; ev.preventDefault();
+  if(!d.on){ if(Math.hypot(ev.clientX-d.x,ev.clientY-d.y)<6) return; d.on=true;
+    const r=d.row.getBoundingClientRect(), g=d.row.cloneNode(true); g.classList.add('drag'); g.removeAttribute('data-act');
+    g.style.cssText='position:fixed;z-index:60;pointer-events:none;width:'+r.width+'px;left:'+r.left+'px;top:'+r.top+'px;margin:0;opacity:.95';
+    document.body.appendChild(g); d.ghost=g; d.dy=ev.clientY-r.top; d.row.classList.add('kdrag'); }
+  d.ghost.style.top=(ev.clientY-d.dy)+'px';
+  const sc=document.getElementById('scroll'); if(sc){ const rr=sc.getBoundingClientRect(); if(ev.clientY<rr.top+110) sc.scrollTop-=14; else if(ev.clientY>rr.bottom-90) sc.scrollTop+=14; }
+  tdClear(); d.tg=null;
+  const el=document.elementFromPoint(ev.clientX,ev.clientY), tg=el&&el.closest('#tblist .trow.ro');
+  if(tg&&tg!==d.row){ const b=tg.getBoundingClientRect(); d.after=ev.clientY>b.top+b.height/2; d.tg=tg; tg.classList.add(d.after?'kdrop-a':'kdrop-b'); }
+},{passive:false});
 function dragEnd(){
-  const d=_drag; if(!d) return; _drag=null;
-  d.row.style.transition='transform .2s cubic-bezier(.2,.8,.2,1)'; d.row.classList.remove('drag');
-  d.row.style.transform='translate3d(0,'+(d.tops[d.cur]-d.tops[d.idx0])+'px,0)';
-  setTimeout(()=>{
-    d.items.forEach(x=>{ x.style.transition='none'; x.style.transform=''; x.style.willChange=''; });
-    const rest=d.items.filter(x=>x!==d.row), anchor=rest[d.cur]||null;
-    if(d.cur!==d.idx0){ if(anchor) anchor.parentNode.insertBefore(d.row,anchor); else rest[rest.length-1].after(d.row); }
-    const codes=[...document.querySelectorAll('#tblist .trow.ro')].map(x=>x.dataset.code);
-    LS.set(ORDKEY,codes); setTrove(S.troveList);
-  },210);
+  const d=_drag; _drag=null; if(!d||!d.on) return;
+  d.ghost.remove(); d.row.classList.remove('kdrag'); tdClear(); _kjd=true; setTimeout(()=>{ _kjd=false; },80);
+  if(d.tg) troveMove(d.row.dataset.code,d.tg.dataset.loc,d.tg.dataset.code,d.after);
 }
 document.addEventListener('pointerup',dragEnd); document.addEventListener('pointercancel',dragEnd);
 let _sw=null;
@@ -2495,7 +2515,7 @@ document.addEventListener('click', async ev=>{
     const t=a.slice(3);
     if(t==='opening'||t==='closing'){ S.flow=t; go('opening'); }
     else{ if(t==='issue'){ S.itype=null; S.iphoto=null; } if(t==='dropoff'||t==='request') S.tagree=false; if(t==='dropoff'){ S.iphoto=null; S.dpay=null; S.dleft=null; } if(t==='request'){ S.rs=null; S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; } if(t==='receive'){ await rqLoad(); if(DEMO||await rLoad()) rEnter(); return; }
-    if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); covMerge(j.covers); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
+    if(t==='trove'){ S.tbq=''; S.tseg='floor'; S.tmv=null; S.tload=!(S.troveList||[]).length; S.view='tbrowse'; render(); if(S.tload){ try{ const j=await api('trove'); covMerge(j.covers); setTrove(j.items); }catch(e){ S.err='Can\u2019t load the Trove list. Check the wifi and try again.'; } S.tload=false; render(); } return; }
     if(t==='kegs'){ S.kv='taps'; S.ks=null; }
     if(t==='drops'){ S.dconf=null; dLoad().then(()=>{ if(S.view==='drops') render(); }); }
     if(t==='reqlist'){ S.rqsel=null; S.rqarch=false; S.rqcol=isMgr()?{quoted:1,ordered:1,wait:1,done:1}:{}; S.rqq=''; S.rqshop='All'; rqLoad().then(()=>{ if(S.view==='reqlist') render(); }); }
@@ -2643,6 +2663,9 @@ document.addEventListener('click', async ev=>{
     L.push({key:key,beer:beer,brewery:br,city:city,style:'',price:pr,status:'deck',tap:null,days:0,lastTap:null,supplier:'',quick:true});
     S.ks=null; kegCommit(L,'Added to On deck: '+beer,{beer:beer,brewery:br,city:city,price:pr,action:'quickadd'}); }
   else if(a==='ktile'){ const n=+b.dataset.n, L=kegs(); S.ks={t:L.some(x=>x.status==='tap'&&x.tap===n)?'tap':'open',n}; render(); }
+  else if(a==='tmvpick'){ if(ev.target.closest('.grip,button')||b.classList.contains('sw')||Date.now()-(window._swAt||0)<400) return; S.tmv=b.dataset.code; rkeep(); }
+  else if(a==='tmvclose'){ if(ev.target===b||b.tagName==='BUTTON'){ S.tmv=null; rkeep(); } }
+  else if(a==='tmvto'){ const c=S.tmv; S.tmv=null; troveMove(c,b.dataset.v); }
   else if(a==='kclose'){ if(ev.target===b||b.tagName==='BUTTON'){ S.ks=null; render(); } }
   else if(a==='kkick'){ const L=kegs(), k=kfind(L,b.dataset.key); const n=k.tap; k.lastTap=n; k.status='empty'; k.tap=null; k.days=0; kegCommit(L,'Kicked: '+k.beer+' (tap '+n+')',{beer:k.beer,brewery:k.brewery,tap:n,action:'kick'}); }
   else if(a==='kmove'){ S.ks={t:'move',key:b.dataset.key,from:+b.dataset.n}; render(); }
