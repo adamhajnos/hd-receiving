@@ -167,6 +167,7 @@ div.tile.done{cursor:default}
 .trow .box{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff}
 .trow.on{border-color:var(--ok);background:var(--ok-bg)}
 .trow.on .box{background:var(--ok);border-color:var(--ok)}
+.trow.last{box-shadow:0 0 0 3px var(--accent)}
 .cov{flex:none;width:56px;height:56px;border-radius:8px;object-fit:cover;background:#E9E1D0}
 .cov.ph{display:flex;align-items:center;justify-content:center;font:700 17px var(--mono);color:var(--muted);letter-spacing:.04em}
 .trow .tx{flex:1;min-width:0}
@@ -180,6 +181,7 @@ div.tile.done{cursor:default}
 .tpanel .big span{display:block;font-size:22px;opacity:.8}
 .tpanel.ok{border-color:var(--ok);background:var(--ok-bg)}.tpanel.bad{border-color:#ff5a4d;background:rgba(255,90,77,.18);animation:flash .5s 2}.tpanel.dup{border-color:var(--warn-fg)}
 @keyframes flash{50%{background:rgba(255,90,77,.55)}}
+.tmsg.bad.tstick{position:sticky;top:-20px;z-index:6;margin-top:14px;background:#FFE1DE;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .tpanel .btn{min-height:56px}
 .addpick{display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px}.addpick .btn{min-height:96px!important}.rtop .kbig,.rtop .kdone{min-height:100px}.rtop{margin:0 0 14px}.kform{max-width:none;margin-top:0;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;align-items:start}.kform>*{grid-column:1/-1}.kform>.half{grid-column:auto}@media (max-width:860px){.kform{grid-template-columns:1fr}.kform>.half{grid-column:1/-1}}.addpick .btn{min-height:124px;font-size:34px;font-weight:800;text-align:left;padding:14px 26px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px}.addpick .btn small{font:400 20px var(--display);opacity:.72}
 .tact{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0 12px}
@@ -817,7 +819,7 @@ const tkey=i=>i.artist+'|'+i.title;
 const ORDKEY='hd.trove.order2';
 function tloadTop(){ return S.tload?'<div class="tload"><span class="spin"></span><div><b>Loading the Trove\u2026</b><span class="sub">Pulling the latest list. One moment.</span></div></div>':''; }
 const LOCKEY='hd.trove.loc';
-function setTrove(L){ const o=LS.get(ORDKEY,null), ov=LS.get(LOCKEY,{}); L=(L||[]).filter(i=>!/sold/i.test(i.status||'')).map(it=>ov[it.code]&&ov[it.code]!==it.location?Object.assign({},it,{location:ov[it.code]}):it); if(o&&o.length){ const ix={}; o.forEach((c,n)=>ix[c]=n); const big=1e6; L=L.map((it,n)=>[it,n]).sort((a,b)=>((ix[a[0].code]??big)-(ix[b[0].code]??big))||(a[1]-b[1])).map(x=>x[0]); } S.troveList=L.map(it=>Object.assign({},it,{genre:troveGenre(it)})); }
+function setTrove(L){ const o=LS.get(ORDKEY+'.pending',null), ov=LS.get(LOCKEY,{}); L=(L||[]).filter(i=>!/sold/i.test(i.status||'')).map(it=>ov[it.code]&&ov[it.code]!==it.location?Object.assign({},it,{location:ov[it.code]}):it); if(o&&o.length){ const ix={}; o.forEach((c,n)=>ix[c]=n); const big=1e6; L=L.map((it,n)=>[it,n]).sort((a,b)=>((ix[a[0].code]??big)-(ix[b[0].code]??big))||(a[1]-b[1])).map(x=>x[0]); } S.troveList=L.map(it=>Object.assign({},it,{genre:troveGenre(it)})); setTimeout(covWarm,1500); }
 const DGEN={"hank mobley|roll call":"Jazz","harbinger|second coming":"Rock","afi|the blood album":"Rock","phish|picture of nectar":"Rock","roy haynes|cymbalism":"Jazz","metallica|jump in the fire":"Hard Rock/Punk","tash sultana|flow state":"Indie/Pop","khruangbin|the universe smiles upon you":"Rock","sky ferreira|night time, my time":"Indie/Pop","my bloody valentine|loveless":"Indie/Pop","pink floyd|live (boot)":"Rock","2 live crew|move somethin'":"Hip Hop","desire|cry at the sky":"Hard Rock/Punk","umphrey's mcgee|hall of fame":"Rock","the monzas|hey! i know you":"Soul/R&B","bruce springsteen|born to run (promo 45)":"Rock","air|music for museum":"Electronic","jimmy buffett|down to earth":"Rock","alberta cross|broken side of time":"Rock","bobby hutcherson|enjoy the view":"Jazz","byard lancaster|it's not up to us":"Jazz","chet baker|let's get lost st":"Jazz","tinariwen|aman iman":"Rock","major lazer|peace is the mission (sealed)":"Electronic","sister hazel|20 stages":"Rock","de la soul|3 feet high and rising":"Hip Hop","status quo|messages from the status quo":"Rock","smyrna|harvest song":"Indie/Pop","curtis mayfield|curtis":"Soul/R&B","mc 900|hell with the lid off":"Electronic","kiss|love gun (promo)":"Hard Rock/Punk","beastie boys|paul's boutique":"Hip Hop","de la soul|say no go":"Electronic","2 live crew|is what we are":"Hip Hop","2 live crew|as nasty as they wanna be":"Hip Hop","schoolly d|saturday night the album":"Hip Hop","joni mitchell|lennie and dom songs (boot)":"Country/Folk","jimmy smith|the sounds of jimmy smith":"Jazz","thomas chapin|spirits rebellious":"Jazz","the fall|extricate":"Indie/Pop","the smiths|meat is murder":"Indie/Pop","joy division|1977-1980":"Hard Rock/Punk","dead kennedys|fresh fruit for rotting vegetables":"Hard Rock/Punk","güngör|ghosts upon the earth":"Rock","ben e. king|don't play that song":"Rock","blue magic|magic #":"Soul/R&B","black ivory|don't turn around":"Soul/R&B","big boi|boomiverse":"Hip Hop","max roach|4 plays":"Jazz","ed sheeran|you need me":"Rock","robert ashley|perfect lives":"Rock","billy bragg & wilco|mermaid avenue vol. 2":"Rock","embers|roll":"Rock","mountain|burgundy":"Rock","nico|desertshore":"Rock","sam phillips|martinis & bikinis":"Rock","the pretenders|live @ santa monica civic":"Rock","starflyer 59|dial m":"Indie/Pop","tiny habits|all for something":"Indie/Pop","miniature tigers|fortress":"Indie/Pop","onerepublic|native":"Rock","montaigne|complex (red)":"Indie/Pop","ed sheeran|songs i wrote with amy":"Indie/Pop","strfkr|miracle mile":"Indie/Pop","cannibal corpse|red before black":"Hard Rock/Punk","white fence|growing faith":"Indie/Pop","big black|atomizer":"Hard Rock/Punk","first strike|only for you (signed)":"Hard Rock/Punk","living death|vengeance of hell":"Hard Rock/Punk","osker|idle will kill":"Hard Rock/Punk","the saints|eternally yours":"Hard Rock/Punk","scratch acid|berserker":"Hard Rock/Punk","stormwitch|tales of terror":"Hard Rock/Punk","thor|only the strong":"Hard Rock/Punk","upright citizens|open eyes open ears":"Hard Rock/Punk","aesop rock|float":"Hip Hop","eagle-eye cherry|save tonight":"Rock","alunageorge|body music":"Electronic","the herbaliser|blow your headphones":"Electronic","hke|hk":"Electronic","lewis|l'amour":"Rock","lizzy mercier descloux|press color":"Rock","shpongle|codex vi":"Electronic","whitehouse|great white death":"Electronic","darrell banks|is here":"Soul/R&B","james brown|shout and shimmy":"Soul/R&B","the impressions|the never ending":"Soul/R&B","garnet mimms|cry baby":"Soul/R&B","wilson pickett|the midnight mover":"Soul/R&B","the strikers|the strikers":"Electronic","wilson williams|up the down stairs":"Soul/R&B","val anthony|what can i say":"Jazz","brian blade|landmarks":"Jazz","sonny clark|cool struttin (09 blue note 45 ltd)":"Jazz","ahmad jamal|73":"Jazz","jackie mclean|fat jazz":"Jazz","gabor szabo|dreams":"Jazz","larry young|young blues":"Jazz","scotty mccreery|seasons change":"Country/Folk","satyajit ray|goopy gyne & bagha byne":"Country/Folk","inezita barroso|vamos falar de brasil, novamente…":"Country/Folk","*45* the green slime|far beyond":"Rock","apples in stereo|fun trick noisemaker":"Indie/Pop","cliff jordan|blowing in from chicago":"Jazz","george duke|no rhyme, no reason":"Jazz","forrest frank|child of god":"Hip Hop","paul hibbets|childhood dream":"Rock","andrew hill|judgement!":"Jazz","albert hash|whitetop":"Country/Folk","frantic|conception (sealed)":"Hard Rock/Punk","juju|a message from mozambique":"Jazz","45\" the annuals|hungry / once in a lifetime":"Soul/R&B","soft rock|soft rock":"Rock","the wrens|the meadowlands":"Indie/Pop","the pyramids|lalibela":"Jazz","wild sugar|bring it here":"Soul/R&B","65daysofstatic|no man's sky st":"Rock","*45* moon kim|i'm dingy dongy over you":"Rock","*45* music machine|the eagle never hunts the fly":"Rock","lee konitz|live from harvard square":"Jazz","afi|decemberunderground (7\" box)":"Hard Rock/Punk","helen merrill|s/t":"Jazz","jay jay johnson|the eminent jjj":"Jazz","alien|s/t":"Electronic","*45* black lips/ke$ha tp|\"they's a person of the world\"":"Hard Rock/Punk","fetti|roma":"Hip Hop","gene barber and cavaliers 45|i need a love":"Soul/R&B","afi (45)|december underground 45 box":"Hard Rock/Punk","the wedding present|":"Indie/Pop","tommy flanagan trio|moodville":"Jazz","drive like jehu|headhunter":"Hard Rock/Punk","republic|new world order":"Hard Rock/Punk","bob dylan|":"Country/Folk","young family|series 5":"Rock","julie driscoll|":"Rock","tree fox|rough trade":"Hard Rock/Punk","dragnet|the fall":"Hard Rock/Punk","xtrmst|s/t (signed)":"Hard Rock/Punk","mr. twin sister|":"Electronic","shelly manne|at the blackhawk":"Jazz","harry partch|":"Classical","tom macdonald|exposed":"Hip Hop","sly johnson|complete mythology":"Hip Hop","ronald ingraham concert choir|saturday morning with ricc":"Soul/R&B","taj mahal|present awakening":"Rock","drive like jehu|s/t":"Hard Rock/Punk","eli's|s/t":"Soul/R&B","*45* richie sings|dream lover":"Soul/R&B","the overtones|rustic (45)":"Rock","sam gendel and sam wilkes|music for saxophone and bass guitar":"Electronic","*45* chevells|pretty little girl":"Soul/R&B","hotline miami|st":"Soundtrack","under the skin|mondo st":"Soundtrack","red hot + cool|stolen moments":"Jazz","richard pryor|i hope i'm funny":"Spoken Word/Comedy"};
 const GENFIX={'indie pop':'Indie/Pop','hard rock/punk/metal':'Hard Rock/Punk','hiphop':'Hip Hop','hip hop':'Hip Hop','soul/r&b/funk/disco':'Soul/R&B','world/latin/reggae':'World'};
 const troveGenre=i=>{ const g=String(i.genre||'').trim(), k=g.toLowerCase(); if(g&&!/^(discogs|ebay)/i.test(g)) return GENFIX[k]||g; return DGEN[(i.artist+'|'+i.title).toLowerCase()]||''; };
@@ -829,11 +831,25 @@ function covHTML(i){
   const u=i.cover||COV[covKey(i)];
   return u ? '<img class="cov" loading="lazy" alt="" src="'+esc(u)+'" data-ph="'+esc(initials(i))+'">' : '<div class="cov ph" data-k="'+esc(covKey(i))+'" data-a="'+esc(i.artist)+'" data-t="'+esc(i.title)+'">'+esc(initials(i))+'</div>';
 }
+// A cover lookup that found nothing is tried again after 3 days (sources add art over time).
+const COVMISS='hd.covmiss', covMiss=LS.get(COVMISS,{});
+const covTry=k=>!COV[k]&&(!(k in COV)||Date.now()-(covMiss[k]||0)>3*864e5);
+// Cache every Trove cover up front, not just the rows on screen: download known covers so they show
+// instantly (even on slow wifi), and look up any missing ones in the background.
+let _covWarmed={};
+function covWarm(){
+  (S.troveList||[]).forEach(i=>{
+    const k=covKey(i), u=i.cover||COV[k];
+    if(u){ if(!_covWarmed[u]){ _covWarmed[u]=1; const im=new Image(); im.decoding='async'; im.src=u; } }
+    else if(covTry(k)&&!_covQ.some(x=>x.dataset.k===k)) _covQ.push({isConnected:true,dataset:{k,a:i.artist,t:i.title}});
+  });
+  covPump();
+}
 // Cover art: looked up from Apple's free search (no key) when a row scrolls into view, then remembered on this device.
 let _covQ=[], _covBusy=false, _covIO=null, _covStop=0;
 function covClean(t){ return String(t||'').replace(/\([^)]*\)/g,' ').replace(/\b(S\/T|ST|OGST|7"|45|EP)\b/gi,' ').replace(/[^\w\s&'.-]/g,' ').replace(/\s+/g,' ').trim(); }
 async function covFetch(el){
-  const k=el.dataset.k; if(k in COV) return;
+  const k=el.dataset.k; if(!covTry(k)) return;
   const a=covClean(el.dataset.a).replace(/^\*?45\*?\s*/,''), t=covClean(el.dataset.t);
   try{
     const r=await fetch('https://itunes.apple.com/search?media=music&entity=album&limit=5&term='+encodeURIComponent((a+' '+t).trim()));
@@ -867,7 +883,7 @@ async function covFetch(el){
       }catch(e){ fail=true; }
     }
     if(!url&&fail){ _covStop=Date.now()+30000; return; } // lookup errored: try again later, don't remember as "no cover"
-    COV[k]=url;
+    COV[k]=url; if(url) delete covMiss[k]; else covMiss[k]=Date.now(); LS.set(COVMISS,covMiss);
     LS.set(COVKEY,COV); if(url) covShare(k,url);
     if(COV[k]) document.querySelectorAll('.cov.ph').forEach(n=>{ if(n.dataset.k===k){ const im=document.createElement('img'); im.className='cov'; im.alt=''; im.src=COV[k]; im.dataset.ph=n.textContent; n.replaceWith(im); } });
   }catch(e){ _covStop=Date.now()+60000; }
@@ -892,7 +908,7 @@ async function covPump(){
 }
 function coverScan(){
   if(!window.IntersectionObserver) return;
-  _covIO=_covIO||new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ _covIO.unobserve(e.target); if(!(e.target.dataset.k in COV)) { _covQ.push(e.target); covPump(); } } }),{rootMargin:'200px'});
+  _covIO=_covIO||new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ _covIO.unobserve(e.target); if(covTry(e.target.dataset.k)) { _covQ.unshift(e.target); covPump(); } } }),{rootMargin:'200px'});
   document.querySelectorAll('.cov.ph[data-k]').forEach(n=>_covIO.observe(n));
 }
 function priceFmt(p){
@@ -916,7 +932,7 @@ function troveListHTML(){
   L.forEach(i=>{
     if(i.location!==loc){ loc=i.location; out+='<div class="tloc"><span>'+esc(loc||'No location')+'</span></div>'; }
     const on=!!S.tfound[tkey(i)];
-    out+='<button class="trow '+(on?'on':'')+'" role="checkbox" aria-checked="'+on+'" data-act="tfound" data-k="'+esc(tkey(i))+'"><span class="box">'+(on?'\u2713':'')+'</span>'+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span><span class="pr">'+priceFmt(i.price)+'</span></button>';
+    out+='<button class="trow '+(on?'on':'')+(S.tlast===tkey(i)?' last':'')+'" role="checkbox" aria-checked="'+on+'" data-act="tfound" data-k="'+esc(tkey(i))+'"><span class="box">'+(on?'\u2713':'')+'</span>'+covHTML(i)+'<span class="tx"><b>'+esc(i.title)+'</b><span>'+esc(i.artist)+'</span></span><span class="pr">'+priceFmt(i.price)+'</span></button>';
   });
   return out;
 }
@@ -937,9 +953,14 @@ function tpanelHTML(){
   const next = nx
     ? '<div class="nextcard">'+covHTML(nx)+'<div class="nx"><div class="lbl">Scan this record next</div><b>'+esc(nx.title)+'</b><span>'+esc(nx.artist)+'</span><em>Shelf: '+esc(nx.location||'?')+'</em><button class="btn ghost tskipb" data-act="tskip">Skip this record</button></div></div>'
     : '<div class="nextcard"><div class="nx"><div class="lbl">All done</div><b>Every record is checked</b><span>Tap Finish check below.</span></div></div>';
-  const msg = !m ? '<div class="tmsg wait"><b>Waiting for a scan</b><span>Point the scanner at the barcode and pull the trigger.</span></div>'
+  const msg = m&&m.k==='bad' ? '' : !m ? '<div class="tmsg wait"><b>Waiting for a scan</b><span>Point the scanner at the barcode and pull the trigger.</span></div>'
     : '<div class="tmsg '+m.k+'"><b>'+esc(m.h)+'</b><span>'+esc(m.t)+'</span>'+(m.k==='bad'?'<button class="btn ghost" data-act="tdismiss">OK, got it</button>':'')+'</div>';
-  return '<div id="tpanel" class="tp"><div class="prog"><span class="pc">'+c.f+' of '+c.n+' checked</span><div class="bar"><i style="width:'+pct+'%"></i></div></div>'+next+msg+'</div>';
+  return '<div id="tpanel" class="tp"><div class="prog"><span class="pc">'+c.f+' of '+c.n+' checked</span><div class="bar"><i style="width:'+pct+'%"></i></div></div>'+next+msg+'</div>'+tbadHTML();
+}
+// Out-of-order / unknown-barcode alert: sticks to the top of the screen while the list scrolls under it.
+function tbadHTML(){
+  const m=S.tmsg; if(!m||m.k!=='bad') return '<div id="tbad"></div>';
+  return '<div id="tbad" class="tmsg bad tstick"><b>'+esc(m.h)+'</b><span>'+esc(m.t)+'</span><button class="btn ghost" data-act="tdismiss">OK, got it</button></div>';
 }
 function tstartHTML(){
   const first=troveSorted()[0];
@@ -959,6 +980,7 @@ function tfootHTML(){
 function troveScan(code){
   code=String(code||'').trim(); if(code.length<3) return;
   const it=(S.troveList||[]).find(i=>String(i.code||'').toLowerCase()===code.toLowerCase());
+  if(it) S.tlast=tkey(it);
   if(!it){ S.tmsg={k:'bad',h:'Not a Trove barcode',t:code}; beep('bad'); }
   else if(S.tfound[tkey(it)]){ S.tmsg={k:'dup',h:'Already checked',t:it.artist+' \u00b7 '+it.title}; beep('dup'); }
   else{
@@ -968,7 +990,15 @@ function troveScan(code){
     if(inOrder){ S.tmsg={k:'ok',h:'\u2713 Checked',t:it.artist+' \u00b7 '+it.title}; beep('ok'); }
     else{ S.tbad=S.tbad||{}; S.tbad[tkey(it)]=1; S.tmsg={k:'bad',h:'OUT OF ORDER',t:it.artist+' \u00b7 '+it.title+' is out of place. Expected: '+nx.artist+' \u00b7 '+nx.title}; beep('bad'); }
   }
-  refreshTrove();
+  refreshTrove(); tcenter();
+}
+// Keep the last scanned record in the middle of the screen so the list follows the scanning.
+// If it's hidden (Not checked filter), center the next record to scan instead.
+function tcenter(){
+  const l=document.getElementById('tlist'); if(!l) return;
+  const find=k=>k?Array.from(l.querySelectorAll('.trow')).find(r=>r.dataset.k===k):null;
+  const nx=troveNext(), el=find(S.tlast)||find(nx&&tkey(nx)); if(!el) return;
+  requestAnimationFrame(()=>el.scrollIntoView({block:'center',behavior:'smooth'}));
 }
 function tbrowseFiltered(){
   const q=(S.tbq||'').trim().toLowerCase().split(/\s+/).filter(Boolean), src=S.tseg==='back'?(C.DEMO_BACKFILL||[]):(S.troveList||[]);
@@ -1012,11 +1042,13 @@ function troveMove(code,loc,ref,after){
   const mv=Object.assign({},it,{location:loc}); let i;
   if(ref){ const r=L.findIndex(x=>x.code===ref); i=r<0?L.length:r+(after?1:0); }
   else { let last=-1; L.forEach((x,n)=>{ if(x.location===loc) last=n; }); i=last<0?L.length:last+1; }
-  L.splice(i,0,mv); S.troveList=L; LS.set(ORDKEY,L.map(x=>x.code));
-  if(loc!==old){
-    const ov=LS.get(LOCKEY,{}); ov[code]=loc; LS.set(LOCKEY,ov); toast('Moved to '+loc);
-    api('trovemove',{code,location:loc}).then(()=>{ const o2=LS.get(LOCKEY,{}); delete o2[code]; LS.set(LOCKEY,o2); }).catch(()=>{});
-  }
+  L.splice(i,0,mv); S.troveList=L;
+  // Save the order to the sheet so every device follows it. Until the sheet confirms, this device keeps its own copy.
+  const nb=L[i+1], pv=L[i-1], rc=ref||(nb&&nb.location===loc?nb.code:''), ra=ref?!!after:false;
+  const ref2=rc||(pv&&pv.location===loc?pv.code:''), after2=rc?ra:true;
+  LS.set(ORDKEY+'.pending',L.map(x=>x.code));
+  const ov=LS.get(LOCKEY,{}); ov[code]=loc; LS.set(LOCKEY,ov); if(loc!==old) toast('Moved to '+loc);
+  api('trovemove',{code,location:loc,ref:ref2,after:after2}).then(()=>{ const o2=LS.get(LOCKEY,{}); delete o2[code]; LS.set(LOCKEY,o2); LS.set(ORDKEY+'.pending',null); }).catch(()=>toast('Couldn\u2019t save the new order. It will stay on this iPad for now.'));
   rkeep();
 }
 function troveCounts(){ const n=S.troveList.length, f=S.troveList.filter(i=>S.tfound[tkey(i)]).length; return {n,f,nf:n-f}; }
@@ -1086,6 +1118,7 @@ function vFind(){
 function refreshTrove(){
   const l=document.getElementById('tlist'); if(l) l.innerHTML=troveListHTML();
   const c=troveCounts(), t=document.getElementById('tcount'); if(t) t.textContent=c.f+' / '+c.n;
+  const tb=document.getElementById('tbad'); if(tb) tb.remove();
   const p=document.getElementById('tpanel'); if(p) p.outerHTML=tpanelHTML();
   const f=document.getElementById('tfoot'); if(f) f.outerHTML=tfootHTML();
   coverScan();
@@ -1453,10 +1486,13 @@ const SUPDEF={
   Bathroom:[['Toilet paper',0,'rolls',4,12],['Dispenser paper towels',0,'rolls',2,6],['Room spray',2],['Dispenser soap']],
   Bar:[['Cups',2,'sleeves',5,0],['Clean rags'],['Paper towels',2,'rolls',2,0],['Wipes',2],['Acid solution'],['Soap',2]],
   Cleaning:[['Multi-purpose cleaner'],['Duster sleeves',2],['Swiffer pads'],['Trash bags',0,'rolls',2,6],['Record cleaner ingredients']],
-  Records:[['Bags',1,'boxes',1,1],['Outer sleeves',1,'bags',1,1],['Inner sleeves',1,'bags',1,1],['XL sleeves',2,'bags',1,0],['Genre tabs',1],['Price gun labels']],
+  Records:[['Bags',1,'boxes',1,1],['Outer sleeves',1,'bags',1,1],['Inner sleeves',1,'bags',1,1],['XL sleeves',2,'bags',1,0],['Genre tabs',1],['Price gun labels'],['Avery 8161 labels']],
   Shipping:[['Packing tape',1],['Printer paper'],['Padding material',2],['Printer ink']]
 };
-function sups(){ let L=LS.get(SUPK,null); if(!L){ L=[]; SUPCATS.forEach(c=>SUPDEF[c].forEach(x=>{ L.push({n:x[0],k:c,t:'r',r:false}); })); LS.set(SUPK,L); } return L; }
+function sups(){ let L=LS.get(SUPK,null), ch=!L; L=L||[];
+  // add any supply new since this iPad saved its list, without touching existing requests
+  SUPCATS.forEach(c=>SUPDEF[c].forEach(x=>{ if(!L.some(y=>y.n===x[0])){ L.push({n:x[0],k:c,t:'r',r:false}); ch=true; } }));
+  if(ch) LS.set(SUPK,L); return L; }
 function supSave(L){ LS.set(SUPK,L); }
 async function supSync(){
   if(DEMO) return;
@@ -2202,7 +2238,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r73';
+const BUILD='r74';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2540,7 +2576,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='tshow'){ S.tshow=!S.tshow; render(); }
   else if(a==='trestart'){ S.trestart=true; render(); }
   else if(a==='trestartno'){ S.trestart=false; render(); }
-  else if(a==='trestartyes'){ S.tfound={}; LS.set(KT(),{}); S.tbad={}; S.tmsg=null; S.tconfirm=false; S.trestart=false; render(); toast('Check restarted. Start scanning from the beginning.'); }
+  else if(a==='trestartyes'){ S.tlast=null; S.tfound={}; LS.set(KT(),{}); S.tbad={}; S.tmsg=null; S.tconfirm=false; S.trestart=false; render(); toast('Check restarted. Start scanning from the beginning.'); }
   else if(a==='tkeep'){ S.tconfirm=false; refreshTrove(); }
   else if(a==='ttest'){ beep('ok'); setTimeout(()=>beep('bad'),500); }
   else if(a==='tskip'){ const nx=troveNext(); if(nx){ S.tskip=S.tskip||{}; S.tskip[tkey(nx)]=true; LS.set(tskipKey(),S.tskip); S.tmsg={k:'dup',h:'Skipped',t:nx.artist+' \u00b7 '+nx.title+' will be reported as not found unless you scan it later.'}; } refreshTrove(); }

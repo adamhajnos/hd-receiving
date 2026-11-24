@@ -546,23 +546,37 @@ function syncAdamTrove() {
 /** Deletes one Trove row by code (falls back to artist + title). A copy goes to the 'Trove Deleted' tab first. */
 /** Moves one Trove record (by code) to another shelf section: sets its Location in the Trove tab. */
 function moveTrove_(req, who) {
+  // Moves a record to a section and, when ref is given, to just before/after that record.
+  // The Trove tab's row order IS the shelf order, so every iPad and browser sees the same order.
   var code = String(req.code || '').trim(), loc = String(req.location || '').trim();
+  var ref = String(req.ref || '').trim(), after = !!req.after;
   if (!code || !loc) throw new Error('Missing code or location');
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
     var sh = sheet_(ss_(), 'Trove');
     if (sh.getLastRow() < 2) return 0;
-    var codes = sh.getRange(2, 6, sh.getLastRow() - 1, 1).getValues();
-    for (var i = 0; i < codes.length; i++) {
-      if (String(codes[i][0]).trim() === code) { sh.getRange(i + 2, 3).setValue(loc); return 1; }
+    var w = Math.max(sh.getLastColumn(), 9), rg = sh.getRange(2, 1, sh.getLastRow() - 1, w), rows = rg.getValues();
+    var from = -1;
+    for (var i = 0; i < rows.length; i++) if (String(rows[i][5]).trim() === code) { from = i; break; }
+    if (from < 0) return 0;
+    var row = rows.splice(from, 1)[0]; row[2] = loc;
+    var to = -1;
+    if (ref && ref !== code) {
+      for (var j = 0; j < rows.length; j++) if (String(rows[j][5]).trim() === ref) { to = after ? j + 1 : j; break; }
     }
-    return 0;
+    if (to < 0) { // no ref: end of that section, or back where it was if the section is new
+      var last = -1;
+      for (var k = 0; k < rows.length; k++) if (String(rows[k][2]).trim() === loc && (rows[k][0] || rows[k][1])) last = k;
+      to = last >= 0 ? last + 1 : from;
+    }
+    rows.splice(to, 0, row);
+    rg.setValues(rows);
+    return 1;
   } finally {
     lock.releaseLock();
   }
 }
-
 function deleteTrove_(req, who) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
