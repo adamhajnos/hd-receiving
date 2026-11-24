@@ -2231,7 +2231,7 @@ function postSheetHTML(){
       '<div style="display:flex;gap:18px;align-items:flex-start">'+img(p.urls[0],400).replace('<img ','<img id="pimg" ')+'<div class="form" style="flex:1;gap:12px">'+
         inp('pcity','Brewery city, state',p.city,'Charleston, SC',1)+'<div class="pair">'+inp('pstyle','Style',p.style,'IPA',1)+inp('pabv','ABV %',p.abv,'6.5',1)+'</div>'+
         '<p class="hint" style="margin:0">Fill in what’s missing. It’s remembered for next time.</p></div></div>',
-      no+'<button class="btn go" data-act="pshare">Share to Instagram</button>');
+      no+'<button class="btn ghost" data-act="psave">Save to Photos</button><button class="btn go" data-act="pshare">Share to Instagram</button>');
   }
   const a=arrGet().items;
   if(p.stage==='ask') return wrap('Post the new records?',a.length+' record'+(a.length===1?'':'s')+' on this week’s list.',
@@ -2259,7 +2259,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r77';
+const BUILD='r78';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2749,6 +2749,7 @@ document.addEventListener('click', async ev=>{
     if(p.kind==='beer'){ const g=id=>((document.getElementById(id)||{}).value||'').trim(), c=g('pcity'), st=g('pstyle'), ab=g('pabv');
       if(c!==p.city||st!==p.style||ab!==p.abv){ p.city=c; p.style=st; p.abv=ab; postSaveFields(p); postBuildBeer(); toast('Updated. Tap Share again.'); return; } }
     stShare(p.files).then(ok=>{ if(ok){ toast(p.kind==='beer'?'Shared':'Saved to Photos'); if(p.kind==='beer') postClose(); } }).catch(()=>{ p.fallback=true; render(); }); }
+  else if(a==='psave'){ const p=S.post; if(!p||!p.files||p.busy) return; stShare(p.files).then(ok=>{ if(ok) toast('Saved. Pick it in your Story.'); }).catch(()=>{ p.fallback=true; render(); }); }
   else if(a==='kplace'){ S.ks={t:'putontap',key:b.dataset.key}; render(); }
   else if(a==='kdoplace'){ const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n;
     if(!k.price){ S.ks={t:'price',key:k.key,n}; render(); return; }
