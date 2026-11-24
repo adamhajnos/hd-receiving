@@ -729,6 +729,7 @@ async function apiRaw(action, payload){
 }
 function bgFeed(){ refreshFeed().then(()=>{ if(S.view==='home'&&!S.busy&&!S.post&&!S.feat&&!document.querySelector('.kscrim, .npop')) render(); }); }
 async function refreshFeed(){
+  kegPull();
   try{ const j = await api('today'); S.feed=j.entries||[]; S.note=j.note||null; S.err=''; }
   catch(e){ if(/PIN/.test(e.message)){ logout(); return; } S.err='Can’t reach the server. Check the wifi and try again.'; }
 }
@@ -1895,10 +1896,22 @@ function doPrint(test){
 
 /* ---------- change keg ---------- */
 const KEGK='hd.kegs5';
+/* The beer list is saved to the Sheet (Kegs tab) so the shop monitor and website show the same taps. */
+let _kp=null,_kpend=false,_kpull=0;
+function kegStore(L){ LS.set(KEGK,L); if(DEMO||!S.pin) return; _kpend=true; clearTimeout(_kp);
+  _kp=setTimeout(()=>{ apiRaw('kegsave',{list:LS.get(KEGK,[])}).then(()=>{ _kpend=false; }).catch(()=>{ _kp=setTimeout(()=>kegStore(LS.get(KEGK,[])),20000); }); },1200); }
+async function kegPull(){
+  if(DEMO||!S.pin||_kpend||Date.now()-_kpull<45000) return; _kpull=Date.now();
+  try{ const j=await apiRaw('kegload'); if(_kpend||!j||!Array.isArray(j.list)) return;
+    if(j.list.length){ if(JSON.stringify(j.list)!==JSON.stringify(LS.get(KEGK,null))){ LS.set(KEGK,j.list); if((S.view==='home'||S.view==='kegs')&&!S.ks&&!S.busy&&!S.post&&!document.activeElement.matches('input,textarea,select')) render(); } }
+    else { const L=LS.get(KEGK,null); if(L&&L.length) kegStore(L); } /* first time: the iPad's list becomes the shared one */
+  }catch(e){}
+}
+setInterval(()=>{ if(S.who) kegPull(); },60000);
 const kegs=()=>{ let k=LS.get(KEGK,null); if(!k){ k=JSON.parse(JSON.stringify(C.DEMO_KEGS||[])); LS.set(KEGK,k); } return k; };
 const kfind=(L,key)=>L.find(x=>x.key===key);
 const kfmt=p=>p?'$'+Number(p).toFixed(2):'';
-function kegCommit(L,summary,data){ LS.set(KEGK,L); S.ks=null; render(); toast(summary); submit('keg',summary,data||{},true); }
+function kegCommit(L,summary,data){ kegStore(L); S.ks=null; render(); toast(summary); submit('keg',summary,data||{},true); }
 function kegDay(){ return 'Daily specials are applied to beer prices automatically, so there\u2019s nothing to change by hand.'; }
 function kegTapTile(L,n){
   const k=L.find(x=>x.status==='tap'&&x.tap===n);
@@ -1967,7 +1980,7 @@ async function kegAuto(){
     if(!kegsIn.length) throw new Error('none');
     const L=kegs(), id=Date.now(), out=[];
     kegsIn.forEach(k=>{ const price=pourPrice(k.cost,k.size); const o={key:k.beer+'|'+k.brewery,beer:k.beer,brewery:k.brewery,style:'',price,status:'deck',tap:null,days:0,lastTap:null,supplier:r.supplier||'',scanId:id}; L.push(o); out.push({beer:k.beer,brewery:k.brewery,cost:k.cost,price}); });
-    LS.set(KEGK,L);
+    kegStore(L);
     S.rkBusy=false; S.rkDone={id,kegs:out,supplier:r.supplier,invoice:r.invoice}; render();
     api('log',{who:S.who,task:'kegrecv',summary:'Kegs received from '+(r.supplier||'invoice')+': '+out.map(k=>k.beer+(k.price?' ('+kfmt(k.price)+')':'')).join(', '),data:{supplier:r.supplier,invoice:r.invoice,kegs:out,photo:S.iphoto.split(',')[1],auto:true}}).then(refreshFeed).catch(()=>{});
   }catch(e){
@@ -2188,7 +2201,7 @@ async function postBuildBeer(){
 }
 function postSaveFields(p){
   const L=kegs(), k=kfind(L,p.key); if(!k) return;
-  k.city=p.city; k.style=p.style; k.abv=p.abv; LS.set(KEGK,L);
+  k.city=p.city; k.style=p.style; k.abv=p.abv; kegStore(L);
   if(p.city){ const m=LS.get(BCK,{}); m[(k.brewery||'').toLowerCase()]=p.city; LS.set(BCK,m); }
 }
 /* new records came in */
@@ -2479,7 +2492,7 @@ function kdEnd(){
   d.ghost.remove(); d.row.classList.remove('kdrag'); document.querySelectorAll('.kdrop,.kdrop-b,.kdrop-a').forEach(x=>x.classList.remove('kdrop','kdrop-b','kdrop-a'));
   _kjd=true; setTimeout(()=>{ _kjd=false; },80);
   if(!d.tg) return; const L=kegs();
-  if(d.deck){ const k=kfind(L,d.row.dataset.key), t=kfind(L,d.tg.dataset.key); L.splice(L.indexOf(k),1); let i=L.indexOf(t); if(d.after) i++; L.splice(i,0,k); LS.set(KEGK,L); render(); }
+  if(d.deck){ const k=kfind(L,d.row.dataset.key), t=kfind(L,d.tg.dataset.key); L.splice(L.indexOf(k),1); let i=L.indexOf(t); if(d.after) i++; L.splice(i,0,k); kegStore(L); render(); }
   else { const from=+d.row.dataset.n, to=+d.tg.dataset.n, k=L.find(x=>x.status==='tap'&&x.tap===from), o=L.find(x=>x.status==='tap'&&x.tap===to); if(o) o.tap=from; k.tap=to;
     kegCommit(L,o?'Swapped taps '+from+' and '+to+': '+k.beer+' / '+o.beer:'Moved '+k.beer+' from tap '+from+' to tap '+to,{beer:k.beer,from,to,action:'move'}); }
 }
@@ -2726,7 +2739,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='kchip'){ const e=document.getElementById('kpr'); if(e) e.value=b.dataset.v; }
   else if(a==='ksaveprice'){ const v=parseFloat(String((document.getElementById('kpr')||{}).value||'').replace(/[^0-9.]/g,'')); if(!(v>0)){ toast('Enter a price, like 6.50'); return; }
     const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n; k.price=v;
-    if(n){ LS.set(KEGK,L); S.ks={t:'san',key:k.key,n}; render(); }
+    if(n){ kegStore(L); S.ks={t:'san',key:k.key,n}; render(); }
     else kegCommit(L,'Price: '+k.beer+' '+kfmt(v),{beer:k.beer,price:v,action:'price'}); }
   else if(a==='pclose'){ if(ev.target===b||b.tagName==='BUTTON') postClose(); }
   else if(a==='pmake'){ postMakeRecs(); }
@@ -2744,7 +2757,7 @@ document.addEventListener('click', async ev=>{
     k.status='tap'; k.tap=n; k.days=0; kegCommit(L,'On tap '+n+': '+k.beer+' ('+kfmt(k.price)+'). Star San run.',{beer:k.beer,brewery:k.brewery,tap:n,price:k.price,action:'place',starSan:true}); postBeer(k.key); }
   else if(a==='kundo'){ const L=kegs(), k=kfind(L,b.dataset.key), free=k.lastTap&&!L.some(x=>x.status==='tap'&&x.tap===k.lastTap); if(free){ k.status='tap'; k.tap=k.lastTap; } else k.status='deck'; kegCommit(L,'Keg restored: '+k.beer,{beer:k.beer,action:'undo'}); }
   else if(a==='kup'||a==='kdown'){ const L=kegs(), d=L.filter(x=>x.status==='deck'), i=d.findIndex(x=>x.key===b.dataset.key), j=a==='kup'?i-1:i+1; if(i<0||j<0||j>=d.length) return;
-    const ia=L.indexOf(d[i]), ib=L.indexOf(d[j]); [L[ia],L[ib]]=[L[ib],L[ia]]; LS.set(KEGK,L); render(); }
+    const ia=L.indexOf(d[i]), ib=L.indexOf(d[j]); [L[ia],L[ib]]=[L[ib],L[ia]]; kegStore(L); render(); }
   else if(a==='pqdel'){ const q=pqGet(); q.splice(+b.dataset.i,1); LS.set(PQ,q); S.pprinted=false; render(); }
   else if(a==='pqadd'){ pqAdd({code:b.dataset.c,artist:b.dataset.a,title:b.dataset.t,price:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).price,genre:((S.troveList||[]).concat(LS.get('hd.used',[])).find(i=>(i.code||'')===b.dataset.c&&i.title===b.dataset.t)||{}).genre}); S.pqs=''; S.pprinted=false; render(); toast('Added to the queue'); }
   else if(a==='pstart'){ LS.set(PS,+b.dataset.k); S.pprinted=false; render(); }
@@ -2829,7 +2842,7 @@ document.addEventListener('click', async ev=>{
     submit('request','Request: '+items.map(r=>r.artist+' - '+r.album).join('; ')+(mail?'. Confirmation emailed to '+em+'.':''),{name:val('rname'),phone:val('rphone'),email:em,items,autoEmail:mail},false,mail?'Logged ✓ Confirmation emailed to '+em:'Logged ✓').then(async ok=>{ if(ok){ S.ritems=[]; S.rc={}; S.rfmt='Vinyl'; S.rpre=null; S.rs=null; await rqLoad(); } });
   }
   else if(a==='kscandone'){ S.rkDone=null; S.iphoto=null; go('home'); }
-  else if(a==='kundoscan'){ const d=S.rkDone; if(d){ const L=kegs().filter(k=>!(k.scanId===d.id)); LS.set(KEGK,L); } S.rkDone=null; S.iphoto=null; S.rk=[]; render(); toast('Undone'); }
+  else if(a==='kundoscan'){ const d=S.rkDone; if(d){ const L=kegs().filter(k=>!(k.scanId===d.id)); kegStore(L); } S.rkDone=null; S.iphoto=null; S.rk=[]; render(); toast('Undone'); }
   else if(a==='ksize'){ S.ksize=b.dataset.v; document.querySelectorAll('.fmts button[data-act=ksize]').forEach(x=>x.classList.toggle('on',x===b)); const c=document.getElementById('kcost').value, p=pourPrice(parseFloat(c),S.ksize); const q=document.getElementById('keq'); if(q) q.innerHTML=keqHTML(c); const pr=document.getElementById('kprice'); if(pr&&p!=null) pr.value=p.toFixed(2); if(S.recheck) S.recheck(); }
   else if(a==='cphoto'){ S.csup=val('csup'); document.getElementById('cphotoin').click(); }
   else if(a==='ctype'){ S.cs.type=b.dataset.v; b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); }
@@ -2844,7 +2857,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='savekegrecv'){
     const L=kegs(), sup=val('ksup'), ks=S.rk||[];
     ks.forEach(k=>L.push({key:k.beer+'|'+k.brewery,beer:k.beer,brewery:k.brewery,city:k.city||'',style:'',price:k.price,status:'deck',tap:null,days:0,lastTap:null,supplier:sup}));
-    LS.set(KEGK,L);
+    kegStore(L);
     submit('kegrecv','Kegs received from '+sup+': '+ks.map(k=>k.beer+' ('+kfmt(k.price)+')').join(', '),{supplier:sup,kegs:ks,photo:S.iphoto?S.iphoto.split(',')[1]:'',noPhoto:!S.iphoto},true).then(ok=>{ if(ok){ const n=ks.length; S.rk=[]; S.iphoto=null; S.ksup=''; S.view='home'; render(); toast(n+' keg'+(n===1?'':'s')+' on deck \u2713'); } });
   }
   else if(a==='savedrop'){

@@ -29,6 +29,7 @@ var TABS = {
   DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records', 'ID', 'Status', 'Pay', 'Unwanted', 'Offer', 'Offer sent', 'Status changed', 'Last action by', 'Leftovers done', 'History', 'Card', 'Card issued', 'Photo', 'Shop'],
   Requests: ['ID', 'Created', 'Source', 'Shop', 'Name', 'Phone', 'Email', 'Artist', 'Album', 'Format', 'Notes', 'Status', 'Status changed', 'Quote', 'Quote note', 'Last action by', 'Hold until', 'Closed reason', 'Reminded'],
   Covers: ['Key', 'URL', 'Updated'],
+  Kegs: ['Key', 'Beer', 'Brewery', 'City', 'Style', 'ABV', 'IBU', 'Price', 'Status', 'Tap', 'Tapped at', 'Days', 'Supplier', 'JSON'],
   SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #', 'Unit cost']
 };
 
@@ -57,6 +58,8 @@ function doPost(e) {
     else if (req.action === 'reqlist') out = { ok: true, requests: reqList_(req) };
     else if (req.action === 'requpdate') out = { ok: true, updated: reqUpdate_(req, who) };
     else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_(), covers: coversMap_() }; }
+    else if (req.action === 'kegsave') out = { ok: true, saved: kegSave_(req.list, who) };
+    else if (req.action === 'kegload') out = { ok: true, list: kegLoad_() };
     else if (req.action === 'droplist') out = { ok: true, drops: dropList_() };
     else if (req.action === 'dropphoto') out = { ok: true, photo: dropPhoto_(req) };
     else if (req.action === 'dropupdate') out = { ok: true, drop: dropUpdate_(req, who) };
@@ -76,6 +79,72 @@ function doPost(e) {
   }
   return json_(out);
 }
+/** Public, PII-free feed for the tap-list monitor and the website: GET <web app url>?feed=taps */
+function doGet(e) {
+  var feed = e && e.parameter && e.parameter.feed;
+  if (feed === 'taps') return json_({ ok: true, shop: myShop_(), asOf: Date.now(), taps: kegPublic_() });
+  return json_({ ok: true });
+}
+
+// ---------- Beer inventory (kegs): the iPads save the whole list here so every screen shows the same taps ----------
+function kegSheet_() {
+  var ss = ss_(), sh = ss.getSheetByName('Kegs');
+  if (!sh) { sh = ss.insertSheet('Kegs'); sh.getRange(1, 1, 1, TABS.Kegs.length).setValues([TABS.Kegs]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  return sh;
+}
+function kegLoad_() {
+  var sh = kegSheet_(), n = sh.getLastRow() - 1, out = [];
+  if (n < 1) return out;
+  sh.getRange(2, TABS.Kegs.length, n, 1).getValues().forEach(function (r) { try { out.push(JSON.parse(r[0])); } catch (e) { /* skip a damaged row */ } });
+  return out;
+}
+function kegSave_(list, who) {
+  if (!Array.isArray(list) || list.length > 400) throw new Error('Bad keg list');
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var old = {}, prev = kegLoad_(), first = prev.length === 0, now = Date.now();
+    prev.forEach(function (k) { old[k.key] = k; });
+    var rows = list.map(function (k) {
+      var n = {}; Object.keys(k || {}).forEach(function (f) { var v = k[f]; n[f] = typeof v === 'string' ? clean_(v) : v; });
+      var o = old[n.key];
+      if (o) ['city', 'style', 'abv', 'ibu'].forEach(function (f) { if (!n[f] && o[f]) n[f] = o[f]; }); // keep details a screen didn't send
+      // "NEW" clock: starts when a keg goes from not-on-tap to on-tap. Moving between taps doesn't restart it.
+      if (n.status === 'tap') n.tappedAt = (o && o.status === 'tap' && o.tappedAt) ? o.tappedAt : (first ? (n.tappedAt || '') : now);
+      else if (o && o.tappedAt) n.tappedAt = o.tappedAt;
+      return [n.key, n.beer, n.brewery, n.city || '', n.style || '', n.abv || '', n.ibu || '', n.price == null ? '' : n.price, n.status, n.tap || '', n.tappedAt ? new Date(n.tappedAt) : '', n.days || 0, n.supplier || '', JSON.stringify(n)];
+    });
+    var sh = kegSheet_(), last = sh.getLastRow();
+    if (last > 1) sh.getRange(2, 1, last - 1, TABS.Kegs.length).clearContent();
+    if (rows.length) sh.getRange(2, 1, rows.length, TABS.Kegs.length).setValues(rows);
+    return rows.length;
+  } finally { lock.releaseLock(); }
+}
+function kegPublic_() {
+  return kegLoad_().filter(function (k) { return k.status === 'tap' && k.tap; }).sort(function (a, b) { return a.tap - b.tap; }).map(function (k) {
+    return { tap: k.tap, beer: k.beer, brewery: k.brewery, city: k.city || '', style: k.style || '', abv: k.abv || '', ibu: k.ibu || '', price: k.price, tappedAt: k.tappedAt || null };
+  });
+}
+/** Run once from the editor: fills in city / style / ABV / IBU for the beers on tap on 11/24/2026 (from the Untappd board), only where blank. */
+function seedTapDetails() {
+  var D = {
+    'blackberry lemon creamsicle blender': ['Charlotte, NC', 'Sour - Smoothie / Pastry', '6.5', ''],
+    'digging these lights': ['Wilmington, NC', 'Winter Ale', '6', ''],
+    'beast life': ['Asheville, NC', 'Schwarzbier', '6.2', ''],
+    'folk metal': ['Burlington, VT', 'Stout - Oatmeal', '5.5', ''],
+    'fire in the mole': ['Wilmington, NC', 'Pilsner - Italian', '5', ''],
+    'congress street': ['Canton, MA', 'IPA - New England / Hazy', '7.2', ''],
+    'tropical lightning ipa': ['Wilmington, NC', 'IPA - American', '7.4', '75'],
+    'house pilsner': ['Fuquay-Varina, NC', 'Pilsner - German', '4.6', ''],
+    'tangie dream': ['Winston-Salem, NC', 'Wheat Beer - Witbier / Blanche', '5.5', ''],
+    'pb&j mixtape': ['Knoxville, TN', 'Sour - Fruited', '6.5', ''],
+    'green city': ['Brooklyn, NY', 'IPA - New England / Hazy', '7', '65'],
+    'sky of the mind': ['Raleigh, NC', 'IPA - New England / Hazy', '7', '15']
+  };
+  var list = kegLoad_(), hit = 0;
+  list.forEach(function (k) { var d = D[String(k.beer || '').toLowerCase()]; if (!d) return; hit++; if (!k.city) k.city = d[0]; if (!k.style) k.style = d[1]; if (!k.abv) k.abv = d[2]; if (!k.ibu && d[3]) k.ibu = d[3]; });
+  kegSave_(list, 'seed'); Logger.log(hit + ' kegs updated');
+}
+
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 /**
