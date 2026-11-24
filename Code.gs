@@ -109,7 +109,7 @@ function kegSave_(list, who) {
       var o = old[n.key];
       if (o) ['city', 'style', 'abv', 'ibu'].forEach(function (f) { if (!n[f] && o[f]) n[f] = o[f]; }); // keep details a screen didn't send
       // "NEW" clock: starts when a keg goes from not-on-tap to on-tap. Moving between taps doesn't restart it.
-      if (n.status === 'tap') n.tappedAt = (o && o.status === 'tap' && o.tappedAt) ? o.tappedAt : (first ? (n.tappedAt || '') : now);
+      if (n.status === 'tap') n.tappedAt = (o && o.status === 'tap') ? (o.tappedAt || '') : (first ? (n.tappedAt || '') : now);
       else if (o && o.tappedAt) n.tappedAt = o.tappedAt;
       return [n.key, n.beer, n.brewery, n.city || '', n.style || '', n.abv || '', n.ibu || '', n.price == null ? '' : n.price, n.status, n.tap || '', n.tappedAt ? new Date(n.tappedAt) : '', n.days || 0, n.supplier || '', JSON.stringify(n)];
     });
@@ -143,6 +143,12 @@ function seedTapDetails() {
   var list = kegLoad_(), hit = 0;
   list.forEach(function (k) { var d = D[String(k.beer || '').toLowerCase()]; if (!d) return; hit++; if (!k.city) k.city = d[0]; if (!k.style) k.style = d[1]; if (!k.abv) k.abv = d[2]; if (!k.ibu && d[3]) k.ibu = d[3]; });
   kegSave_(list, 'seed'); Logger.log(hit + ' kegs updated');
+}
+
+/** Run from the editor to clear every NEW badge (e.g. after a bulk change). Kegs tapped from now on get their own NEW. */
+function resetNewBadges() {
+  var list = kegLoad_(); list.forEach(function (k) { k.tappedAt = ''; });
+  kegSave_(list, 'reset'); Logger.log(list.length + ' kegs cleared');
 }
 
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
