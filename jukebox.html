@@ -42,6 +42,11 @@ var TAPS = 12, NEW_DAYS = 4, POLL_MS = 60000, CK = 'hd.jukebox.last';
 
 function fit(){ var de = document.documentElement, w = de.clientWidth || innerWidth, h = de.clientHeight || innerHeight, s = Math.min(w/1920, h/1080), st = document.getElementById('stage');
   st.style.transform = 'scale(' + s + ')'; st.style.left = (w - 1920*s)/2 + 'px'; st.style.top = (h - 1080*s)/2 + 'px'; }
+
+function goFull(){ var d=document.documentElement, f=d.requestFullscreen||d.webkitRequestFullscreen; if(f&&!(document.fullscreenElement||document.webkitFullscreenElement)){ try{ var p=f.call(d); if(p&&p.catch) p.catch(function(){}); }catch(e){} } }
+addEventListener('keydown', function(e){ if(e.key==='Enter'||e.keyCode===13||e.keyCode===23) goFull(); });
+addEventListener('click', goFull);
+document.addEventListener('fullscreenchange', fit); document.addEventListener('webkitfullscreenchange', fit);
 addEventListener('resize', fit); addEventListener('load', fit); fit(); [300,1500,5000].forEach(function(t){ setTimeout(fit, t); }); setInterval(fit, 10000);
 
 function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
