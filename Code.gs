@@ -59,6 +59,7 @@ function doPost(e) {
     else if (req.action === 'requpdate') out = { ok: true, updated: reqUpdate_(req, who) };
     else if (req.action === 'trove') { try { troveSoldSync_(false); } catch (e) { /* list still loads; sold check retries next time */ } out = { ok: true, items: troveItems_(), covers: coversMap_() }; }
     else if (req.action === 'kegsave') out = { ok: true, saved: kegSave_(req.list, who) };
+    else if (req.action === 'kegsquare') { try { out = kegSquare_(req); } catch (e) { out = { ok: false, note: String(e.message || e).slice(0, 200) }; } }
     else if (req.action === 'kegload') out = { ok: true, list: kegLoad_() };
     else if (req.action === 'droplist') out = { ok: true, drops: dropList_() };
     else if (req.action === 'dropphoto') out = { ok: true, photo: dropPhoto_(req) };
@@ -98,6 +99,67 @@ function kegLoad_() {
   sh.getRange(2, TABS.Kegs.length, n, 1).getValues().forEach(function (r) { try { out.push(JSON.parse(r[0])); } catch (e) { /* skip a damaged row */ } });
   return out;
 }
+/* ---------- Keg on tap -> Square ----------
+ * A keg goes on a tap: the item that was on that tap (abbreviation = tap number, in Draft) is archived, and the beer gets its Square item.
+ * The same beer keeps ONE Square item all year: if an item with this name already exists (even archived) it is reused, so per-beer sales stay together.
+ * New items: "Brewery - Beer", abbreviation = tap number, Draft category, taxes and low-stock alert copied from the item being replaced.
+ * Safe to re-run. Staff then drag the new item onto Favorites (Square's API cannot place POS tiles).
+ */
+var SQK = { cat: 'R75SXLU53C6FCS2WHWHD7LF3', taxes: ['UIFR5UKZEUSS566Z644HZN6D', 'FO6G3IYQWTUVI4U6X2PEGV67'], alert: 8, color: 'FFBF00' };
+
+function sqKegName_(brewery, beer) { return (String(brewery || '').trim() + ' - ' + String(beer || '').trim()).replace(/\s+/g, ' '); }
+
+function kegSquare_(req) {
+  if (!PropertiesService.getScriptProperties().getProperty('SQUARE_TOKEN')) return { ok: false, note: 'Square is not connected yet.' };
+  var tapN = Math.floor(Number(req.tap) || 0), beer = String(req.beer || '').trim(), brewery = String(req.brewery || '').trim();
+  var cents = Math.round((Number(req.price) || 0) * 100);
+  if (tapN < 1 || !beer) return { ok: false, note: 'Missing tap or beer.' };
+  if (!(cents > 0)) return { ok: false, note: 'No price, so no Square item.' };
+  var tap = ('0' + tapN).slice(-2), name = sqKegName_(brewery, beer), low = name.toLowerCase();
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var items = [], cursor = '';
+    do {
+      var res = sq_('post', '/v2/catalog/search-items', { category_ids: [SQK.cat], archived_state: 'ARCHIVED_STATE_ALL', limit: 100, cursor: cursor || undefined });
+      (res.items || []).forEach(function (o) { items.push(o); }); cursor = res.cursor || '';
+    } while (cursor);
+    var mine = null, old = [];
+    items.forEach(function (o) {
+      var d = o.item_data || {}, arch = !!d.is_archived, ab = String(d.abbreviation || '');
+      if (String(d.name || '').toLowerCase() === low) { if (!mine || (mine.item_data.is_archived && !arch)) mine = o; }
+    });
+    items.forEach(function (o) {
+      var d = o.item_data || {}; if (d.is_archived || !/^\d\d$/.test(String(d.abbreviation || ''))) return;
+      if (String(d.abbreviation) === tap && (!mine || o.id !== mine.id)) old.push(o);
+    });
+    var note = [], created = false, template = old[0] || null;
+    if (mine) {
+      var d = mine.item_data, v = d.variations[0], changed = false;
+      if (d.is_archived) { d.is_archived = false; changed = true; note.push('Restored'); }
+      if (d.abbreviation !== tap) { d.abbreviation = tap; changed = true; }
+      if (v.item_variation_data.price_money.amount !== cents) { v.item_variation_data.price_money = { amount: cents, currency: 'USD' }; changed = true; }
+      if (changed) sq_('post', '/v2/catalog/object', { idempotency_key: 'hd-kegre-' + mine.id + '-' + tap + '-' + cents + '-' + (req.at || ''), object: mine });
+      note.push('Reused existing item');
+    } else {
+      var td = template ? template.item_data : null, tv = td && td.variations && td.variations[0] ? td.variations[0].item_variation_data : null;
+      var thr = tv && tv.location_overrides && tv.location_overrides[0] && tv.location_overrides[0].inventory_alert_threshold || SQK.alert;
+      sq_('post', '/v2/catalog/object', { idempotency_key: 'hd-kegnew-' + tap + '-' + Utilities.base64EncodeWebSafe(name).slice(0, 40) + '-' + (req.at || ''), object: { type: 'ITEM', id: '#i', present_at_all_locations: false, present_at_location_ids: [SQ.loc],
+        item_data: { name: name, abbreviation: tap, label_color: (td && td.label_color) || SQK.color, is_taxable: true, tax_ids: (td && td.tax_ids && td.tax_ids.length) ? td.tax_ids : SQK.taxes,
+          categories: [{ id: SQK.cat }], variations: [{ type: 'ITEM_VARIATION', id: '#v', present_at_all_locations: false, present_at_location_ids: [SQ.loc],
+            item_variation_data: { item_id: '#i', name: 'Regular', pricing_type: 'FIXED_PRICING', price_money: { amount: cents, currency: 'USD' }, track_inventory: true,
+              location_overrides: [{ location_id: SQ.loc, track_inventory: true, inventory_alert_type: 'LOW_QUANTITY', inventory_alert_threshold: thr }] } }] } } });
+      created = true; note.push('Created new item');
+    }
+    var arch = [];
+    old.forEach(function (o) {
+      var full = sq_('get', '/v2/catalog/object/' + o.id).object; full.item_data.is_archived = true;
+      sq_('post', '/v2/catalog/object', { idempotency_key: 'hd-kegarch-' + o.id + '-' + (full.version || ''), object: full });
+      arch.push(o.item_data.name);
+    });
+    return { ok: true, name: name, tap: tap, created: created, archived: arch, note: note.join('. ') };
+  } finally { lock.releaseLock(); }
+}
+
 function kegSave_(list, who, raw) {
   if (!Array.isArray(list) || list.length > 400) throw new Error('Bad keg list');
   var lock = LockService.getScriptLock(); lock.waitLock(20000);

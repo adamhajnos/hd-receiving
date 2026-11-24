@@ -1908,6 +1908,18 @@ async function kegPull(){
   }catch(e){}
 }
 setInterval(()=>{ if(S.who) kegPull(); },60000);
+/* keg goes on a tap -> Square: archive the old item on that tap, create (or reuse) this beer's item. Queued so a dropped connection retries. */
+let _sqbusy=false; const SQQ='hd.sqq';
+function kegSquare(k,n){ if(DEMO||!S.pin||!k||!(k.price>0)) return; const q=LS.get(SQQ,[]); q.push({tap:n,beer:k.beer,brewery:k.brewery,price:k.price,at:Date.now()}); LS.set(SQQ,q); kegSquareRun(); }
+async function kegSquareRun(){ if(_sqbusy||DEMO||!S.pin) return; _sqbusy=true;
+  try{ let q=LS.get(SQQ,[]);
+    while(q.length){ const j=q[0]; let r; try{ r=await apiRaw('kegsquare',j); }catch(e){ break; }
+      if(r&&r.ok){ q.shift(); LS.set(SQQ,q);
+        const msg='Square: '+(r.created?'new item ':'item ')+r.tap+' '+r.name+(r.archived&&r.archived.length?' (archived '+r.archived.join(', ')+')':'')+'. Add it to Favorites.';
+        toast(msg); submit('keg',msg,{action:'square',tap:j.tap,beer:j.beer},true); }
+      else { q.shift(); LS.set(SQQ,q); toast('Square did not update: '+((r&&r.note)||'unknown')+'. Tell Adam.'); submit('keg','Square did not update for tap '+j.tap+': '+((r&&r.note)||'unknown'),{action:'square-fail',tap:j.tap,beer:j.beer},true); } }
+  }finally{ _sqbusy=false; } }
+setInterval(()=>{ if(S.who) kegSquareRun(); },120000);
 const kegs=()=>{ let k=LS.get(KEGK,null); if(!k){ k=JSON.parse(JSON.stringify(C.DEMO_KEGS||[])); LS.set(KEGK,k); } return k; };
 const kfind=(L,key)=>L.find(x=>x.key===key);
 const kfmt=p=>p?'$'+Number(p).toFixed(2):'';
@@ -2259,7 +2271,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r78';
+const BUILD='r79';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2755,7 +2767,7 @@ document.addEventListener('click', async ev=>{
     if(!k.price){ S.ks={t:'price',key:k.key,n}; render(); return; }
     S.ks={t:'san',key:k.key,n}; render(); }
   else if(a==='ksan'){ const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n;
-    k.status='tap'; k.tap=n; k.days=0; kegCommit(L,'On tap '+n+': '+k.beer+' ('+kfmt(k.price)+'). Star San run.',{beer:k.beer,brewery:k.brewery,tap:n,price:k.price,action:'place',starSan:true}); postBeer(k.key); }
+    k.status='tap'; k.tap=n; k.days=0; kegCommit(L,'On tap '+n+': '+k.beer+' ('+kfmt(k.price)+'). Star San run.',{beer:k.beer,brewery:k.brewery,tap:n,price:k.price,action:'place',starSan:true}); kegSquare(k,n); postBeer(k.key); }
   else if(a==='kundo'){ const L=kegs(), k=kfind(L,b.dataset.key), free=k.lastTap&&!L.some(x=>x.status==='tap'&&x.tap===k.lastTap); if(free){ k.status='tap'; k.tap=k.lastTap; } else k.status='deck'; kegCommit(L,'Keg restored: '+k.beer,{beer:k.beer,action:'undo'}); }
   else if(a==='kup'||a==='kdown'){ const L=kegs(), d=L.filter(x=>x.status==='deck'), i=d.findIndex(x=>x.key===b.dataset.key), j=a==='kup'?i-1:i+1; if(i<0||j<0||j>=d.length) return;
     const ia=L.indexOf(d[i]), ib=L.indexOf(d[j]); [L[ia],L[ib]]=[L[ib],L[ia]]; kegStore(L); render(); }
