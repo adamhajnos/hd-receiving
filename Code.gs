@@ -173,7 +173,12 @@ function addTrove_(ss, d) {
   var max = 0;
   if (sh.getLastRow() > 1) sh.getRange(2, 6, sh.getLastRow() - 1, 1).getValues().forEach(function (r) { var n = parseInt(String(r[0]).replace(/\D/g, ''), 10); if (n > max) max = n; });
   var code = trCode_(max + 1);
-  sh.appendRow([clean_(d.artist), clean_(d.album), clean_(d.location), Number(d.price) || '', '', code, clean_(d.genre), clean_(d.status) || 'Active', clean_(d.listed)]);
+  var row = [clean_(d.artist), clean_(d.album), clean_(d.location), Number(d.price) || '', '', code, clean_(d.genre), clean_(d.status) || 'Active', clean_(d.listed)];
+  // New records go at the end of their own section (the sheet's row order is the shelf order), not the bottom of the sheet.
+  var last = -1, loc = clean_(d.location);
+  if (loc && sh.getLastRow() > 1) sh.getRange(2, 3, sh.getLastRow() - 1, 1).getValues().forEach(function (r, i) { if (String(r[0]).trim() === loc) last = i + 2; });
+  if (last > 0) { sh.insertRowAfter(last); sh.getRange(last + 1, 1, 1, row.length).setValues([row]); }
+  else sh.appendRow(row);
   return code;
 }
 
@@ -1410,4 +1415,49 @@ function coverSet_(entries) {
   });
   if (rows.length) { var sh = coversSheet_(); sh.getRange(sh.getLastRow() + 1, 1, rows.length, 3).setValues(rows); }
   return rows.length;
+}
+
+/**
+ * ONE-TIME (Nov 24 2026): tidies the Trove tab. Run it once from the editor.
+ * Merges "Backfill" into "Backfill cubbie", puts the two plain "Trove bin" records in their genre bins,
+ * archives TT-0176/0177/0178 to "Trove Deleted", sorts rows so each section appears once in shelf order,
+ * and puts Forrest Frank (TT-0153) just before Tash Sultana (TT-0011).
+ */
+function tidyTroveSections() {
+  var ORDER = ['Bar wall', 'Bar cubbies', 'Wall trove', 'Trove bin: Freshest', 'Trove bin: Rock', 'Trove bin: Indie Pop', 'Trove bin: Hard Rock/Punk/Metal', 'Trove bin: HipHop', 'Trove bin: Electronic', 'Trove bin: Soul/R&B/Funk/Disco', 'Trove bin: Jazz', 'Trove bin: Country/Folk', 'Trove bin: World/Latin/Reggae', 'Trove bin: Misc', 'Backfill cubbie'];
+  var FIX = { 'TT-0186': 'Trove bin: Rock', 'TT-0187': 'Trove bin: Soul/R&B/Funk/Disco' };
+  var ARCHIVE = { 'TT-0176': 1, 'TT-0177': 1, 'TT-0178': 1 };
+  var lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    var ss = ss_(), sh = sheet_(ss, 'Trove');
+    var n = sh.getLastRow() - 1; if (n < 1) return;
+    var w = Math.max(sh.getLastColumn(), 9), rg = sh.getRange(2, 1, n, w), rows = rg.getValues();
+    var keep = [], gone = [], blank = [], seen = {}, extra = 0;
+    rows.forEach(function (r, i) {
+      if (!(r[0] || r[1])) { blank.push(r); return; }
+      var code = String(r[5]).trim();
+      if (ARCHIVE[code]) { gone.push(r); return; }
+      if (String(r[2]).trim() === 'Backfill') r[2] = 'Backfill cubbie';
+      if (FIX[code]) r[2] = FIX[code];
+      var loc = String(r[2]).trim(), k = ORDER.indexOf(loc);
+      if (k < 0) { if (!(loc in seen)) seen[loc] = 100 + (extra++); k = seen[loc]; }
+      keep.push({ r: r, k: k, i: i });
+    });
+    keep.sort(function (a, b) { return a.k - b.k || a.i - b.i; });
+    var out = keep.map(function (x) { return x.r; });
+    var fi = -1, ti = -1;
+    out.forEach(function (r, i) { var c = String(r[5]).trim(); if (c === 'TT-0153') fi = i; });
+    if (fi >= 0) { var ff = out.splice(fi, 1)[0]; ff[2] = 'Bar wall';
+      out.forEach(function (r, i) { if (ti < 0 && String(r[5]).trim() === 'TT-0011') ti = i; });
+      out.splice(ti >= 0 ? ti : 0, 0, ff); }
+    out = out.concat(blank); while (out.length < n) out.push(new Array(w).fill(''));
+    rg.setValues(out);
+    if (gone.length) {
+      var bin = ss.getSheetByName('Trove Deleted') || ss.insertSheet('Trove Deleted');
+      if (bin.getLastRow() === 0) bin.getRange(1, 1, 1, 11).setValues([['Deleted at', 'Deleted by', 'Artist', 'Title', 'Location', 'Price', 'Cover URL', 'Code', 'Genre', 'Status', 'Listed']]).setFontWeight('bold');
+      gone.forEach(function (r) { bin.appendRow([new Date(), 'Adam (archived in cleanup)'].concat(r.slice(0, 9))); });
+      sh.getRange(2 + n - gone.length, 1, gone.length, w).clearContent();
+    }
+    Logger.log('Kept ' + keep.length + ', archived ' + gone.length + '. Sections: ' + out.map(function (r) { return r[2]; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).join(' | '));
+  } finally { lock.releaseLock(); }
 }
