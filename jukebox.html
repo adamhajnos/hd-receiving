@@ -40,9 +40,9 @@ html,body{margin:0;height:100%;background:#110908;overflow:hidden;cursor:none}
 var FEED = 'https://script.google.com/macros/s/AKfycbzlu0sZz66b8t60AaQrIfXmo_UgzG6ZApjbYo3lHthgni2bigzNPYmaro-_uH-qaRrNTA/exec?feed=taps';
 var TAPS = 12, NEW_DAYS = 4, POLL_MS = 60000, CK = 'hd.jukebox.last';
 
-function fit(){ var s = Math.min(innerWidth/1920, innerHeight/1080), st = document.getElementById('stage');
-  st.style.transform = 'scale(' + s + ')'; st.style.left = (innerWidth - 1920*s)/2 + 'px'; st.style.top = (innerHeight - 1080*s)/2 + 'px'; }
-addEventListener('resize', fit); fit();
+function fit(){ var de = document.documentElement, w = de.clientWidth || innerWidth, h = de.clientHeight || innerHeight, s = Math.min(w/1920, h/1080), st = document.getElementById('stage');
+  st.style.transform = 'scale(' + s + ')'; st.style.left = (w - 1920*s)/2 + 'px'; st.style.top = (h - 1080*s)/2 + 'px'; }
+addEventListener('resize', fit); addEventListener('load', fit); fit(); [300,1500,5000].forEach(function(t){ setTimeout(fit, t); }); setInterval(fit, 10000);
 
 function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function money(p){ var n = Number(p); return n > 0 ? '$' + n.toFixed(2) : ''; }
