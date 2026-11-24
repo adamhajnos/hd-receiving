@@ -1822,6 +1822,14 @@ function pdfPageStream(slots,test,cal){
   const T=(x,y,font,size,str,Tc)=>{ o+='BT /'+font+' '+f(size)+' Tf '+(Tc?f(Tc)+' Tc ':'')+'1 0 0 1 '+f(x)+' '+f(y)+' Tm ('+pe(str)+') Tj ET\n'; };
   slots.forEach((r,k)=>{ if(!r) return; const row=Math.floor(k/2), col=k%2, bx=(0.15625+col*4.1875)*72, top=792-(0.5+row)*72;
     if(r.test){ o+='0.5 w '+f(bx)+' '+f(top-72)+' 288 72 re S\n'; const t=String(r.test), w=tw(t,'bold',16); T(bx+144-w/2,top-42,'F2',16,t); return; }
+    if(r.big){ /* register labels (Used record / CD): big text left, huge barcode right so the scanner reads it every time */
+      const LB=.86, cx=bx+144, cy=top-36; o+='q '+f(LB)+' 0 0 '+f(LB)+' '+f(cx*(1-LB))+' '+f(cy*(1-LB))+' cm\n';
+      const lines=String(r.big).split(' '), fs=lines.length>1?21:40, lh=fs*1.05, tx=bx+8, tw_=Math.max.apply(null,lines.map(l=>tw(l,'bold',fs)));
+      let ty=top-36+(lines.length*lh)/2-fs*.8; lines.forEach(l=>{ T(tx,ty,'F2',fs,l); ty-=lh; });
+      const bits=code128(r.code), x0=tx+tw_+10, xe2=bx+288-6, BW2=xe2-x0, u=BW2/(bits.length+20), BH2=47, bt=top-6;
+      for(let i=0;i<bits.length;){ if(bits[i]==='1'){ let j=i; while(j<bits.length&&bits[j]==='1') j++; o+=f(x0+(i+10)*u)+' '+f(bt-BH2)+' '+f((j-i)*u)+' '+f(BH2)+' re\n'; i=j; } else i++; }
+      o+='f\n'; const cw=tw(r.code,'',7); T(x0+BW2/2-cw/2,bt-BH2-9,'F1',7,r.code,.4);
+      o+='Q\n'; return; }
     const LS_=.86, lcx=bx+144, lcy=top-36; o+='q '+f(LS_)+' 0 0 '+f(LS_)+' '+f(lcx*(1-LS_))+' '+f(lcy*(1-LS_))+' cm\n';
     const BW=115.2, BH=29, iT=top-5.04, xe=bx+288-7.2, rl=xe-(BW+3.6), tx0=bx+7.2+42.79+7.2, maxW=rl-7.2-tx0;
     if(_logo) o+='q 42.79 0 0 44.64 '+f(bx+7.2)+' '+f(top-58.32)+' cm /Im1 Do Q\n';
@@ -2271,7 +2279,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r79';
+const BUILD='r80';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
