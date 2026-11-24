@@ -1817,7 +1817,7 @@ function fitTxt(t,font,size,maxW){ t=String(t||''); if(tw(t,font,size)<=maxW) re
 function wrap2(t,font,size,maxW){ t=String(t||''); if(tw(t,font,size)<=maxW) return [t]; const w=t.split(/\s+/); let l1=''; let i=0; for(;i<w.length;i++){ const n=l1?l1+' '+w[i]:w[i]; if(tw(n,font,size)>maxW) break; l1=n; } if(!l1){ return [fitTxt(t,font,size,maxW)]; } return [l1,fitTxt(w.slice(i).join(' '),font,size,maxW)]; }
 function pdfPageStream(slots,test,cal){
   const f=n=>(Math.round(n*100)/100).toString(); let o='';
-  const sc=cal.s/100; o+='q '+f(sc)+' 0 0 '+f(sc)+' '+f(cal.x*72)+' '+f(792*(1-sc)-cal.y*72)+' cm\n';
+  o+='q -1 0 0 -1 612 792 cm\n'; /* top-tray: sheet loads bottom edge first, so print rotated 180 */ const sc=cal.s/100; o+='q '+f(sc)+' 0 0 '+f(sc)+' '+f(cal.x*72)+' '+f(792*(1-sc)-cal.y*72)+' cm\n';
   const T=(x,y,font,size,str,Tc)=>{ o+='BT /'+font+' '+f(size)+' Tf '+(Tc?f(Tc)+' Tc ':'')+'1 0 0 1 '+f(x)+' '+f(y)+' Tm ('+pe(str)+') Tj ET\n'; };
   slots.forEach((r,k)=>{ if(!r) return; const row=Math.floor(k/2), col=k%2, bx=(0.15625+col*4.1875)*72, top=792-(0.5+row)*72;
     if(r.test){ o+='0.5 w '+f(bx)+' '+f(top-72)+' 288 72 re S\n'; const t=String(r.test), w=tw(t,'bold',16); T(bx+144-w/2,top-42,'F2',16,t); return; }
@@ -1836,7 +1836,7 @@ function pdfPageStream(slots,test,cal){
       o+='f\n'; const ct=bt-BH-g, cw=tw(r.code,'',6.5); T(rl+3.6+BW/2-cw/2,ct-6.5*.85,'F1',6.5,r.code,.4); }
     o+='Q\n';
   });
-  return o+'Q\n';
+  return o+'Q\nQ\n';
 }
 function buildPdf(test){
   const cal=pcal(), pages=test?[Array.from({length:20},(_,i)=>({test:i+1}))]:sheetPages();
@@ -2246,7 +2246,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r75';
+const BUILD='r76';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
