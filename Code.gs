@@ -24,6 +24,7 @@ var TABS = {
   Cash:     ['Timestamp', 'Who', 'Drawer count', 'Deposit', 'Note', 'Type', 'Source'],
   Records: ['Timestamp', 'Who', 'Type', 'Artist', 'Album', 'Genre', 'Format', 'Barcode', 'MSRP', 'Price', 'Status', 'Location', 'Listed on', 'Label queued', 'Notes'],
   Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted', 'Unit cost'],
+  Backordered: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Alerted'],
   UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
   DropOffs: ['Timestamp', 'Who', 'Customer', 'Phone', 'Email', 'What they dropped off', 'Approx. records', 'ID', 'Status', 'Pay', 'Unwanted', 'Offer', 'Offer sent', 'Status changed', 'Last action by', 'Leftovers done', 'History', 'Card', 'Card issued', 'Photo', 'Shop'],
@@ -793,6 +794,153 @@ function addExpected_(lines) {
   if (!rows.length) return 0;
   sh.getRange(sh.getLastRow() + 1, 1, rows.length, 12).setValues(rows);
   return rows.length;
+}
+
+/* ---------- Alliance e-invoice ingest (Raleigh = account 066847) ----------
+ * Alliance emails one "E-Invoice" per shipment from hdadmin@aent.com to the shop Gmail (this script runs as that account).
+ * The attachment (PLS#.XLS) is really tab-delimited text with a header block, then one line per title.
+ * ingestAllianceInvoices() runs every 10 minutes: it reads new invoice emails (spam included), adds the SHIPPED lines to
+ * Expected (the receiving queue), and tracks backordered lines in the Backordered tab until a later invoice ships them.
+ * Run installInvoiceTriggers() once from the editor (it will ask for Gmail permission the first time).
+ */
+var INVOICE_FROM = 'hdadmin@aent.com';
+var INVOICE_ACCOUNT = '066847';
+var INVOICE_LABEL = 'HD/invoice-loaded';
+var INVOICE_PROBLEM_LABEL = 'HD/invoice-problem';
+
+/** 11-digit UPCs on the invoice are missing the check digit; add it to get the scannable UPC-A. */
+function upcWithCheck_(raw) {
+  var d = String(raw || '').replace(/\D/g, '');
+  if (d.length !== 11) return d;
+  var odd = 0, even = 0;
+  for (var i = 0; i < 11; i++) { if (i % 2 === 0) odd += +d.charAt(i); else even += +d.charAt(i); }
+  return d + ((10 - ((odd * 3 + even) % 10)) % 10);
+}
+
+/** "PRINCE / 1999" -> artist "PRINCE", title "1999". No " / " (e.g. "HOZIER"): the whole text is the artist. */
+function splitDesc_(desc) {
+  var s = String(desc || '').replace(/\s+/g, ' ').trim(), i = s.indexOf(' / ');
+  return i < 0 ? { artist: s, title: '' } : { artist: s.slice(0, i).trim(), title: s.slice(i + 3).trim() };
+}
+
+/** Invoice text -> {inv, date 'yyyy-mm-dd', customer, total, due, lines:[{po, prod, upc, artist, title, list, cost, ord, shp, bo, carton}]}. Throws if it does not look like an Alliance invoice. */
+function parseAllianceInvoice_(text) {
+  var rows = String(text || '').split(/\r?\n/).map(function (l) { return l.split('\t').map(function (c) { return c.trim(); }); });
+  var out = { inv: '', date: '', customer: '', total: '', due: '', lines: [] }, hdr = -1;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i], k = r[0];
+    if (k === 'AEC Product#') { hdr = i; break; }
+    if (k === 'Invoice') out.inv = r[1] || '';
+    else if (k === 'Customer') out.customer = r[1] || '';
+    else if (k === 'Inv Date') { var m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(r[1] || ''); if (m) out.date = (m[3].length === 2 ? '20' + m[3] : m[3]) + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2); }
+    else if (k === 'Total') out.total = r[1] || '';
+    else if (k === 'Terms') out.due = r[3] || ''; // "Terms  30 DAYS NET  Due  12/24/26"
+  }
+  if (hdr < 0 || !out.inv || !out.date) throw new Error('Not an Alliance invoice file');
+  var col = {}; rows[hdr].forEach(function (h, j) { if (h) col[h] = j; });
+  ['Product Description', 'UPC', 'Qty Ord', 'Qty Shp', 'Qty B/O', 'Unit Price', 'List Price', 'Orig P/O'].forEach(function (h) { if (col[h] == null) throw new Error('Invoice file is missing the "' + h + '" column'); });
+  for (var j = hdr + 1; j < rows.length; j++) {
+    var c = rows[j], prod = c[col['AEC Product#']];
+    if (!prod || !/^\d{8,14}$/.test(String(c[col['UPC']] || '').replace(/\s/g, ''))) continue; // blank rows and the "As of ..." footer
+    var d = splitDesc_(c[col['Product Description']]);
+    out.lines.push({ po: c[col['Orig P/O']] || '', prod: prod, upc: upcWithCheck_(c[col['UPC']]), artist: d.artist, title: d.title,
+      list: parseFloat(c[col['List Price']]) || 0, cost: parseFloat(c[col['Unit Price']]) || 0,
+      ord: parseInt(c[col['Qty Ord']], 10) || 0, shp: parseInt(c[col['Qty Shp']], 10) || 0, bo: parseInt(c[col['Qty B/O']], 10) || 0,
+      carton: c[col['Carton']] || '' });
+  }
+  if (!out.lines.length) throw new Error('No lines found in the invoice file');
+  return out;
+}
+
+/** Backordered titles stay here until a later invoice ships them (matched by PO + product #). */
+function backorderSheet_(ss) {
+  var sh = ss.getSheetByName('Backordered');
+  if (!sh) {
+    sh = ss.insertSheet('Backordered');
+    sh.getRange(1, 1, 1, TABS.Backordered.length).setValues([TABS.Backordered]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+    sh.getRange('A:E').setNumberFormat('@');
+  }
+  return sh;
+}
+
+/** One parsed invoice -> Expected (shipped lines) + Backordered (still owed lines). Safe to run twice on the same invoice. */
+function loadInvoice_(p) {
+  var ss = ss_(), added = addExpected_(p.lines.filter(function (l) { return l.shp > 0; }).map(function (l) {
+    return { inv: p.inv, date: p.date, po: l.po, prod: l.prod, upc: l.upc, artist: l.artist, title: l.title, list: l.list, qty: l.shp, cost: l.cost };
+  }));
+  var sh = backorderSheet_(ss), have = {}, n = sh.getLastRow() - 1, vals = n > 0 ? sh.getRange(2, 1, n, TABS.Backordered.length).getValues() : [];
+  vals.forEach(function (r, i) { have[r[2] + '|' + r[3]] = i; });
+  var drop = [], newBo = 0, cleared = 0;
+  p.lines.forEach(function (l) {
+    var key = l.po + '|' + l.prod, at = have[key];
+    if (l.bo > 0) {
+      if (at == null) { sh.appendRow([p.inv, p.date, l.po, l.prod, l.upc, l.artist, l.title, l.list, l.bo, '']); newBo++; }
+      else if (Number(vals[at][8]) !== l.bo) sh.getRange(at + 2, 9).setValue(l.bo);
+    } else if (l.shp > 0 && at != null) { drop.push(at + 2); cleared++; }
+  });
+  drop.sort(function (a, b) { return b - a; }).forEach(function (row) { sh.deleteRow(row); });
+  return { added: added, backordered: newBo, cleared: cleared };
+}
+
+/** Runs every 10 minutes. Reads new Alliance e-invoice emails (spam included) and loads them. Each email is labelled once loaded. */
+function ingestAllianceInvoices() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) return;
+  try {
+    var done = GmailApp.getUserLabelByName(INVOICE_LABEL) || GmailApp.createLabel(INVOICE_LABEL);
+    var bad = GmailApp.getUserLabelByName(INVOICE_PROBLEM_LABEL) || GmailApp.createLabel(INVOICE_PROBLEM_LABEL);
+    var q = 'from:' + INVOICE_FROM + ' subject:"E-Invoice" has:attachment -label:' + INVOICE_LABEL + ' -label:' + INVOICE_PROBLEM_LABEL + ' newer_than:45d in:anywhere';
+    GmailApp.search(q, 0, 25).forEach(function (th) {
+      try {
+        var loaded = 0;
+        th.getMessages().forEach(function (msg) {
+          msg.getAttachments().forEach(function (att) {
+            if (!/\.xls$/i.test(att.getName())) return;
+            var p = parseAllianceInvoice_(att.getDataAsString('ISO-8859-1'));
+            if (p.customer !== INVOICE_ACCOUNT) return; // another store's account: ignore
+            loadInvoice_(p); loaded++;
+          });
+        });
+        th.addLabel(done);
+        if (th.isInSpam()) th.moveToInbox(); // the shop should see the email too
+      } catch (e) {
+        th.addLabel(bad);
+        var to = PropertiesService.getScriptProperties().getProperty('OVERDUE_TO') || PropertiesService.getScriptProperties().getProperty('SHOP_EMAIL') || '';
+        if (to) MailApp.sendEmail(to, 'Hunky Dory Backstage: could not read an Alliance invoice',
+          'The invoice email "' + th.getFirstMessageSubject() + '" could not be loaded into receiving: ' + String(e.message || e) + '\n\nThe invoice is still in the shop Gmail. Tell Adam so the reader can be fixed.', { name: 'Hunky Dory Records' });
+      }
+    });
+  } finally { lock.releaseLock(); }
+}
+
+/** Runs every morning. Backordered titles still owed after 14 days are listed in one email (once each) so someone can chase Katie. */
+function checkBackorders() {
+  var props = PropertiesService.getScriptProperties();
+  var to = props.getProperty('OVERDUE_TO') || props.getProperty('SHOP_EMAIL') || '';
+  var ss = ss_(), sh = ss.getSheetByName('Backordered');
+  if (!to || !sh || sh.getLastRow() < 2) return;
+  var rg = sh.getRange(2, 1, sh.getLastRow() - 1, TABS.Backordered.length), rows = rg.getValues();
+  var tz = ss.getSpreadsheetTimeZone(), today = new Date(), todayStr = Utilities.formatDate(today, tz, 'yyyy-MM-dd'), lines = [];
+  rows.forEach(function (r) {
+    if (r[9]) return;
+    var d = new Date(dstr_(r[1]) + 'T12:00:00');
+    if (isNaN(d) || (today - d) / 864e5 <= 14) return;
+    lines.push(r[5] + (r[6] ? ' - ' + r[6] : '') + ' (' + r[8] + ' owed, PO ' + r[2] + ', first backordered on invoice ' + r[0] + ')');
+    r[9] = todayStr;
+  });
+  if (!lines.length) return;
+  MailApp.sendEmail(to, 'Hunky Dory Raleigh: ' + lines.length + ' backordered record' + (lines.length === 1 ? '' : 's') + ' still not shipped',
+    'These titles have been backordered at Alliance (account ' + INVOICE_ACCOUNT + ') for more than 14 days:\n\n  ' + lines.join('\n  ') + '\n\nCall or email Katie Curtis to ask when they will ship or cancel them.', { name: 'Hunky Dory Records' });
+  rg.setValues(rows);
+}
+
+/** Run once from the editor: reads invoice emails every 10 minutes and checks backorders every morning around 8. */
+function installInvoiceTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { var f = t.getHandlerFunction(); if (f === 'ingestAllianceInvoices' || f === 'checkBackorders') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('ingestAllianceInvoices').timeBased().everyMinutes(10).create();
+  ScriptApp.newTrigger('checkBackorders').timeBased().everyDays(1).atHour(8).create();
+  ingestAllianceInvoices(); // load anything already waiting
 }
 
 /**
