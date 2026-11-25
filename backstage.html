@@ -1628,9 +1628,24 @@ function upcKeys(u){ const d=String(u||'').replace(/\D/g,''); if(!d) return []; 
 function rOrder(){ if(!DEMO){ const m={}, lines=[]; (S.exp||[]).forEach(l=>{ const k=l.upc; if(m[k]) m[k].qty+=l.qty; else { m[k]=Object.assign({},l,{oid:l.inv}); lines.push(m[k]); } }); return {id:'queue',lines}; }
   const d=LS.get(RDONE,{}), lines=[]; (C.DEMO_ORDERS||[]).forEach(o=>o.lines.forEach(l=>{ const left=l.qty-(d[l.upc]||0); if(left>0) lines.push(Object.assign({},l,{qty:left,oid:o.id})); })); return {id:'queue',lines}; }
 async function rLoad(){ try{ const j=await api('expected',{}); S.exp=j.lines||[]; if(j.map) LS.set('hd.upcmap',Object.assign(LS.get('hd.upcmap',{}),j.map)); return true; }catch(e){ toast('Couldn\u2019t load the expected list. Check the wifi and try again.'); return false; } }
-function rEnter(){ const sv=LS.get(RK(),{})||{}; S.rhist=sv.hist||[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rextra=sv.extra||[]; S.radd=null; S.rpack=null; S.rpend=null; S.view='recv'; render(); }
-function rSave(){ LS.set(RK(),{scan:S.rscan,bad:S.rbad,last:S.rlast,nopack:S.rnopack,extra:S.rextra||[],hist:S.rhist||[]}); }
+function rEnter(){ const sv=LS.get(RK(),{})||{}; S.rhist=sv.hist||[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rextra=sv.extra||[]; S.rpc=sv.rpc||{}; S.rsq={}; S.radd=null; S.rpack=null; S.rpend=null; S.view='recv'; render(); rExtras(); }
+// Receiving extras (live data only): open customer requests, Square prices for what's already scanned, and what Alliance still owes.
+function rExtras(){ if(DEMO) return; const re=()=>{ if(S.view==='recv'||S.view==='owed') render(); };
+  if(!(RQC.list||[]).length) rqLoad().then(re); else re();
+  apiRaw('backordered',{}).then(j=>{ S.owed=(j&&j.lines)||[]; re(); }).catch(()=>{});
+  Object.keys(S.rscan||{}).forEach(u=>{ if((S.rscan[u]||0)>0) rSquarePrice(u); }); }
+async function rSquarePrice(u){ if(DEMO||(S.rsq&&S.rsq[u]!==undefined)) return; S.rsq=S.rsq||{}; S.rsq[u]=null;
+  try{ const j=await apiRaw('sqprice',{upc:u}); S.rsq[u]=(j&&j.found&&j.price!=null)?{price:Number(j.price)}:{none:true}; }catch(e){ S.rsq[u]={none:true}; }
+  if(S.view==='recv') render(); }
+// A scanned record already in Square at a different price than the new one: staff must pick before the box can be finished.
+function rPriceDiffs(o){ return (o.lines||[]).filter(l=>{ const q=(S.rsq||{})[l.upc], np=msrpPrice(l.list); return (S.rscan[l.upc]||0)>0&&q&&q.price!=null&&np&&Math.abs(q.price-np)>0.005; }); }
+function rSave(){ LS.set(RK(),{scan:S.rscan,bad:S.rbad,last:S.rlast,nopack:S.rnopack,extra:S.rextra||[],hist:S.rhist||[],rpc:S.rpc||{}}); }
 function rStatus(l){ const g=S.rscan[l.upc]||0; return g===0?'':g<l.qty?'part':g===l.qty?'ok':'over'; }
+function vOwed(){ const L=S.owed||[], tot=L.reduce((n,x)=>n+x.qty,0);
+  const rows=L.map(x=>'<div class="rrow'+(x.days>14?' bad':'')+'"><div><b>'+esc(tc(x.artist))+'</b>'+(x.title?' \u00b7 '+esc(tc(x.title)):'')+'<span class="o"> invoice '+esc(x.inv)+'</span></div><span class="rprice">$'+(msrpPrice(x.list)||'')+'</span><span class="rcnt">\u00d7 '+x.qty+'</span><span class="chip'+(x.days>14?' age late':'')+'">'+x.days+' day'+(x.days===1?'':'s')+'</span></div>').join('');
+  return '<div class="top"><button class="btn ghost" data-act="rowedback">\u2039 Back</button><h2><span>Owed by Alliance</span></h2><span class="chip">'+tot+' record'+(tot===1?'':'s')+'</span></div>'+bannerHTML()+
+    '<p class="hint" style="margin:0 0 8px">Backordered on an invoice and not shipped yet. They clear by themselves when a later invoice ships them. Red means more than 14 days: Forrest and Bell get an email.</p>'+
+    (rows?'<div class="rlist">'+rows+'</div>':'<p class="hint">Nothing is owed right now.</p>'); }
 function vRecvList(){
   const os=(C.DEMO_ORDERS||[]).map(o=>'<button class="tile" data-act="rpick" data-id="'+esc(o.id)+'"><span class="t">Order '+esc(o.id)+'</span><span class="s">Submitted '+esc(o.submitted)+' · '+o.lines.length+' records</span></button>').join('');
   const na=arrGet().items.length;
@@ -1642,8 +1657,8 @@ function vRecv(){
     '<button class="btn go" data-act="rpackbtn">'+bi('photo','Take a photo of the packing list','Then scanning opens up')+'</button><input id="packin" type="file" accept="image/*" capture="environment" hidden>'+
     '<button class="btn ghost" data-act="rnopack">'+bi('issue','No packing list in the box','Adam and Bell get an email')+'</button></div>';
   const rows=o.lines.map(l=>{
-    const g=S.rscan[l.upc]||0, st=rStatus(l);
-    return '<div class="rrow '+st+'"><div><b>'+esc(tc(l.artist))+'</b> · '+esc(tc(l.title))+'<span class="o"> '+esc(l.media)+'</span></div>'+
+    const g=S.rscan[l.upc]||0, st=rStatus(l), rqm=rqOpenMatch(l), box=l.carton?' \u00b7 box \u2026'+esc(String(l.carton).slice(-4)):'';
+    return '<div class="rrow '+st+'"><div><b>'+esc(tc(l.artist))+'</b> · '+esc(tc(l.title))+'<span class="o"> '+esc(l.media)+box+'</span>'+(rqm.length?' <span class="chip">Request: '+esc(rqm[0].name||'customer')+(rqm.length>1?' +'+(rqm.length-1):'')+'</span>':'')+'</div>'+
       '<span class="rprice">$'+msrpPrice(l.list)+'</span><span class="rcnt">'+g+' of '+l.qty+'</span>'+
       '<span class="rbs"><button class="rb" data-act="rminus" data-u="'+esc(l.upc)+'" aria-label="One less">−</button><button class="rb" data-act="rplus" data-u="'+esc(l.upc)+'" aria-label="One more">+</button></span></div>';
   }).join('');
@@ -1660,6 +1675,12 @@ function vRecv(){
         '<ul class="rhl">'+gx.map(x=>'<li>'+esc(x.artist)+' \u00b7 '+esc(x.album)+'</li>').join('')+'</ul>'+
         (wait.length?'<div class="hint" style="flex-basis:100%">Also asked for, not here yet: '+wait.map(x=>esc(x.artist)+' \u00b7 '+esc(x.album)).join('; ')+'</div>':'')+
         (f.email?'<button class="btn go" data-act="rhold" data-ids="'+ids.join(',')+'">Email customer'+(gx.length>1?' about all '+gx.length:'')+'</button><span class="hint">Sends one standard email. You don\u2019t write anything.</span>':'<span class="hint">No email on file: '+esc(f.phone||'no phone')+'. Call or text them.</span>')+'</div>'; }).join('')+'<button class="btn go rnext" data-act="rnext">Scan next record</button><span class="hint">Tap to keep going. Anything you don\u2019t email stays on the Request list, marked Set aside, and shows up with the next match for that customer.</span></div>' : '';
+  const diffs=rPriceDiffs(o), askP=diffs.filter(l=>!(S.rpc||{})[l.upc]);
+  const pbox = diffs.length ? '<div class="rholdw">'+diffs.map(l=>{ const q=S.rsq[l.upc].price, np=msrpPrice(l.list), c=(S.rpc||{})[l.upc];
+    return '<div class="rhold"><div><b>PRICE CHECK</b> '+esc(tc(l.artist))+' \u00b7 '+esc(tc(l.title))+'. Already in Square at <b>$'+q.toFixed(2).replace(/\.00$/,'')+'</b>. The new price would be <b>$'+np+'</b>.</div>'+
+      (c?'<span class="hint">'+(c==='new'?'Will change it to $'+np+' when the box is saved.':'Keeping $'+q.toFixed(2).replace(/\.00$/,'')+'.')+'</span> <button class="btn ghost" data-act="rpundo" data-u="'+esc(l.upc)+'">Change</button>':
+      '<button class="btn go" data-act="rpkeep" data-u="'+esc(l.upc)+'">Keep $'+q.toFixed(2).replace(/\.00$/,'')+'</button><button class="btn ghost" data-act="rpnew" data-u="'+esc(l.upc)+'">Use $'+np+'</button>')+'</div>'; }).join('')+'</div>' : '';
+  const nreq=o.lines.filter(l=>rqOpenMatch(l).length).length, reqNote = nreq ? '<div class="hint" style="margin:0"><b>'+nreq+' record'+(nreq===1?'':'s')+' on the list '+(nreq===1?'is a':'are')+' customer request'+(nreq===1?'':'s')+'.</b> They are marked Request below and get set aside when scanned.</div>' : '';
   const warn = S.rwarn ? '<div class="rrow bad" style="font-size:26px;padding:18px 22px;border-width:3px"><div><b>NOT ON THE EXPECTED LIST</b><span class="o"> Barcode '+esc(S.rwarn)+' isn\u2019t on any invoice. Set it aside for Forrest or Bell.</span></div></div>' : '';
   const empty = !o.lines.length ? '<p class="hint">Nothing is expected right now. If you scan a record, you\u2019ll get a warning.</p>' : '';
   const total=o.lines.reduce((n,l)=>n+l.qty,0), got=o.lines.reduce((n,l)=>n+Math.min(S.rscan[l.upc]||0,l.qty),0);
@@ -1669,10 +1690,10 @@ function vRecv(){
   const needPack = !S.rpack && !S.rnopack;
   const packRow='<div class="row2" style="flex-wrap:wrap"><button class="btn ghost" data-act="rpackbtn">'+(S.rpack?'Retake packing list photo':'Packing list photo')+'</button><input id="packin" type="file" accept="image/*" capture="environment" hidden>'+
     (S.rpack?'<img class="iimg" alt="" src="'+S.rpack+'" style="height:64px">':'<button class="fmt'+(S.rnopack?' on':'')+'" data-act="rnopack" style="min-height:56px;padding:0 20px;border-radius:14px;border:1px solid var(--line);background:'+(S.rnopack?'var(--fg)':'none')+';color:'+(S.rnopack?'var(--bg)':'inherit')+';font-weight:700">No packing list in the box</button>')+'</div>';
-  return topHTML('Receive records','home','<span class="chip">'+got+' of '+total+' scanned</span>')+bannerHTML()+
-    '<div class="form" style="max-width:none;gap:14px">'+undoBtn+'<input id="rscan" inputmode="numeric" autocomplete="off" placeholder="Scan each record’s barcode here"'+(held.length?' disabled':'')+'>'+warn+last+hold+empty+
+  return topHTML('Receive records','home',(S.owed&&S.owed.length?'<button class="btn ghost" data-act="rowed">Owed by Alliance ('+S.owed.reduce((n,x)=>n+x.qty,0)+')</button> ':'')+'<span class="chip">'+got+' of '+total+' scanned</span>')+bannerHTML()+
+    '<div class="form" style="max-width:none;gap:14px">'+reqNote+undoBtn+'<input id="rscan" inputmode="numeric" autocomplete="off" placeholder="Scan each record’s barcode here"'+(held.length?' disabled':'')+'>'+warn+last+pbox+hold+empty+
     (S.radd?raddHTML():S.rpend?pend:'<div class="rlist">'+rows+exr+bad+'</div>')+packRow+
-    '<div style="display:flex;align-items:center;gap:18px"><button class="btn go" id="rfin" data-act="rfinish"'+(S.busy||held.length?' disabled':'')+'>Finish this box</button><span class="hint">Anything not scanned stays on the waiting list.</span></div></div>';
+    '<div style="display:flex;align-items:center;gap:18px"><button class="btn go" id="rfin" data-act="rfinish"'+(S.busy||held.length||askP.length?' disabled':'')+'>Finish this box</button><span class="hint">'+(askP.length?'Pick a price above first.':'Anything not scanned stays on the waiting list.')+'</span></div></div>';
 }
 function scanUPC(raw){
   const o=rOrder(); const an=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,''), pk=an(raw), u=nz(raw); if(!o||!(u||pk)||rHeld().length) return;
@@ -1682,7 +1703,7 @@ function scanUPC(raw){
   let l=/[A-Za-z]/.test(String(raw))?o.lines.find(x=>x.prod&&an(x.prod)===pk):null;
   if(!l) l=o.lines.find(x=>!x.nobar&&upcKeys(x.upc).includes(u));
   if(!l&&map[u]) l=o.lines.find(x=>x.upc===map[u]);
-  if(l){ S.rscan[l.upc]=(S.rscan[l.upc]||0)+1; S.rlast=l.upc; S.rhold=rqOpenMatch(l).map(x=>x.id); (S.rhist=S.rhist||[]).push({u:l.upc}); }
+  if(l){ S.rscan[l.upc]=(S.rscan[l.upc]||0)+1; S.rlast=l.upc; S.rhold=rqOpenMatch(l).map(x=>x.id); (S.rhist=S.rhist||[]).push({u:l.upc}); rSquarePrice(l.upc); }
   else if(o.lines.some(x=>x.nobar)){ S.rpend=u; render(); return; }
   else if(!DEMO&&o.lines.length){ S.rpend=u; S.rlook=true; S.rcand=null; render(); rLookup(u); return; }
   else { S.rbad[u]=(S.rbad[u]||0)+1; S.rlast=null; S.rwarn=u; (S.rhist=S.rhist||[]).push({b:u}); }
@@ -2296,7 +2317,7 @@ function pausedHTML(){
 }
 function render(){
   if(S.paused){ document.getElementById('app').innerHTML=pausedHTML(); const fs=document.getElementById('featslot'); if(fs) fs.innerHTML=''; return; }
-  const v = {login:vLogin,home:vHome,opening:vOpening,trove:vTrove,tbrowse:vTBrowse,request:vRequest,addrec:vAddRec,addused:vUsed,recvlist:vRecvList,supplies:vSupplies,drops:vDrops,reqlist:vReqList,credit:vCredit,kegs:vKegs,rkeg:vRKeg,rstock:vRStock,rcans:vRCans,labels:vLabels,recv:vRecv,find:vFind,note:vNote,issue:vIssue,cash:vCash,drop:vDrop}[S.view]();
+  const v = {login:vLogin,home:vHome,opening:vOpening,trove:vTrove,tbrowse:vTBrowse,request:vRequest,addrec:vAddRec,addused:vUsed,recvlist:vRecvList,owed:vOwed,supplies:vSupplies,drops:vDrops,reqlist:vReqList,credit:vCredit,kegs:vKegs,rkeg:vRKeg,rstock:vRStock,rcans:vRCans,labels:vLabels,recv:vRecv,find:vFind,note:vNote,issue:vIssue,cash:vCash,drop:vDrop}[S.view]();
   document.getElementById('app').innerHTML = v + (S.notePop&&S.note&&S.view==='home' ? notePopHTML() : '') + (S.rq&&S.view==='recv' ? rqPopHTML() : '') + postSheetHTML(); { const fs=document.getElementById('featslot'); if(fs) fs.innerHTML=featHTML(); } if(S.view==='recv'&&!S.rq&&!S.rpend&&!S.radd) setTimeout(focusScan,60);
   bindForms(); coverScan();
 }
@@ -2331,7 +2352,7 @@ async function rDoFinish(addQ){
     const arrIn=o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>({artist:tc(l.artist),album:tc(l.title)}));
     const labels=addQ?rLabelList():[];
     submit('receive','Received a box: '+got+' of '+total+' scanned'+(short.length?', '+short.length+' short':'')+(extra.length?', '+extra.length+' not on order':''),
-      {order:[...new Set(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>l.oid))].join(', '),got:Object.fromEntries(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>[l.upc,Math.min(S.rscan[l.upc],l.qty)])),expected:total,scanned:got,short,over,extra,packing:S.rpack?S.rpack.split(',')[1]:'',noPacking:S.rnopack,extras:(S.rextra||[]).map(e=>({upc:e.upc,artist:e.artist,title:e.title,price:e.price,genre:e.genre,qty:e.qty||1}))},true).then(async ok=>{ if(ok){ if(DEMO){ const d=LS.get(RDONE,{}); o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); if(g) d[l.upc]=(d[l.upc]||0)+g; }); LS.set(RDONE,d); } else await rLoad(); labels.forEach(pqAdd); if(labels.length) S.pprinted=false; S.rwarn=null; LS.set(RK(),null); S.rhist=[]; S.rhold=[]; S.rscan={}; S.rbad={}; S.rextra=[]; S.rlast=null; S.rpack=null; S.rnopack=false; S.view='recv'; render(); toast(labels.length?'Box saved. '+labels.length+' labels added to the print queue':'Box saved'); if(arrIn.length){ arrAdd(arrIn); postRecs(); } } });
+      {order:[...new Set(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>l.oid))].join(', '),got:Object.fromEntries(o.lines.filter(l=>(S.rscan[l.upc]||0)>0).map(l=>[l.upc,Math.min(S.rscan[l.upc],l.qty)])),prices:Object.fromEntries(o.lines.filter(l=>(S.rpc||{})[l.upc]==='new'&&(S.rscan[l.upc]||0)>0&&msrpPrice(l.list)).map(l=>[l.upc,msrpPrice(l.list)])),expected:total,scanned:got,short,over,extra,packing:S.rpack?S.rpack.split(',')[1]:'',noPacking:S.rnopack,extras:(S.rextra||[]).map(e=>({upc:e.upc,artist:e.artist,title:e.title,price:e.price,genre:e.genre,qty:e.qty||1}))},true).then(async ok=>{ if(ok){ if(DEMO){ const d=LS.get(RDONE,{}); o.lines.forEach(l=>{ const g=Math.min(S.rscan[l.upc]||0,l.qty); if(g) d[l.upc]=(d[l.upc]||0)+g; }); LS.set(RDONE,d); } else await rLoad(); labels.forEach(pqAdd); if(labels.length) S.pprinted=false; S.rwarn=null; LS.set(RK(),null); S.rhist=[]; S.rhold=[]; S.rscan={}; S.rbad={}; S.rextra=[]; S.rlast=null; S.rpack=null; S.rnopack=false; S.rpc={}; S.rsq={}; S.view='recv'; render(); rExtras(); toast(labels.length?'Box saved. '+labels.length+' labels added to the print queue':'Box saved'); if(arrIn.length){ arrAdd(arrIn); postRecs(); } } });
 }
 
 /* ---------- form validation ---------- */
@@ -2703,6 +2724,10 @@ document.addEventListener('click', async ev=>{
   else if(a==='featsend'){ const t=((document.getElementById('ftxt')||{}).value||'').trim(); if(!t){ S.feat.text=''; S.err='Type your note first.'; render(); return; } S.feat.text=t;
     const ok=await submit('feature','Feature/bug: '+t.slice(0,200),{text:t,autoEmail:{to:C.FEATURE_EMAIL||'',subject:'Backstage feature or bug from '+S.who,body:t+'\n\nFrom '+S.who+' on '+new Date().toLocaleString('en-US')}},true); if(ok){ S.feat=null; render(); toast('Sent to Adam \u2713'); } }
   else if(a==='rundo'){ const h=(S.rhist||[]).pop(); if(h){ if(h.u){ S.rscan[h.u]=Math.max(0,(S.rscan[h.u]||0)-1); } else if(h.x){ const e=(S.rextra||[]).find(z=>z.upc===h.x); if(e){ e.qty=(e.qty||1)-1; if(e.qty<=0) S.rextra=S.rextra.filter(z=>z!==e); } } else if(h.b){ S.rbad[h.b]=(S.rbad[h.b]||1)-1; if(S.rbad[h.b]<=0) delete S.rbad[h.b]; } const p=S.rhist[S.rhist.length-1]; S.rlast=p&&p.u?p.u:null; S.rhold=[]; rSave(); render(); toast('Removed that scan'); focusScan(); } }
+  else if(a==='rpkeep'||a==='rpnew'){ (S.rpc=S.rpc||{})[b.dataset.u]=a==='rpnew'?'new':'keep'; rSave(); render(); focusScan(); }
+  else if(a==='rpundo'){ if(S.rpc) delete S.rpc[b.dataset.u]; rSave(); render(); }
+  else if(a==='rowed'){ S.view='owed'; render(); }
+  else if(a==='rowedback'){ S.view='recv'; render(); focusScan(); }
   else if(a==='rnext'){ rqAside(rHeld()); S.rhold=[]; render(); focusScan(); }
   else if(a==='dopen'){ S.dsel=S.dsel===b.dataset.id?null:b.dataset.id; render(); const x=S.dsel&&drops().find(y=>y.id===S.dsel); if(x&&x.hasPhoto&&!DEMO&&!(S.dph||{})[x.id]){ try{ const j=await apiRaw('dropphoto',{id:x.id}); S.dph=S.dph||{}; if(j.photo) S.dph[x.id]='data:image/jpeg;base64,'+j.photo; if(S.dsel===x.id) render(); }catch(e){} } }
   else if(a==='dzoom'){ const x=drops().find(y=>y.id===b.dataset.id), src=x&&(x.photoData||(S.dph||{})[x.id]); if(src){ const o=document.createElement('div'); o.className='dzoom'; o.innerHTML='<img alt="Drop-off photo" src="'+esc(src)+'">'; o.addEventListener('click',()=>o.remove()); document.getElementById('screen').appendChild(o); } }
@@ -2717,7 +2742,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='rlist'){ S.view='recvlist'; render(); }
   else if(a==='rrec'){ await rqLoad(); if(DEMO||await rLoad()){ S.rwarn=null; S.rhold=[]; rEnter(); focusScan(); } }
   else if(a==='rpick'){ S.rorder=b.dataset.id; const sv=LS.get(RK(),{})||{}; S.rhist=sv.hist||[]; S.rhold=[]; S.rscan=sv.scan||{}; S.rbad=sv.bad||{}; S.rlast=sv.last||null; S.rnopack=!!sv.nopack; S.rpack=null; S.rpend=null; S.view='recv'; render(); focusScan(); }
-  else if(a==='rplus'||a==='rminus'){ const u=b.dataset.u; S.rscan[u]=Math.max(0,(S.rscan[u]||0)+(a==='rplus'?1:-1)); if(a==='rplus'){ (S.rhist=S.rhist||[]).push({u}); S.rlast=u; const o=rOrder(), l=o&&o.lines.find(x=>x.upc===u); if(l) S.rhold=rqOpenMatch(l).map(x=>x.id); } rSave(); render(); focusScan(); }
+  else if(a==='rplus'||a==='rminus'){ const u=b.dataset.u; S.rscan[u]=Math.max(0,(S.rscan[u]||0)+(a==='rplus'?1:-1)); if(a==='rplus'){ (S.rhist=S.rhist||[]).push({u}); S.rlast=u; const o=rOrder(), l=o&&o.lines.find(x=>x.upc===u); if(l){ S.rhold=rqOpenMatch(l).map(x=>x.id); rSquarePrice(u); } } rSave(); render(); focusScan(); }
   else if(a==='rassign'){ rDoAssign(S.rpend,b.dataset.u,false); }
   else if(a==='radd'){ const g=S.rguess||{}; S.radd={upc:S.rpend,artist:tc(g.artist||''),title:tc(g.album||''),price:'',genre:(LS.get(AG,{})[unorm(g.artist||'')]||'')}; S.rpend=null; S.rlook=false; S.err=''; render(); }
   else if(a==='radcancel'){ S.radd=null; S.err=''; render(); focusScan(); }

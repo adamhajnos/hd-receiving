@@ -23,7 +23,7 @@ var TABS = {
   Issues:   ['Timestamp', 'Who', 'Type', 'Details', 'Photo', 'Status'],
   Cash:     ['Timestamp', 'Who', 'Drawer count', 'Deposit', 'Note', 'Type', 'Source'],
   Records: ['Timestamp', 'Who', 'Type', 'Artist', 'Album', 'Genre', 'Format', 'Barcode', 'MSRP', 'Price', 'Status', 'Location', 'Listed on', 'Label queued', 'Notes'],
-  Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted', 'Unit cost'],
+  Expected: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Received', 'Alerted', 'Unit cost', 'Carton'],
   Backordered: ['Invoice', 'Invoice date', 'PO', 'Product #', 'UPC', 'Artist', 'Title', 'MSRP', 'Qty', 'Alerted'],
   UpcMap: ['Scanned', 'Expected UPC', 'Who', 'When'],
   Receiving: ['Timestamp', 'Who', 'Order', 'Expected', 'Scanned', 'Short', 'Over', 'Not on order', 'Packing list'],
@@ -31,7 +31,7 @@ var TABS = {
   Requests: ['ID', 'Created', 'Source', 'Shop', 'Name', 'Phone', 'Email', 'Artist', 'Album', 'Format', 'Notes', 'Status', 'Status changed', 'Quote', 'Quote note', 'Last action by', 'Hold until', 'Closed reason', 'Reminded'],
   Covers: ['Key', 'URL', 'Updated'],
   Kegs: ['Key', 'Beer', 'Brewery', 'City', 'Style', 'ABV', 'IBU', 'Price', 'Status', 'Tap', 'Tapped at', 'Days', 'Supplier', 'JSON'],
-  SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #', 'Unit cost']
+  SquareSync: ['Timestamp', 'UPC', 'Artist', 'Title', 'Qty', 'Status', 'Note', 'Key', 'MSRP', 'Product #', 'Unit cost', 'Set price']
 };
 
 /** Run once from the editor to create the tabs. */
@@ -71,6 +71,8 @@ function doPost(e) {
     else if (req.action === 'today') out = { ok: true, entries: todayEntries_(), note: latestNote_() };
     else if (req.action === 'log') { var res = logEntry_(req, who) || {}; out = { ok: true, code: res.code || '' }; }
     else if (req.action === 'expected') out = { ok: true, lines: expectedLines_(), map: upcMap_() };
+    else if (req.action === 'backordered') out = { ok: true, lines: backorderedList_() };
+    else if (req.action === 'sqprice') out = sqPrice_(req);
     else if (req.action === 'learnupc') out = { ok: true, saved: learnUpc_(req, who) };
     else if (req.action === 'scaninvoice') out = { ok: true, result: scanInvoice_(req) };
     else if (req.action === 'trovedel') out = { ok: true, removed: deleteTrove_(req, who) };
@@ -395,7 +397,7 @@ function logEntry_(req, who) {
     } else if (task === 'request') {
       requestEntry_(d, who, now, tz);
     } else if (task === 'receive') {
-      try { sqQueue_(ss, d.got, now); } catch (e) { /* Square problems must never block a receipt */ }
+      try { sqQueue_(ss, d.got, now, d.prices); } catch (e) { /* Square problems must never block a receipt */ }
       try { sqQueueExtras_(ss, d.extras, now); } catch (e) { /* same: never block a receipt */ }
       applyReceived_(ss, d.got);
       var pack = d.packing ? saveIssuePhoto_(String(d.packing), now, tz) : (d.noPacking ? 'None in box' : '');
@@ -752,11 +754,11 @@ function deleteTrove_(req, who) {
 function expectedLines_() {
   var sh = ss_().getSheetByName('Expected');
   if (!sh || sh.getLastRow() < 2) return [];
-  var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 11).getValues(), out = [];
+  var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 13).getValues(), out = [];
   rows.forEach(function (r) {
     var left = Number(r[8]) - Number(r[9] || 0);
     if (r[4] && left > 0) out.push({ inv: String(r[0]), date: dstr_(r[1]), po: String(r[2]), prod: String(r[3]), upc: String(r[4]),
-      artist: String(r[5]), title: String(r[6]), list: Number(r[7]), qty: left, media: 'LP' });
+      artist: String(r[5]), title: String(r[6]), list: Number(r[7]), qty: left, media: 'LP', carton: String(r[12] || '') });
   });
   return out;
 }
@@ -789,10 +791,12 @@ function addExpected_(lines) {
   sh.getRange('A:E').setNumberFormat('@'); // text, so leading zeros and dates survive
   lines.forEach(function (l) {
     if (have[l.inv + '|' + l.prod]) return;
-    rows.push([l.inv, l.date, l.po, l.prod, String(l.upc), l.artist, l.title, l.list, l.qty, Math.min(Number(l.got) || 0, l.qty), '', Number(l.cost) || '']);
+    rows.push([l.inv, l.date, l.po, l.prod, String(l.upc), l.artist, l.title, l.list, l.qty, Math.min(Number(l.got) || 0, l.qty), '', Number(l.cost) || '', String(l.carton || '')]);
   });
   if (!rows.length) return 0;
-  sh.getRange(sh.getLastRow() + 1, 1, rows.length, 12).setValues(rows);
+  if (!sh.getRange(1, 13).getValue()) sh.getRange(1, 13).setValue('Carton').setFontWeight('bold');
+  sh.getRange('M:M').setNumberFormat('@');
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, 13).setValues(rows);
   return rows.length;
 }
 
@@ -867,7 +871,7 @@ function backorderSheet_(ss) {
 /** One parsed invoice -> Expected (shipped lines) + Backordered (still owed lines). Safe to run twice on the same invoice. */
 function loadInvoice_(p) {
   var ss = ss_(), added = addExpected_(p.lines.filter(function (l) { return l.shp > 0; }).map(function (l) {
-    return { inv: p.inv, date: p.date, po: l.po, prod: l.prod, upc: l.upc, artist: l.artist, title: l.title, list: l.list, qty: l.shp, cost: l.cost };
+    return { inv: p.inv, date: p.date, po: l.po, prod: l.prod, upc: l.upc, artist: l.artist, title: l.title, list: l.list, qty: l.shp, cost: l.cost, carton: l.carton };
   }));
   var sh = backorderSheet_(ss), have = {}, n = sh.getLastRow() - 1, vals = n > 0 ? sh.getRange(2, 1, n, TABS.Backordered.length).getValues() : [];
   vals.forEach(function (r, i) { have[r[2] + '|' + r[3]] = i; });
@@ -881,6 +885,34 @@ function loadInvoice_(p) {
   });
   drop.sort(function (a, b) { return b - a; }).forEach(function (row) { sh.deleteRow(row); });
   return { added: added, backordered: newBo, cleared: cleared };
+}
+
+/** Titles Alliance still owes us (Backordered tab), oldest first, with how many days since the first invoice. */
+function backorderedList_() {
+  var sh = ss_().getSheetByName('Backordered');
+  if (!sh || sh.getLastRow() < 2) return [];
+  var today = new Date(), out = [];
+  sh.getRange(2, 1, sh.getLastRow() - 1, TABS.Backordered.length).getValues().forEach(function (r) {
+    if (!r[3]) return;
+    var d = new Date(dstr_(r[1]) + 'T12:00:00');
+    out.push({ inv: String(r[0]), date: dstr_(r[1]), po: String(r[2]), prod: String(r[3]), upc: String(r[4]), artist: String(r[5]), title: String(r[6]),
+      list: Number(r[7]) || 0, qty: Number(r[8]) || 0, days: isNaN(d) ? 0 : Math.max(0, Math.floor((today - d) / 864e5)) });
+  });
+  return out.sort(function (a, b) { return b.days - a.days; });
+}
+
+/** Read-only: what price does Square have for this UPC right now? Called by the iPad after each matched scan. */
+function sqPrice_(req) {
+  var u = String(req.upc || '').replace(/\D/g, '');
+  if (!u || u.length > 14) throw new Error('Bad barcode');
+  if (!PropertiesService.getScriptProperties().getProperty('SQUARE_TOKEN')) return { ok: true, found: false, noToken: true };
+  var res = sq_('post', '/v2/catalog/search', { object_types: ['ITEM_VARIATION'], include_related_objects: true,
+    query: { set_query: { attribute_name: 'upc', attribute_values: [u] } } });
+  var v = (res.objects || []).filter(function (o) { return o.item_variation_data && o.item_variation_data.upc === u && !o.is_deleted; })[0];
+  if (!v) return { ok: true, found: false };
+  var it = (res.related_objects || []).filter(function (o) { return o.id === v.item_variation_data.item_id; })[0];
+  var cents = v.item_variation_data.price_money && v.item_variation_data.price_money.amount;
+  return { ok: true, found: true, price: cents == null ? null : cents / 100, name: it ? it.item_data.name : '', archived: !!(it && it.item_data.is_archived) };
 }
 
 /** Runs every 10 minutes. Reads new Alliance e-invoice emails (spam included) and loads them. Each email is labelled once loaded. */
@@ -1099,7 +1131,7 @@ function learnUpc_(req, who) {
 var SQ = { loc: 'L7WFX5VKQEQ29', cat: 'MC5G6VGYDMHIDS3QHHTIDZ76', tax: 'UIFR5UKZEUSS566Z644HZN6D', vendor: 'ZJSCSOCI6C2JMLMX', ver: '2025-10-16' };
 
 /** Queue one row per scanned UPC (called inside the log lock, before applyReceived_ changes the counts). */
-function sqQueue_(ss, got, now) {
+function sqQueue_(ss, got, now, prices) {
   if (!got || typeof got !== 'object') return;
   var ex = ss.getSheetByName('Expected'), info = {};
   if (ex && ex.getLastRow() > 1) ex.getRange(2, 1, ex.getLastRow() - 1, 12).getValues().forEach(function (r) { if (r[4] && !info[String(r[4])]) info[String(r[4])] = r; });
@@ -1107,7 +1139,7 @@ function sqQueue_(ss, got, now) {
   Object.keys(got).forEach(function (u) {
     var n = Math.floor(Number(got[u]) || 0), r = info[String(u)];
     if (n < 1 || !r) return;
-    rows.push([now, String(u), r[5], r[6], n, 'Pending', '', 'hd-recv-' + now.getTime() + '-' + u, Number(r[7]) || 0, String(r[3]), Number(r[11]) || '']);
+    rows.push([now, String(u), r[5], r[6], n, 'Pending', '', 'hd-recv-' + now.getTime() + '-' + u, Number(r[7]) || 0, String(r[3]), Number(r[11]) || '', (prices && Number(prices[u]) > 0) ? Math.round(Number(prices[u])) : '']);
   });
   if (!rows.length) return;
   var sh = ss.getSheetByName('SquareSync');
@@ -1124,7 +1156,7 @@ function sqQueueExtras_(ss, extras, now) {
     var u = String(e.upc || '').replace(/\D/g, ''), n = Math.floor(Number(e.qty) || 1), price = Math.round(Number(e.price) || 0);
     if (!u || price < 1) return;
     // The sync prices as ceil(MSRP)+1, so store price-1 to land on exactly the price staff typed.
-    rows.push([now, u, clean_(e.artist), clean_(e.title), n, 'Pending', '', 'hd-recv-' + now.getTime() + '-x-' + u, price - 1, u, '']);
+    rows.push([now, u, clean_(e.artist), clean_(e.title), n, 'Pending', '', 'hd-recv-' + now.getTime() + '-x-' + u, price - 1, u, '', '']);
   });
   if (!rows.length) return;
   var sh = ss.getSheetByName('SquareSync');
@@ -1150,7 +1182,7 @@ function squareSync() {
   try {
     var sh = ss_().getSheetByName('SquareSync');
     if (!sh || sh.getLastRow() < 2) return;
-    var rg = sh.getRange(2, 1, sh.getLastRow() - 1, 11), rows = rg.getValues();
+    var rg = sh.getRange(2, 1, sh.getLastRow() - 1, 12), rows = rg.getValues();
     var todo = rows.filter(function (r) { return r[5] !== 'Done'; });
     if (!todo.length) return;
     var upcs = todo.map(function (r) { return String(r[1]); }).filter(function (u, i, a) { return a.indexOf(u) === i; });
@@ -1170,6 +1202,12 @@ function squareSync() {
           var it = items[v.item_variation_data.item_id];
           if (it && it.item_data.is_archived) { it.item_data.is_archived = false; sq_('post', '/v2/catalog/object', { idempotency_key: r[7] + '-un', object: it }); r[6] = 'Restored archived item'; }
           else r[6] = 'Added stock';
+          // Staff chose "Use new price" on the iPad for a record already in Square: change the price (explicit choice only).
+          if (Number(r[11]) > 0) {
+            var vo = JSON.parse(JSON.stringify(v)); vo.item_variation_data.price_money = { amount: Math.round(Number(r[11]) * 100), currency: 'USD' };
+            sq_('post', '/v2/catalog/object', { idempotency_key: r[7] + '-price', object: vo });
+            r[6] += '; price set to $' + Number(r[11]);
+          }
         }
         sq_('post', '/v2/inventory/changes/batch-create', { idempotency_key: r[7], changes: [{ type: 'ADJUSTMENT', adjustment: {
           catalog_object_id: v.id, from_state: 'NONE', to_state: 'IN_STOCK', location_id: SQ.loc, quantity: String(r[4]), occurred_at: new Date().toISOString() } }] });
