@@ -2300,7 +2300,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r80';
+const BUILD='r81';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
