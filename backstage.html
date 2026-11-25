@@ -1939,12 +1939,12 @@ async function kegPull(){
 setInterval(()=>{ if(S.who) kegPull(); },60000);
 /* keg goes on a tap -> Square: archive the old item on that tap, create (or reuse) this beer's item. Queued so a dropped connection retries. */
 let _sqbusy=false; const SQQ='hd.sqq';
-function kegSquare(k,n){ if(DEMO||!S.pin||!k||!(k.price>0)) return; const q=LS.get(SQQ,[]); q.push({tap:n,beer:k.beer,brewery:k.brewery,price:k.price,at:Date.now()}); LS.set(SQQ,q); kegSquareRun(); }
+function kegSquare(k,n,pu){ if(DEMO||!S.pin||!k||!(k.price>0)) return; const q=LS.get(SQQ,[]); q.push({tap:n,beer:k.beer,brewery:k.brewery,price:k.price,at:Date.now(),pu:pu?1:0}); LS.set(SQQ,q); kegSquareRun(); }
 async function kegSquareRun(){ if(_sqbusy||DEMO||!S.pin) return; _sqbusy=true;
   try{ let q=LS.get(SQQ,[]);
     while(q.length){ const j=q[0]; let r; try{ r=await apiRaw('kegsquare',j); }catch(e){ break; }
       if(r&&r.ok){ q.shift(); LS.set(SQQ,q);
-        const msg='Square: '+(r.created?'new item ':'item ')+r.tap+' '+r.name+(r.archived&&r.archived.length?' (archived '+r.archived.join(', ')+')':'')+'. Add it to Favorites.';
+        const msg=j.pu?'Square price updated: '+r.name+' '+kfmt(j.price):'Square: '+(r.created?'new item ':'item ')+r.tap+' '+r.name+(r.archived&&r.archived.length?' (archived '+r.archived.join(', ')+')':'')+'. Add it to Favorites.';
         toast(msg); submit('keg',msg,{action:'square',tap:j.tap,beer:j.beer},true); }
       else { q.shift(); LS.set(SQQ,q); toast('Square did not update: '+((r&&r.note)||'unknown')+'. Tell Adam.'); submit('keg','Square did not update for tap '+j.tap+': '+((r&&r.note)||'unknown'),{action:'square-fail',tap:j.tap,beer:j.beer},true); } }
   }finally{ _sqbusy=false; } }
@@ -2300,7 +2300,7 @@ document.addEventListener('change',e=>{ const p=S.post, id=e.target&&e.target.id
 
 /* ---------- killswitch: status.json next to this page; {"paused":true} shows the pause screen ---------- */
 S.paused = !!LS.get('hd.paused',false); S.pmsg = LS.get('hd.pmsg','');
-const BUILD='r81';
+const BUILD='r82';
 async function pauseCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   try{
@@ -2785,7 +2785,7 @@ document.addEventListener('click', async ev=>{
   else if(a==='ksaveprice'){ const v=parseFloat(String((document.getElementById('kpr')||{}).value||'').replace(/[^0-9.]/g,'')); if(!(v>0)){ toast('Enter a price, like 6.50'); return; }
     const L=kegs(), k=kfind(L,b.dataset.key), n=+b.dataset.n; k.price=v;
     if(n){ kegStore(L); S.ks={t:'san',key:k.key,n}; render(); }
-    else kegCommit(L,'Price: '+k.beer+' '+kfmt(v),{beer:k.beer,price:v,action:'price'}); }
+    else { kegCommit(L,'Price: '+k.beer+' '+kfmt(v),{beer:k.beer,price:v,action:'price'}); if(k.status==='tap'&&k.tap) kegSquare(k,k.tap,true); } }
   else if(a==='pclose'){ if(ev.target===b||b.tagName==='BUTTON') postClose(); }
   else if(a==='pmake'){ postMakeRecs(); }
   else if(a==='pclear'){ LS.set(ARK,{items:[]}); postClose(); toast('List cleared'); }
